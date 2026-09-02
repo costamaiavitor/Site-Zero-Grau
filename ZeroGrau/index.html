@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="madrugada" data-fonte="pop" data-botao="neon" data-sombra="halo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero Grau · Distribuidora de Bebidas · Entrega gelada em 40 minutos</title>
+<meta name="description" content="Distribuidora Zero Grau — cerveja, destilados, vinhos e não alcoólicos saindo da câmara fria a −2 °C e chegando em até 40 minutos em Fortaleza e região.">
+<meta name="theme-color" content="#0C1A22">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Anybody:wdth,wght@50..150,400..900&family=Archivo:wdth,wght@62..125,400..900&family=Big+Shoulders+Display:wght@600;700;800;900&family=Chakra+Petch:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Gabarito:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&family=Manrope:wght@400;500;600;800&family=Martian+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Unbounded:wght@400;600;700;900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/temas.css">
+</head>
+<body>
+
+<!-- ============ SPRITE: silhuetas técnicas (traço 1px, sem preenchimento) ============ -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- long neck -->
+    <symbol id="s-bottle" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M21.5 10h17v8.5c0 3.6.7 5.8 2.4 9.2l3.2 6.4c1.6 3.2 2.2 5.8 2.2 9.4V145c0 4-2.6 6.6-6.6 6.6H20.3c-4 0-6.6-2.6-6.6-6.6V43.5c0-3.6.6-6.2 2.2-9.4l3.2-6.4c1.7-3.4 2.4-5.6 2.4-9.2z"/>
+      <path d="M21.5 4.5h17V10h-17z"/>
+      <path d="M13.7 76h32.6M13.7 116h32.6"/>
+      <path d="M18.6 88h22.8" stroke-width=".9" opacity=".55"/>
+      <path d="M18.6 96h16" stroke-width=".9" opacity=".55"/>
+    </symbol>
+
+    <!-- lata -->
+    <symbol id="s-can" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M15 26.5c0-3.2 2.3-5 15-5s15 1.8 15 5v107c0 3.2-2.3 5-15 5s-15-1.8-15-5z"/>
+      <ellipse cx="30" cy="26.5" rx="15" ry="5"/>
+      <ellipse cx="30" cy="26.5" rx="9.4" ry="3.1" stroke-width=".9" opacity=".55"/>
+      <path d="M15 60h30M15 112h30"/>
+      <path d="M20 74h20" stroke-width=".9" opacity=".55"/>
+      <path d="M20 83h14" stroke-width=".9" opacity=".55"/>
+    </symbol>
+
+    <!-- garrafa alta: destilado e vinho -->
+    <symbol id="s-tall" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M23.6 9h12.8v17.6l5.5 8.2c2 3 2.8 5.4 2.8 9V145c0 4-2.6 6.6-6.6 6.6H22c-4 0-6.6-2.6-6.6-6.6V43.8c0-3.6.8-6 2.8-9l5.4-8.2z"/>
+      <path d="M22.6 3.5h14.8V13H22.6z"/>
+      <path d="M15.4 70h29.2M15.4 118h29.2"/>
+      <path d="M20 82h20" stroke-width=".9" opacity=".55"/>
+      <path d="M20 91h13" stroke-width=".9" opacity=".55"/>
+    </symbol>
+
+    <!-- pet / garrafão -->
+    <symbol id="s-pet" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M22 12h16v6.4c0 2.8 1 4.4 2.9 6.2l3.3 3.2c2.6 2.6 3.4 4.8 3.4 8.2V145c0 4-2.6 6.6-6.6 6.6H19c-4 0-6.6-2.6-6.6-6.6V36c0-3.4.8-5.6 3.4-8.2l3.3-3.2c1.9-1.8 2.9-3.4 2.9-6.2z"/>
+      <path d="M21.4 5h17.2v7.2H21.4z"/>
+      <path d="M12.4 60h35.2M12.4 122h35.2"/>
+      <path d="M12.6 70h34.8M12.6 78h34.8" stroke-width=".9" opacity=".45"/>
+      <path d="M17 92h26" stroke-width=".9" opacity=".55"/>
+    </symbol>
+
+    <!-- saco selado: gelo e carvão -->
+    <symbol id="s-saco" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M16.6 26h26.8l3.6 13.6c1.3 4.8 1.8 8.2 1.8 13V141c0 6.2-3.4 9.8-9.6 9.8H20.8c-6.2 0-9.6-3.6-9.6-9.8V52.6c0-4.8.5-8.2 1.8-13z"/>
+      <path d="M16.6 26 15 13.4h30L43.4 26"/>
+      <path d="M18.4 13.4v-4h23.2v4" stroke-width=".9"/>
+      <path d="M12.4 72h35.2M12.4 118h35.2"/>
+      <path d="M19 86h22" stroke-width=".9" opacity=".55"/>
+      <path d="M19 95h14" stroke-width=".9" opacity=".55"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ AGE GATE ============ -->
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+    </div>
+    <h3 id="gateTitle">Você tem 18 anos ou mais?</h3>
+    <p>A venda de bebida alcoólica é proibida para menores de 18 anos. O entregador confere um documento com foto na entrega.</p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" id="gateYes">Tenho 18 ou mais</button>
+      <a class="btn btn-ghost" href="https://www.gov.br" rel="noopener">Sou menor</a>
+    </div>
+    <small class="gate-legal">Lei nº 13.106/2015 · Aprecie com moderação. Se for dirigir, não beba.</small>
+  </div>
+</div>
+
+<!-- ============ FAIXA DE OPERAÇÃO ============ -->
+<div class="opstrip">
+  <div class="wrap">
+    <span class="op"><i class="live" aria-hidden="true"></i> <b>Aberto</b> até 03h00</span>
+    <span class="op">Câmara 01 <b class="num" id="t1">−2,0 °C</b></span>
+    <span class="op">Câmara 02 <b class="num" id="t2">−4,5 °C</b></span>
+    <span class="op">Em rota <b class="num" id="rotas">6</b></span>
+    <span class="op">Frete grátis acima de <b class="num">R$ 120</b></span>
+  </div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="site-head" id="header">
+  <div class="wrap">
+    <a href="#" class="logo" aria-label="Zero Grau, início">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+    </a>
+
+    <nav class="nav-main" id="nav" aria-label="Principal">
+      <a href="#catalogo">Catálogo</a>
+      <a href="#destaques">Destaques</a>
+      <a href="#promocoes">Cupom</a>
+      <a href="#como-funciona">Como pedir</a>
+      <a href="#entrega">Entrega</a>
+    </nav>
+
+    <div class="head-actions">
+      <a href="#destaques" class="btn btn-primary btn-sm">Peça agora
+        <svg class="seta" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <button class="cart-btn" id="cartBtn" aria-label="Abrir carrinho">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+          <path d="M2 3h3l2.7 12.6a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
+        </svg>
+        <span class="cart-total num" id="cartTotal" aria-live="polite"></span>
+        <b class="num" id="cartCount">0</b>
+      </button>
+      <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <path d="M3 6h18M3 12h18M3 18h18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="sec hero">
+  <div class="wrap">
+    <div class="hero-eyebrow rv">
+      <span>Distribuidora de bebidas</span>
+      <span>Fortaleza / CE</span>
+      <span>Câmara fria própria desde 2014</span>
+    </div>
+
+    <h1 class="hero-title rv">
+      <span class="ht-1">Sai da câmara a −2 °C</span>
+      <span class="ht-2">e chega na sua porta</span>
+      <span class="ht-3">em 40 minutos</span>
+    </h1>
+
+    <div class="hero-body">
+      <p class="lead rv">Mais de 400 rótulos entre cervejas, destilados, vinhos, energéticos e não alcoólicos. Estoque contado em tempo real, preço de distribuidora, sem pedido mínimo escondido.</p>
+
+      <div class="rv">
+        <p class="tag cep-label">Consulte a taxa do seu endereço</p>
+        <div class="cep-form">
+          <input id="cepInput" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" aria-label="Seu CEP" aria-describedby="cepMsg">
+          <button class="btn btn-primary btn-sm" id="cepBtn">Calcular</button>
+        </div>
+        <p class="cep-msg" id="cepMsg" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="hero-stats rv">
+      <div class="hstat"><b>38 min</b><span>Tempo médio<br>das últimas 500 entregas</span></div>
+      <div class="hstat"><b>R$ 4,90</b><span>Taxa base<br>+ R$ 1,20 por km</span></div>
+      <div class="hstat"><b>R$ 30</b><span>Pedido mínimo<br>em toda a área</span></div>
+      <div class="hstat"><b>456</b><span>Rótulos<br>disponíveis hoje</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MARCAS ============ -->
+<div class="marquee" aria-label="Marcas distribuídas">
+  <div class="marquee-track" id="mq">
+    <span>Heineken</span><span>Original</span><span>Spaten</span><span>Corona</span><span>Budweiser</span><span>Stella Artois</span>
+    <span>Johnnie Walker</span><span>Absolut</span><span>Tanqueray</span><span>Jack Daniel's</span><span>Campari</span>
+    <span>Casillero del Diablo</span><span>Chandon</span><span>Red Bull</span><span>Coca-Cola</span><span>Indaiá</span>
+  </div>
+</div>
+
+<!-- ============ CATEGORIAS ============ -->
+<section class="sec" id="catalogo">
+  <div class="wrap">
+    <div class="srule rv">
+      <span class="srule-k">Catálogo</span>
+      <span class="srule-line"></span>
+      <span class="srule-v">456 itens · 6 categorias</span>
+    </div>
+    <div class="sec-intro rv">
+      <h2>Escolha por categoria</h2>
+      <p class="lead">Do fardo de long neck ao saco de gelo do churrasco. Tudo sai do mesmo estoque, num pedido só.</p>
+    </div>
+
+    <div class="cat-grid">
+      <a href="#destaques" class="cat rv" data-ir="cerveja">
+        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v5M13 12v5"/><path d="M3 5h14v11a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M3 9h14"/></svg></span>
+        <span><b>Cervejas</b><small>184 itens · long neck, lata, 600 ml</small></span>
+      </a>
+      <a href="#destaques" class="cat rv" data-ir="destilado">
+        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v5l3 5v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-9l3-5z"/><path d="M7 14h10"/></svg></span>
+        <span><b>Destilados</b><small>96 itens · whisky, vodka, gin</small></span>
+      </a>
+      <a href="#destaques" class="cat rv" data-ir="vinho">
+        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-1 7a4 4 0 0 1-6 0z"/><path d="M12 14v7M8 21h8"/></svg></span>
+        <span><b>Vinhos e espumantes</b><small>62 itens · tinto, branco, rosé</small></span>
+      </a>
+      <a href="#destaques" class="cat rv" data-ir="nao">
+        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>
+        <span><b>Energéticos</b><small>28 itens · lata avulsa e fardo</small></span>
+      </a>
+      <a href="#destaques" class="cat rv" data-ir="nao">
+        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c3.5 4.5 6 7.8 6 11a6 6 0 0 1-12 0c0-3.2 2.5-6.5 6-11z"/></svg></span>
+        <span><b>Águas e refrigerantes</b><small>74 itens · 2 L, 1,5 L, lata</small></span>
+      </a>
+      <a href="#destaques" class="cat rv" data-ir="nao">
+        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5 4.9 17.5"/></svg></span>
+        <span><b>Gelo e carvão</b><small>12 itens · sacos de 5 kg e 10 kg</small></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DESTAQUES ============ -->
+<section class="sec sec--tight" id="destaques">
+  <div class="wrap">
+    <div class="srule rv">
+      <span class="srule-k">Mais pedidos</span>
+      <span class="srule-line"></span>
+      <span class="srule-v" id="estoqueTotal">Estoque conferido hoje</span>
+    </div>
+    <div class="sec-intro rv">
+      <h2>Destaques da adega</h2>
+      <p class="lead">Os itens que mais saíram esta semana. O contador de unidades é o estoque real da loja — quando zera, o item sai do ar.</p>
+    </div>
+
+    <div class="filtros rv">
+      <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
+      <button class="tab active" data-cat="all" role="tab" aria-selected="true">Tudo</button>
+      <button class="tab" data-cat="cerveja" role="tab" aria-selected="false">Cervejas</button>
+      <button class="tab" data-cat="destilado" role="tab" aria-selected="false">Destilados</button>
+      <button class="tab" data-cat="vinho" role="tab" aria-selected="false">Vinhos</button>
+      <button class="tab" data-cat="nao" role="tab" aria-selected="false">Sem álcool</button>
+      </div>
+      <div class="busca">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="buscaInput" type="search" placeholder="Buscar marca ou produto" aria-label="Buscar no catálogo" autocomplete="off">
+      </div>
+    </div>
+    <p class="sem-resultado" id="semResultado" hidden>Nenhum item encontrado. <button class="link" id="limparBusca">Limpar busca</button></p>
+
+    <div class="prod-grid rv" id="grid"></div>
+  </div>
+</section>
+
+<!-- ============ CUPOM ============ -->
+<section class="sec sec--tight" id="promocoes">
+  <div class="wrap">
+    <div class="srule rv">
+      <span class="srule-k">Cupom de estreia</span>
+      <span class="srule-line"></span>
+      <span class="srule-v">Válido até 31/12/2026</span>
+    </div>
+
+    <div class="cupom rv">
+      <div>
+        <p class="tag">Primeiro pedido</p>
+        <h2>15% off em todo o catálogo</h2>
+        <p class="lead">Sem teto de desconto e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
+        <ul class="cupom-list">
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ 60,00</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ 120,00</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
+        </ul>
+      </div>
+      <div class="ticket">
+        <small>Código</small>
+        <button class="code" id="code" aria-describedby="codeHint">PRIMEIRAGELADA</button>
+        <small id="codeHint">Clique para copiar</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ COMO FUNCIONA ============ -->
+<section class="sec sec--deep" id="como-funciona">
+  <div class="wrap">
+    <div class="srule rv">
+      <span class="srule-k">Do carrinho à porta</span>
+      <span class="srule-line"></span>
+      <span class="srule-v">Quatro passos · nenhum telefonema</span>
+    </div>
+    <div class="sec-intro rv">
+      <h2>Como pedir</h2>
+      <p class="lead">Você acompanha o entregador no mapa desde o momento em que ele aceita a corrida.</p>
+    </div>
+
+    <ol class="steps">
+      <li class="step rv"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
+      <li class="step rv"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
+      <li class="step rv"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
+      <li class="step rv"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ ENTREGA ============ -->
+<section class="sec" id="entrega">
+  <div class="wrap">
+    <div class="srule rv">
+      <span class="srule-k">Área de cobertura</span>
+      <span class="srule-line"></span>
+      <span class="srule-v">Raio de 12 km · Aldeota, Fortaleza</span>
+    </div>
+
+    <div class="split">
+      <div class="rv">
+        <h2>Entregamos num raio de 12 km da loja</h2>
+        <p class="lead lead--spaced">Loja física na Av. Santos Dumont, com câmara fria própria e frota de entregadores parceiros. Fora do raio, você retira no balcão sem pagar taxa.</p>
+        <div class="info-list">
+          <div class="info-row"><span>Funcionamento</span><b>Seg a dom · 10h00 – 03h00</b></div>
+          <div class="info-row"><span>Raio de entrega</span><b>12 km</b></div>
+          <div class="info-row"><span>Taxa base</span><b>R$ 4,90 <i>+ R$ 1,20/km</i></b></div>
+          <div class="info-row"><span>Pedido mínimo</span><b>R$ 30,00</b></div>
+          <div class="info-row"><span>Frete grátis</span><b class="hl">Acima de R$ 120,00</b></div>
+          <div class="info-row"><span>Tempo médio</span><b class="hl">38 minutos</b></div>
+        </div>
+      </div>
+
+      <!-- diagrama de zonas: cada anel mostra a taxa real daquele raio -->
+      <div class="zones rv">
+        <!-- as cores vêm dos tokens do tema: o diagrama acompanha a identidade -->
+        <svg viewBox="0 0 400 362" role="img" aria-label="Diagrama das zonas de entrega: 4 km custa R$ 9,70, 8 km custa R$ 14,50 e 12 km custa R$ 19,30.">
+          <g fill="none" stroke="var(--rule)" stroke-width="1">
+            <circle cx="200" cy="192" r="144" stroke-dasharray="4 4"/>
+            <circle cx="200" cy="192" r="96" stroke-dasharray="4 4"/>
+            <circle cx="200" cy="192" r="48"/>
+          </g>
+          <circle cx="200" cy="192" r="48" fill="var(--acc)" opacity=".12"/>
+          <g stroke="var(--rule)" stroke-width="1">
+            <path d="M200 336V48M56 192h288" stroke-dasharray="2 5" opacity=".8"/>
+          </g>
+
+          <rect x="184" y="176" width="32" height="32" fill="var(--acc)"/>
+          <text x="200" y="196" text-anchor="middle" fill="var(--on-acc)" font-family="var(--mono)" font-size="11" font-weight="600" letter-spacing="1">0°</text>
+          <text x="200" y="228" text-anchor="middle" fill="var(--ink-2)" font-family="var(--mono)" font-size="9.5" letter-spacing="1.6">LOJA</text>
+
+          <g font-family="var(--mono)" font-size="10.5" letter-spacing=".6">
+            <rect x="139" y="136" width="122" height="18" fill="var(--card)"/>
+            <text x="200" y="149" text-anchor="middle" fill="var(--ink)">4 km · R$ 9,70</text>
+
+            <rect x="135" y="88" width="130" height="18" fill="var(--card)"/>
+            <text x="200" y="101" text-anchor="middle" fill="var(--ink)">8 km · R$ 14,50</text>
+
+            <rect x="133" y="40" width="134" height="18" fill="var(--card)"/>
+            <text x="200" y="53" text-anchor="middle" fill="var(--acc)" font-weight="600">12 km · R$ 19,30</text>
+          </g>
+        </svg>
+        <div class="zones-cap">
+          <span>Taxa = R$ 4,90 + R$ 1,20/km</span>
+          <span>Acima de 12 km: retirada no balcão</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PAGAMENTO ============ -->
+<section class="sec sec--tight">
+  <div class="wrap">
+    <div class="srule rv">
+      <span class="srule-k">Pagamento</span>
+      <span class="srule-line"></span>
+      <span class="srule-v">4 formas aceitas</span>
+    </div>
+    <div class="sec-intro rv"><h2>Pague do jeito que der</h2></div>
+
+    <div class="pay-grid">
+      <div class="pay rv">
+        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 4 4-4 4-4-4z"/><path d="m12 14 4 4-4 4-4-4z"/><path d="m6 8 4 4-4 4-4-4z"/><path d="m18 8 4 4-4 4-4-4z"/></svg></span>
+        <b>Pix</b><small>Aprovação na hora. O pedido só sai depois da confirmação.</small>
+      </div>
+      <div class="pay rv">
+        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1"/><path d="M2 10h20M6 15h4"/></svg></span>
+        <b>Crédito e débito</b><small>No site ou na maquininha do entregador. Todas as bandeiras.</small>
+      </div>
+      <div class="pay rv">
+        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="1"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+        <b>Dinheiro</b><small>Informe para quanto precisa de troco e ele já vai separado.</small>
+      </div>
+      <div class="pay rv">
+        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+        <b>Vale-refeição</b><small>Alelo, Sodexo e Ticket, válidos para itens sem álcool.</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AVISO 18+ ============ -->
+<section class="sec sec--tight">
+  <div class="wrap">
+    <div class="aviso rv">
+      <div class="m18" aria-hidden="true">18+</div>
+      <div>
+        <h3>Venda proibida para menores de 18 anos</h3>
+        <p>A idade é verificada no cadastro e conferida com documento com foto na entrega. Sem documento, a bebida alcoólica volta para a loja e o valor é estornado. Aprecie com moderação — se for dirigir, não beba.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="sec--deep">
+  <div class="wrap cta">
+    <p class="tag">Estoque aberto agora</p>
+    <h2>Sua próxima gelada está a 40 minutos daqui</h2>
+    <p>Primeiro pedido com 15% de desconto usando o cupom PRIMEIRAGELADA.</p>
+    <div class="cta-btns">
+      <a href="#destaques" class="btn btn-primary">Ver o catálogo
+        <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="https://wa.me/5585999999999" class="btn btn-ghost" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2m0 2a8 8 0 1 1-4.1 14.8l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 0 1 12 4m-3.4 4c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s1 2.4 1.1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7s1.6-.6 1.8-1.3c.2-.6.2-1.2.1-1.3l-.6-.3-1.6-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.1-.2 0-.4.1-.5l.5-.6.3-.5v-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4z"/></svg>
+        Pedir pelo WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="f-grid">
+      <div class="f-col">
+        <a href="#" class="logo">
+          <div class="logo-mark" aria-hidden="true">0°</div>
+          <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+        </a>
+        <p class="f-about">Distribuidora de bebidas com entrega em Fortaleza e região metropolitana. Câmara fria própria desde 2014.</p>
+        <div class="socials">
+          <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="#" aria-label="WhatsApp"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2m0 2a8 8 0 1 1-4.1 14.8l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 0 1 12 4"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 22v-8h3l.5-3H13V9c0-.9.3-1.5 1.6-1.5H17V4.8c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2V11H8v3h2.5v8z"/></svg></a>
+        </div>
+      </div>
+      <div class="f-col">
+        <h4>Catálogo</h4>
+        <a href="#destaques" data-ir="cerveja">Cervejas</a><a href="#destaques" data-ir="destilado">Destilados</a><a href="#destaques" data-ir="vinho">Vinhos</a><a href="#destaques" data-ir="nao">Energéticos</a><a href="#destaques" data-ir="nao">Gelo e carvão</a>
+      </div>
+      <div class="f-col">
+        <h4>Ajuda</h4>
+        <a href="#entrega">Área de entrega</a><a href="#como-funciona">Como pedir</a><a href="#promocoes">Cupons</a><a href="#">Trocas e devoluções</a><a href="#">Política de casco</a>
+      </div>
+      <div class="f-col">
+        <h4>Contato</h4>
+        <p>(85) 3000-0000</p>
+        <p>oi@zerograu.com.br</p>
+        <p>Av. Santos Dumont, 1580<br>Aldeota · Fortaleza / CE</p>
+      </div>
+    </div>
+    <div class="f-bottom">
+      <span>© 2026 Zero Grau Distribuidora de Bebidas LTDA · CNPJ 00.000.000/0001-00</span>
+      <span>Venda proibida para menores de 18 anos · Beba com moderação</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Painel de experimentação — remover junto com o bloco final de css/temas.css -->
+<div class="lab" id="lab">
+  <div class="lab-row" role="group" aria-label="Tipografia">
+    <b>Tipografia</b>
+    <button data-fonte="sinalizacao" aria-pressed="false">Sinalização</button>
+    <button data-fonte="volume"      aria-pressed="false">Volume</button>
+    <button data-fonte="neon"        aria-pressed="false">Neon</button>
+    <button data-fonte="maquina"     aria-pressed="false">Máquina</button>
+    <button data-fonte="contraste"   aria-pressed="false">Contraste</button>
+    <button data-fonte="terminal"    aria-pressed="false">Terminal</button>
+    <button data-fonte="bloco"       aria-pressed="false">Bloco</button>
+    <button data-fonte="pop"         aria-pressed="true">Pop</button>
+  </div>
+  <div class="lab-row" role="group" aria-label="Botões">
+    <b>Botões</b>
+    <button data-botao="solido"  aria-pressed="false">Sólido</button>
+    <button data-botao="neon"    aria-pressed="true">Neon</button>
+    <button data-botao="chanfro" aria-pressed="false">Chanfro</button>
+    <button data-botao="duotom"  aria-pressed="false">Duotom</button>
+  </div>
+  <div class="lab-row" role="group" aria-label="Sombra dos botões">
+    <b>Sombra</b>
+    <button data-sombra="nenhuma"   aria-pressed="false">Nenhuma</button>
+    <button data-sombra="projetada" aria-pressed="false">Projetada</button>
+    <button data-sombra="dura"      aria-pressed="false">Dura</button>
+    <button data-sombra="halo"      aria-pressed="true">Halo</button>
+    <button data-sombra="fosso"     aria-pressed="false">Fosso</button>
+    <button data-sombra="derrame"   aria-pressed="false">Derrame</button>
+  </div>
+  <div class="lab-row" role="group" aria-label="Slogan">
+    <b>Slogan</b>
+    <button data-slogan="camara" aria-pressed="true">Câmara</button>
+    <button data-slogan="role"   aria-pressed="false">Rolê</button>
+    <button data-slogan="chama"  aria-pressed="false">Você chama</button>
+    <button data-slogan="copo"   aria-pressed="false">Copo</button>
+    <button data-slogan="fila"   aria-pressed="false">Fila</button>
+  </div>
+</div>
+
+<!-- ============ CARRINHO ============ -->
+<div class="cart-overlay" id="cartOverlay" hidden></div>
+<aside class="cart" id="cart" aria-label="Carrinho de compras" aria-hidden="true">
+  <header class="cart-head">
+    <h3>Seu carrinho</h3>
+    <button class="cart-close" id="cartClose" aria-label="Fechar carrinho">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </header>
+
+  <div class="cart-itens" id="cartItens"></div>
+
+  <div class="cart-vazio" id="cartVazio">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+      <path d="M2 3h3l2.7 12.6a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
+    </svg>
+    <p>Carrinho vazio</p>
+    <small>Adicione uma gelada e ela aparece aqui.</small>
+  </div>
+
+  <footer class="cart-pe" id="cartPe">
+    <div class="cart-cupom">
+      <input id="cupomInput" type="text" placeholder="Cupom de desconto" aria-label="Código do cupom" autocomplete="off">
+      <button class="btn btn-ghost btn-sm" id="cupomBtn">Aplicar</button>
+    </div>
+    <p class="cart-aviso" id="cupomMsg" role="status" aria-live="polite"></p>
+
+    <dl class="cart-resumo">
+      <div><dt>Subtotal</dt><dd class="num" id="rSub">R$ 0,00</dd></div>
+      <div id="linhaDesconto" hidden><dt>Desconto <span id="rCupomNome"></span></dt><dd class="num desconto" id="rDesc">− R$ 0,00</dd></div>
+      <div><dt>Entrega <span class="cart-cep" id="rCepInfo">informe o CEP</span></dt><dd class="num" id="rEntrega">—</dd></div>
+      <div class="cart-total-linha"><dt>Total</dt><dd class="num" id="rTotal">R$ 0,00</dd></div>
+    </dl>
+
+    <p class="cart-aviso" id="cartAviso" role="status" aria-live="polite"></p>
+    <button class="btn btn-primary cart-fechar-pedido" id="finalizar">Finalizar pelo WhatsApp
+      <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </footer>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
