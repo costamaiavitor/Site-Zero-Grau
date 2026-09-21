@@ -1,15 +1,20 @@
 /* ==========================================================================
-   ZERO GRAU · Temas
+   ZERO GRAU · Tema
 
-   Cada bloco redefine apenas os tokens declarados no :root de style.css.
-   Nenhum seletor de componente aparece aqui — se um tema precisar de um,
-   é sinal de que falta um token em style.css.
+   A pele que o site veste. Redefine apenas tokens já declarados no :root de
+   style.css — trocar este arquivo troca a identidade inteira sem tocar em
+   mais nada. A única exceção é o bloco de botão no fim: um botão é forma,
+   preenchimento e hover ao mesmo tempo, e tokenizar isso daria mais tokens
+   do que regras.
 
-   Sem atributo data-tema, vale o tema base "Câmara fria" do style.css.
+   Sem o atributo data-tema no <html>, vale o tema base "Câmara fria" que o
+   :root de style.css já traz.
    ========================================================================== */
 
-/* ============ 01 · MADRUGADA ============
-   Sexta, 23h. Letreiro aceso na rua escura. */
+/* ============ MADRUGADA ============
+   Sexta, 23h. Letreiro aceso na rua escura.
+   Gabarito no display e Manrope no texto: geométricas cheias e redondas, o
+   registro de marca de bebida jovem. */
 [data-tema="madrugada"]{
   --paper:#0A0A1E;
   --paper-2:#12122E;
@@ -34,27 +39,34 @@
   --hot:#FF2D78;
   --ok:#00E5D0;
 
-  --display:"Big Shoulders Display","Arial Narrow",sans-serif;
-  --body:"Space Grotesk",system-ui,sans-serif;
-  --mono:"Space Grotesk",system-ui,sans-serif;
+  --display:"Gabarito",system-ui,sans-serif;
+  --body:"Manrope",system-ui,sans-serif;
+  --mono:"Manrope",system-ui,sans-serif;
 
   --h-wght:900;
   --h-wght-2:700;
   --h-tt:uppercase;
-  --h-ls:-.005em;
-  --h-lh:.94;
-  --hero-lh:.86;
+  --h-ls:-.035em;
+  --h-lh:1.02;
+  --hero-lh:.96;
 
-  /* manchete: sem eixo de largura variavel, corpo unico e escada a esquerda */
-  --ht1-wd:100%; --ht1-k:0.0930; --ht1-max:6.97rem;
-  --ht2-wd:100%; --ht2-k:0.0930; --ht2-max:6.97rem;
-  --ht3-wd:100%; --ht3-k:0.0930; --ht3-max:6.97rem;
+  /* Reserva da manchete para quando o script não rodar. O Gabarito não tem
+     eixo de largura variável, então as três linhas mantêm 100% e a escada
+     aparece à esquerda. Os coeficientes foram medidos no navegador contra a
+     linha mais longa das duas que o sorteio pode trazer, com 1,5% de folga:
+     o k rege enquanto a coluna acompanha a viewport e o teto assume quando
+     ela trava no --wrap. Por isso não são números redondos. */
+  --ht1-wd:100%; --ht1-k:0.1013; --ht1-max:7.60rem;
+  --ht2-wd:100%; --ht2-k:0.0996; --ht2-max:7.47rem;
+  --ht3-wd:100%; --ht3-k:0.1222; --ht3-max:9.17rem;
 
   --r-btn:2px;
   --r-card:0;
   --r-badge:2px;
-  --sh-btn:0 0 20px rgba(255,45,120,.35);
+  --sh-btn:none;         /* o brilho do botão vem das regras no fim do arquivo */
   --sh-card:0 0 0 0 transparent;
+  /* halo: amplia o brilho do botão em vez de projetar sombra */
+  --sh-extra:0 0 42px -6px color-mix(in srgb,var(--acc) 75%,transparent);
 
   --art-bg:radial-gradient(70% 60% at 50% 100%,rgba(0,229,208,.10),transparent 70%),#0D0D24;
   --art-bg-hover:radial-gradient(70% 60% at 50% 100%,rgba(255,45,120,.14),transparent 70%),#0D0D24;
@@ -62,173 +74,11 @@
   --art-ink-hover:#FF2D78;
   --art-sw:1.6;
 
-  --grao:.045;   /* só o tema noturno pede textura; nos claros lê como sujeira */
-}
-
-/* ============ 02 · RÓTULO ============
-   Adesivo de fardo, carimbo, cor chapada de impressão. */
-[data-tema="rotulo"]{
-  --paper:#F2E9D8;
-  --paper-2:#FFF8EC;
-  --paper-blur:rgba(242,233,216,.95);
-  --card:#FFF8EC;
-  --deep:#141210;
-  --deep-2:#1E1A16;
-
-  --ink:#141210;
-  --ink-2:#6B6357;
-  --ink-on-deep:#F2E9D8;
-  --ink-2-on-deep:#A99D8A;
-
-  --rule:#141210;
-  --rule-2:#D8CDB6;
-  --rule-deep:#3A342C;
-
-  --acc:#E02B20;
-  --acc-2:#F5B301;
-  --acc-wash:#FBE9B8;
-  --hot:#E02B20;
-  --ok:#1B5E20;
-
-  --display:"Anton",Impact,sans-serif;
-  --body:"DM Sans",system-ui,sans-serif;
-  --mono:"DM Sans",system-ui,sans-serif;
-
-  --h-wght:400;          /* Anton tem um peso só */
-  --h-wght-2:400;
-  --h-tt:uppercase;
-  --h-ls:0;
-  --h-lh:1.12;
-  --hero-lh:1.06;
-
-  /* manchete: sem eixo de largura variavel, corpo unico e escada a esquerda */
-  --ht1-wd:100%; --ht1-k:0.0927; --ht1-max:6.95rem;
-  --ht2-wd:100%; --ht2-k:0.0927; --ht2-max:6.95rem;
-  --ht3-wd:100%; --ht3-k:0.0927; --ht3-max:6.95rem;
-
-  --r-btn:0;
-  --r-card:0;
-  --r-badge:0;
-  --sh-btn:4px 4px 0 #141210;
-  --sh-card:5px 5px 0 #141210;
-
-  --art-bg:#F5B301;
-  --art-bg-hover:#FFC72C;
-  --art-ink:#141210;
-  --art-ink-hover:#E02B20;
-  --art-sw:2.6;
-}
-
-/* ============ 03 · LITORAL ============
-   Domingo em Fortaleza: praia, churrasco, sol ainda alto. */
-[data-tema="litoral"]{
-  --paper:#FBF3E7;
-  --paper-2:#FFFDF9;
-  --paper-blur:rgba(251,243,231,.94);
-  --card:#FFFFFF;
-  --deep:#14313D;
-  --deep-2:#1C4252;
-
-  --ink:#14313D;
-  --ink-2:#6E8590;
-  --ink-on-deep:#F2FAF9;
-  --ink-2-on-deep:#9DBAC2;
-
-  --rule:#DDE7E5;
-  --rule-2:#EAF1EF;
-  --rule-deep:#2C5566;
-
-  --acc:#FF5C39;
-  --acc-2:#00A6A0;
-  --acc-wash:#E6F4F2;
-  --hot:#FF5C39;
-  --ok:#00807B;
-
-  --display:"Syne",system-ui,sans-serif;
-  --body:"Work Sans",system-ui,sans-serif;
-  --mono:"Work Sans",system-ui,sans-serif;
-
-  --h-wght:800;
-  --h-wght-2:700;
-  --h-tt:none;           /* única direção em caixa mista */
-  --h-ls:-.035em;
-  --h-lh:1.06;
-  --hero-lh:1;
-
-  /* manchete: sem eixo de largura variavel, corpo unico e escada a esquerda */
-  --ht1-wd:100%; --ht1-k:0.0565; --ht1-max:4.23rem;
-  --ht2-wd:100%; --ht2-k:0.0565; --ht2-max:4.23rem;
-  --ht3-wd:100%; --ht3-k:0.0565; --ht3-max:4.23rem;
-
-  --r-btn:100px;
-  --r-card:18px;
-  --r-badge:100px;
-  --sh-btn:none;
-  --sh-card:0 12px 30px -18px rgba(20,49,61,.35);
-
-  --art-bg:#E6F4F2;
-  --art-bg-hover:#DCEFEC;
-  --art-ink:#14313D;
-  --art-ink-hover:#FF5C39;
-  --art-sw:2.4;
-}
-
-/* ============ 04 · ESQUINA ============
-   O peso da Rótulo sobre a base clara e confortável da Litoral. */
-[data-tema="esquina"]{
-  --paper:#FAF2E4;
-  --paper-2:#FFFBF2;
-  --paper-blur:rgba(250,242,228,.95);
-  --card:#FFFBF2;
-  --deep:#151311;
-  --deep-2:#211D19;
-
-  --ink:#151311;
-  --ink-2:#6F675C;
-  --ink-on-deep:#FAF2E4;
-  --ink-2-on-deep:#A79C8B;
-
-  --rule:#DED3BE;
-  --rule-2:#EBE2D1;
-  --rule-deep:#3A342C;
-
-  --acc:#E8452C;
-  --acc-2:#00A6A0;
-  --acc-wash:#DDF1EF;
-  --hot:#E8452C;
-  --ok:#00807B;
-
-  --display:"Anton",Impact,sans-serif;
-  --body:"Work Sans",system-ui,sans-serif;
-  --mono:"Work Sans",system-ui,sans-serif;
-
-  --h-wght:400;
-  --h-wght-2:400;
-  --h-tt:uppercase;
-  --h-ls:0;
-  --h-lh:1.12;
-  --hero-lh:1.06;
-
-  /* manchete: sem eixo de largura variavel, corpo unico e escada a esquerda */
-  --ht1-wd:100%; --ht1-k:0.0927; --ht1-max:6.95rem;
-  --ht2-wd:100%; --ht2-k:0.0927; --ht2-max:6.95rem;
-  --ht3-wd:100%; --ht3-k:0.0927; --ht3-max:6.95rem;
-
-  --r-btn:8px;
-  --r-card:10px;
-  --r-badge:6px;
-  --sh-btn:3px 3px 0 #151311;
-  --sh-card:0 8px 20px -14px rgba(21,19,17,.4);
-
-  --art-bg:#FFF4DC;
-  --art-bg-hover:#FFEDC9;
-  --art-ink:#151311;
-  --art-ink-hover:#E8452C;
-  --art-sw:2.4;
+  --grao:.045;           /* fundo escuro chapado pede textura de fotografia */
 }
 
 /* ==========================================================================
-   ASSINATURA DO MADRUGADA · o letreiro acendendo
+   ASSINATURA · o letreiro acendendo
 
    Um letreiro de neon não acende limpo: titubeia antes de firmar. A linha do
    acento na manchete faz esse gesto uma única vez, quando o aviso de idade
@@ -259,198 +109,24 @@
 }
 
 /* ==========================================================================
-   VARIANTES TIPOGRÁFICAS
+   BOTÕES · tubo de letreiro
 
-   Aplicadas por cima do tema (vêm depois no arquivo, então vencem). Mexem só
-   em família e peso — cor e forma continuam vindo do tema.
+   Só o contorno aceso; preenche ao passar o mouse. O --sh-extra do tema entra
+   como segunda sombra em cada regra, então o halo convive com o brilho do
+   contorno em vez de substituí-lo.
    ========================================================================== */
-
-/* Sinalização — condensada de letreiro urbano. É a do Madrugada original. */
-[data-fonte="sinalizacao"]{
-  --display:"Big Shoulders Display","Arial Narrow",sans-serif;
-  --body:"Space Grotesk",system-ui,sans-serif;
-  --mono:"Space Grotesk",system-ui,sans-serif;
-  --h-wght:900; --h-wght-2:700; --h-ls:-.005em; --h-lh:.94; --hero-lh:.86;
-}
-
-/* Volume — larga e encorpada, de cartaz de festival. Anybody tem eixo de
-   largura, então a manchete abre até 130%. */
-[data-fonte="volume"]{
-  --display:"Anybody",system-ui,sans-serif;
-  --body:"Manrope",system-ui,sans-serif;
-  --mono:"Manrope",system-ui,sans-serif;
-  --h-wght:800; --h-wght-2:700; --h-ls:-.03em; --h-lh:1; --hero-lh:.94;
-  --ht1-wd:118%; --ht2-wd:118%; --ht3-wd:118%;
-}
-
-/* Neon — geométrica pesada, registro de streetwear e marca de energético. */
-[data-fonte="neon"]{
-  --display:"Unbounded",system-ui,sans-serif;
-  --body:"Sora",system-ui,sans-serif;
-  --mono:"Sora",system-ui,sans-serif;
-  --h-wght:700; --h-wght-2:600; --h-ls:-.04em; --h-lh:1.14; --hero-lh:1.08;
-}
-
-/* Máquina — cantos cortados, cara de painel e HUD. */
-[data-fonte="maquina"]{
-  --display:"Chakra Petch",system-ui,sans-serif;
-  --body:"Space Grotesk",system-ui,sans-serif;
-  --mono:"Space Grotesk",system-ui,sans-serif;
-  --h-wght:700; --h-wght-2:600; --h-ls:-.01em; --h-lh:1.04; --hero-lh:.98;
-}
-
-/* Contraste — serifa alta e estreita sobre neon. A aposta menos óbvia das oito:
-   troca a energia da balada por algo mais editorial, quase de capa de disco. */
-[data-fonte="contraste"]{
-  --display:"Instrument Serif",Georgia,serif;
-  --body:"Space Grotesk",system-ui,sans-serif;
-  --mono:"Space Grotesk",system-ui,sans-serif;
-  --h-wght:400; --h-wght-2:400; --h-tt:none; --h-ls:-.02em; --h-lh:1; --hero-lh:.94;
-}
-
-/* Terminal — monoespaçada no display. Puxa a leitura para painel de operação,
-   e conversa com a faixa de temperatura no topo do site. */
-[data-fonte="terminal"]{
-  --display:"Martian Mono",ui-monospace,monospace;
-  --body:"Space Grotesk",system-ui,sans-serif;
-  --mono:"Space Grotesk",system-ui,sans-serif;
-  --h-wght:700; --h-wght-2:600; --h-ls:-.06em; --h-lh:1.18; --hero-lh:1.1;
-}
-
-/* Bloco — o Archivo aberto no máximo do eixo de largura, peso 900.
-   Maciça e horizontal, sem o desenho técnico do tema Câmara fria. */
-[data-fonte="bloco"]{
-  --display:"Archivo",system-ui,sans-serif;
-  --body:"Manrope",system-ui,sans-serif;
-  --mono:"Manrope",system-ui,sans-serif;
-  --h-wght:900; --h-wght-2:800; --h-ls:-.03em; --h-lh:1; --hero-lh:.92;
-  --ht1-wd:125%; --ht2-wd:125%; --ht3-wd:125%;
-}
-
-/* Pop — geométrica cheia e redonda, registro de marca de bebida jovem. */
-[data-fonte="pop"]{
-  --display:"Gabarito",system-ui,sans-serif;
-  --body:"Manrope",system-ui,sans-serif;
-  --mono:"Manrope",system-ui,sans-serif;
-  --h-wght:900; --h-wght-2:700; --h-ls:-.035em; --h-lh:1.02; --hero-lh:.96;
-}
-
-/* ==========================================================================
-   VARIANTES DE BOTÃO
-
-   Única seção com seletor de componente: um botão é forma, preenchimento e
-   comportamento no hover ao mesmo tempo, e tokenizar isso daria mais tokens
-   do que regras.
-   ========================================================================== */
-
-/* Sólido — preenchido, com halo do próprio acento. Clareia no hover. */
-[data-botao="solido"]{ --sh-btn:0 0 24px -4px color-mix(in srgb,var(--acc) 60%,transparent) }
-[data-botao="solido"] .btn-primary:hover{
-  background:var(--acc-2); border-color:var(--acc-2); color:var(--paper);
-  box-shadow:0 0 30px -2px color-mix(in srgb,var(--acc-2) 70%,transparent);
-}
-
-/* Neon — tubo de letreiro: só contorno aceso, preenche ao passar o mouse. */
-[data-botao="neon"]{ --sh-btn:none }
-[data-botao="neon"] .btn-primary{
+[data-tema="madrugada"] .btn-primary{
   background:transparent; color:var(--acc); border-color:var(--acc);
   box-shadow:0 0 14px -2px color-mix(in srgb,var(--acc) 55%,transparent),
              inset 0 0 12px -6px color-mix(in srgb,var(--acc) 70%,transparent),
              var(--sh-extra,0 0 #0000);
   text-shadow:0 0 12px color-mix(in srgb,var(--acc) 60%,transparent);
 }
-[data-botao="neon"] .btn-primary:hover{
+[data-tema="madrugada"] .btn-primary:hover{
   background:var(--acc); color:var(--on-acc); border-color:var(--acc);
   text-shadow:none;
   box-shadow:0 0 26px -2px color-mix(in srgb,var(--acc) 75%,transparent),
              var(--sh-extra,0 0 #0000);
 }
-[data-botao="neon"] .btn-ghost{border-color:var(--acc-2);color:var(--acc-2)}
-[data-botao="neon"] .btn-ghost:hover{background:var(--acc-2);color:var(--paper);border-color:var(--acc-2)}
-
-/* Chanfro — cantos cortados na diagonal. O clip-path corta o halo, então este
-   é o único sem brilho: o corte é que carrega a personalidade. */
-[data-botao="chanfro"]{
-  --r-btn:0;
-  --sh-btn:none;
-  --btn-clip:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px);
-}
-[data-botao="chanfro"] .btn-primary:hover{background:var(--acc-2);border-color:var(--acc-2);color:var(--paper)}
-
-/* ==========================================================================
-   SOMBRA DOS BOTÕES
-
-   Camada independente do estilo do botão: entra como segunda sombra, então
-   convive com o brilho do Neon e com o gradiente do Duotom.
-   ========================================================================== */
-
-/* Sem sombra — só o que o próprio estilo do botão já traz. */
-[data-sombra="nenhuma"]{ --sh-extra:0 0 #0000 }
-
-/* Projetada — elevação escura. Descola o botão do fundo sem competir com o
-   brilho: a sombra é preta, o brilho é colorido. */
-[data-sombra="projetada"]{ --sh-extra:0 12px 26px -10px rgba(0,0,0,.85) }
-
-/* Dura — deslocamento sólido no acento frio, sem desfoque. Lê como letreiro
-   impresso fora de registro. É a mais ousada. */
-[data-sombra="dura"]{ --sh-extra:4px 4px 0 0 var(--acc-2) }
-
-/* Halo — amplia o brilho em vez de projetar. Empurra o neon para o exagero. */
-[data-sombra="halo"]{ --sh-extra:0 0 42px -6px color-mix(in srgb,var(--acc) 75%,transparent) }
-
-/* Fosso — sombra larga e baixa, tipo luz de teto. Mais discreta que a projetada. */
-[data-sombra="fosso"]{ --sh-extra:0 18px 30px -18px rgba(0,0,0,.95) }
-
-/* Derrame — a sombra na cor do acento, jogada para baixo. Num fundo escuro é
-   o que uma sombra projetada seria num fundo claro: preto sobre preto some,
-   cor sobre preto lê. */
-[data-sombra="derrame"]{ --sh-extra:0 14px 30px -10px color-mix(in srgb,var(--acc) 65%,transparent) }
-
-/* Duotom — os dois acentos no mesmo botão; a rampa inverte no hover. */
-[data-botao="duotom"]{ --sh-btn:0 6px 20px -8px color-mix(in srgb,var(--acc) 60%,transparent) }
-[data-botao="duotom"] .btn-primary{
-  background:linear-gradient(100deg,var(--acc),var(--acc-2));
-  border-color:transparent; color:var(--on-acc);
-}
-[data-botao="duotom"] .btn-primary:hover{
-  background:linear-gradient(100deg,var(--acc-2),var(--acc));
-  box-shadow:0 8px 26px -8px color-mix(in srgb,var(--acc-2) 70%,transparent);
-}
-
-/* ==========================================================================
-   PAINEL DE EXPERIMENTAÇÃO
-   Sai do site junto com este bloco quando tipografia e slogan estiverem
-   escolhidos.
-   ========================================================================== */
-/* Enquanto a verificação de idade está aberta o site fica coberto pelo overlay,
-   então trocar não teria efeito visível. O painel só entra depois. */
-body.locked .lab{display:none}
-
-.lab{
-  position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
-  z-index:300;display:grid;gap:6px;
-  background:#0F1013;border:1px solid #33353D;border-radius:16px;
-  padding:12px 14px;
-  box-shadow:0 16px 40px -14px rgba(0,0,0,.8);
-  font-family:"IBM Plex Mono",ui-monospace,monospace;
-  max-width:calc(100vw - 20px);
-}
-.lab-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.lab-row > b{
-  font-size:.58rem;font-weight:500;letter-spacing:.16em;text-transform:uppercase;
-  color:#7C7E88;width:78px;flex:none;
-}
-.lab button{
-  font-family:inherit;
-  font-size:.66rem;letter-spacing:.05em;
-  padding:7px 12px;border-radius:100px;
-  color:#B7B9C2;white-space:nowrap;
-  transition:background .15s ease,color .15s ease;
-}
-.lab button:hover{color:#fff;background:#22242A}
-.lab button[aria-pressed="true"]{background:#F0F1F4;color:#0F1013;font-weight:600}
-@media(max-width:680px){
-  .lab{padding:10px;gap:4px;left:8px;right:8px;transform:none;max-width:none}
-  .lab-row > b{width:100%;margin-bottom:2px}
-  .lab button{padding:7px 10px;font-size:.62rem;flex:1}
-}
+[data-tema="madrugada"] .btn-ghost{border-color:var(--acc-2);color:var(--acc-2)}
+[data-tema="madrugada"] .btn-ghost:hover{background:var(--acc-2);color:var(--paper);border-color:var(--acc-2)}

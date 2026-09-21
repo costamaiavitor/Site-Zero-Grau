@@ -3,9 +3,13 @@
 
    Toda a "pele" do site — cor, tipografia e forma — vem dos tokens abaixo.
    Trocar o bloco de tokens troca a identidade inteira sem tocar em mais nada.
-   css/temas.css redefine esses mesmos tokens para as outras direções.
+   css/temas.css redefine esses mesmos tokens para a pele que o site veste
+   hoje, a "Madrugada", e é o arquivo a editar para mudar a identidade.
 
-   Tema base: "Câmara fria" — documento operacional, não cartaz.
+   Tema base: "Câmara fria" — documento operacional, não cartaz. Fica aqui
+   como fundação e como rede de segurança: sem data-tema no <html>, é ele que
+   vale. As famílias que ele pede não são mais carregadas (o <link> do index
+   traz só as da Madrugada), então neste estado ele cai nas fontes do sistema.
    ========================================================================== */
 
 /* ============ 1. TOKENS ============ */
@@ -425,6 +429,11 @@ h3{
   padding-top:22px;
 }
 @media(max-width:860px){.hero-body{grid-template-columns:1fr;gap:26px}}
+/* Item de grade nasce com min-width:auto, que resolve para min-content — e o
+   min-content desta coluna é o <input> do CEP, que sem atributo size carrega
+   213px intrínsecos. Abaixo de ~360px isso empurrava a coluna para fora da
+   tela; o overflow-x:hidden do body escondia, mas a régua continuava torta. */
+.hero-body > *{min-width:0}
 
 .cep-label{margin-bottom:10px}
 .cep-form{display:flex;border:1px solid var(--ink);border-radius:var(--r-btn);max-width:460px;background:var(--card)}

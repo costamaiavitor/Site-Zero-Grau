@@ -566,73 +566,19 @@ addEventListener("resize", () => {
   ajustarManchete._t = setTimeout(ajustarManchete, 120);
 });
 
-/* ---------- 13. LABORATÓRIO DE IDENTIDADE (demonstração) ----------
-   Escrever data-fonte no <html> é tudo o que o CSS precisa; o slogan é o único
-   que mexe em conteúdo. Sai daqui junto com o painel quando estiver escolhido. */
-const SLOGANS = {
-  camara: ["Sai da câmara a −2 °C", "e chega na sua porta", "em 40 minutos"],
-  role:   ["O rolê não para",       "só porque a gelada",   "acabou"],
-  chama:  ["Você chama,",           "a gente leva",         "em 40 minutos"],
-  copo:   ["Da câmara fria",        "direto pro seu copo",  "em 40 minutos"],
-  fila:   ["Sexta à noite não é",   "hora de encarar",      "fila de mercado"]
-};
+/* ---------- 13. SLOGAN ----------
+   Duas manchetes com o mesmo esqueleto de três linhas, sorteadas a cada visita:
+   quem volta no dia seguinte não encontra a mesma frase na porta. O HTML já
+   nasce com uma delas, então sem script a manchete continua de pé.
+   A medição da seção 12 roda depois disto (document.fonts.ready só resolve no
+   fim da tarefa atual), então já mede o texto sorteado. */
+const SLOGANS = [
+  ["Sexta à noite não é", "hora de encarar",    "fila de mercado"],
+  ["O rolê não para",     "só porque a gelada", "acabou"]
+];
 
-const lab = $("lab");
-
-/* localStorage falha em algumas configurações de privacidade e ao abrir por
-   file://. É só a lembrança da escolha — não pode derrubar o resto do script. */
-/* o prefixo é versionado: mudar os padrões acima sem trocá-lo faria a escolha
-   antiga guardada no navegador vencer, e os novos padrões nunca apareceriam */
-const CHAVE = "zg3-";
-const lembrar = {
-  ler:    c    => { try{ return localStorage.getItem(CHAVE + c) }catch{ return null } },
-  salvar:(c,v) => { try{ localStorage.setItem(CHAVE + c, v) }catch{ /* segue sem lembrar */ } }
-};
-
-function marcar(chave, valor){
-  lab.querySelectorAll(`[data-${chave}]`).forEach(b =>
-    b.setAttribute("aria-pressed", String(b.dataset[chave] === valor))
-  );
-  lembrar.salvar(chave, valor);
-}
-
-function aplicarFonte(nome){
-  document.documentElement.setAttribute("data-fonte", nome);
-  marcar("fonte", nome);
-  document.fonts.ready.then(ajustarManchete);
-}
-
-function aplicarBotao(nome){
-  document.documentElement.setAttribute("data-botao", nome);
-  marcar("botao", nome);
-}
-
-function aplicarSombra(nome){
-  document.documentElement.setAttribute("data-sombra", nome);
-  marcar("sombra", nome);
-}
-
-function aplicarSlogan(nome){
-  const linhas = SLOGANS[nome];
-  if(!linhas) return;
-  heroLinhas.forEach((el, i) => el.textContent = linhas[i]);
-  marcar("slogan", nome);
-  ajustarManchete();
-}
-
-lab.addEventListener("click", e => {
-  const btn = e.target.closest("button");
-  if(!btn) return;
-  if(btn.dataset.fonte)  aplicarFonte(btn.dataset.fonte);
-  if(btn.dataset.botao)  aplicarBotao(btn.dataset.botao);
-  if(btn.dataset.sombra) aplicarSombra(btn.dataset.sombra);
-  if(btn.dataset.slogan) aplicarSlogan(btn.dataset.slogan);
-});
-
-aplicarFonte(lembrar.ler("fonte")   || "pop");
-aplicarBotao(lembrar.ler("botao")   || "neon");
-aplicarSombra(lembrar.ler("sombra") || "halo");
-aplicarSlogan(lembrar.ler("slogan") || "camara");
+const slogan = SLOGANS[Math.floor(Math.random() * SLOGANS.length)];
+heroLinhas.forEach((el, i) => el.textContent = slogan[i]);
 
 /* ---------- 14. REVELAR AO ROLAR ---------- */
 const io = new IntersectionObserver(entradas => {

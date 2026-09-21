@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-tema="madrugada" data-fonte="pop" data-botao="neon" data-sombra="halo">
+<html lang="pt-BR" data-tema="madrugada">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0C1A22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Anybody:wdth,wght@50..150,400..900&family=Archivo:wdth,wght@62..125,400..900&family=Big+Shoulders+Display:wght@600;700;800;900&family=Chakra+Petch:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Gabarito:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&family=Manrope:wght@400;500;600;800&family=Martian+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Unbounded:wght@400;600;700;900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/temas.css">
 </head>
@@ -140,10 +140,11 @@
       <span>Câmara fria própria desde 2014</span>
     </div>
 
+    <!-- o script sorteia entre os slogans; estas linhas são o que fica sem JS -->
     <h1 class="hero-title rv">
-      <span class="ht-1">Sai da câmara a −2 °C</span>
-      <span class="ht-2">e chega na sua porta</span>
-      <span class="ht-3">em 40 minutos</span>
+      <span class="ht-1">Sexta à noite não é</span>
+      <span class="ht-2">hora de encarar</span>
+      <span class="ht-3">fila de mercado</span>
     </h1>
 
     <div class="hero-body">
@@ -462,45 +463,6 @@
     </div>
   </div>
 </footer>
-
-<!-- Painel de experimentação — remover junto com o bloco final de css/temas.css -->
-<div class="lab" id="lab">
-  <div class="lab-row" role="group" aria-label="Tipografia">
-    <b>Tipografia</b>
-    <button data-fonte="sinalizacao" aria-pressed="false">Sinalização</button>
-    <button data-fonte="volume"      aria-pressed="false">Volume</button>
-    <button data-fonte="neon"        aria-pressed="false">Neon</button>
-    <button data-fonte="maquina"     aria-pressed="false">Máquina</button>
-    <button data-fonte="contraste"   aria-pressed="false">Contraste</button>
-    <button data-fonte="terminal"    aria-pressed="false">Terminal</button>
-    <button data-fonte="bloco"       aria-pressed="false">Bloco</button>
-    <button data-fonte="pop"         aria-pressed="true">Pop</button>
-  </div>
-  <div class="lab-row" role="group" aria-label="Botões">
-    <b>Botões</b>
-    <button data-botao="solido"  aria-pressed="false">Sólido</button>
-    <button data-botao="neon"    aria-pressed="true">Neon</button>
-    <button data-botao="chanfro" aria-pressed="false">Chanfro</button>
-    <button data-botao="duotom"  aria-pressed="false">Duotom</button>
-  </div>
-  <div class="lab-row" role="group" aria-label="Sombra dos botões">
-    <b>Sombra</b>
-    <button data-sombra="nenhuma"   aria-pressed="false">Nenhuma</button>
-    <button data-sombra="projetada" aria-pressed="false">Projetada</button>
-    <button data-sombra="dura"      aria-pressed="false">Dura</button>
-    <button data-sombra="halo"      aria-pressed="true">Halo</button>
-    <button data-sombra="fosso"     aria-pressed="false">Fosso</button>
-    <button data-sombra="derrame"   aria-pressed="false">Derrame</button>
-  </div>
-  <div class="lab-row" role="group" aria-label="Slogan">
-    <b>Slogan</b>
-    <button data-slogan="camara" aria-pressed="true">Câmara</button>
-    <button data-slogan="role"   aria-pressed="false">Rolê</button>
-    <button data-slogan="chama"  aria-pressed="false">Você chama</button>
-    <button data-slogan="copo"   aria-pressed="false">Copo</button>
-    <button data-slogan="fila"   aria-pressed="false">Fila</button>
-  </div>
-</div>
 
 <!-- ============ CARRINHO ============ -->
 <div class="cart-overlay" id="cartOverlay" hidden></div>
