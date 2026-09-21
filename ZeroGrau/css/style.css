@@ -127,6 +127,20 @@ ul,ol{list-style:none}
   outline-offset:3px;
 }
 
+/* Primeiro alvo do Tab: pula o cabeçalho inteiro e vai direto ao catálogo.
+   Fica fora da tela até receber foco. */
+.pular{
+  position:fixed;top:0;left:50%;z-index:210;
+  transform:translate(-50%,-120%);
+  background:var(--acc);color:var(--on-acc);
+  font-family:var(--mono);font-size:.74rem;font-weight:600;
+  letter-spacing:.08em;text-transform:var(--label-tt);
+  padding:12px 20px;
+  border-radius:0 0 var(--r-btn) var(--r-btn);
+  transition:transform .18s ease;
+}
+.pular:focus{transform:translate(-50%,0)}
+
 /* ============ 3. PRIMITIVAS ============ */
 .wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:var(--gut)}
 
@@ -869,13 +883,16 @@ h3{
 }
 
 /* ============ 18. AGE GATE ============ */
+/* Fechado por padrão, aberto pelo script. Invertido de propósito: antes era
+   display:grid aqui e o JS é que escondia, então sem JavaScript o diálogo
+   cobria a tela para sempre e o site inteiro ficava inalcançável. */
 .gate{
   position:fixed;inset:0;z-index:200;
-  background:rgba(12,26,34,.94);
+  background:color-mix(in srgb,var(--deep) 94%,transparent);
   backdrop-filter:blur(6px);
-  display:grid;place-items:center;padding:24px;
+  display:none;place-items:center;padding:24px;
 }
-.gate.gone{display:none}
+.gate.aberto{display:grid}
 .gate-card{
   width:100%;max-width:440px;
   background:var(--paper);
@@ -957,7 +974,15 @@ h3{
   gap:14px;align-items:center;
   padding:14px 0;border-bottom:1px solid var(--rule-2);
 }
-.cart-item img{width:52px;height:60px;object-fit:contain;object-position:center bottom}
+/* mesma reserva da vitrine: se a foto não carregar, a silhueta assume o lugar
+   em vez de deixar o ícone de imagem quebrada na lista */
+.cart-art{
+  width:52px;height:60px;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.cart-art img{max-width:100%;max-height:100%;object-fit:contain;object-position:center bottom}
+.cart-art .silhueta{display:none;width:30px;height:56px;color:var(--ink-2);stroke-width:var(--art-sw)}
+.cart-art.sem-foto .silhueta{display:block}
 .cart-item .marca{
   font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--ink-2);font-weight:600;
@@ -965,7 +990,17 @@ h3{
 .cart-item .nome{font-size:.86rem;line-height:1.3;margin:2px 0 6px}
 .cart-item .un{font-family:var(--mono);font-size:.68rem;color:var(--ink-2)}
 .cart-item .linha-fim{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.cart-item .acoes{display:flex;align-items:center;gap:6px}
 .cart-item .sub{font-family:var(--mono);font-size:.82rem;font-weight:600;white-space:nowrap}
+/* tirar de uma vez, em vez de clicar "−" até zerar */
+.tirar{
+  width:26px;height:26px;flex:none;
+  display:grid;place-items:center;
+  border:1px solid var(--rule);border-radius:var(--r-btn);
+  color:var(--ink-2);
+  transition:color .14s,border-color .14s,background .14s;
+}
+.tirar:hover{color:var(--on-acc);background:var(--hot);border-color:var(--hot)}
 
 .qtd{display:flex;align-items:center;border:1px solid var(--rule);border-radius:var(--r-btn)}
 .qtd button{
