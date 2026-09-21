@@ -76,8 +76,19 @@ no commit `c000790`, caso seja preciso reprocessar.
 ## Publicar
 
 `.github/workflows/pages.yml` publica a pasta `ZeroGrau/` no GitHub Pages a
-cada push na `main`. Para ligar, uma única vez:
-**Settings → Pages → Source = GitHub Actions**.
+cada push na `main`. O conteúdo dessa pasta vira a raiz do site, então o
+endereço é `https://costamaiavitor.github.io/Site-Zero-Grau/` — sem `ZeroGrau`
+no caminho. É esse endereço que o `og:url` do `index.html` declara.
+
+No plano gratuito, **o Pages só funciona em repositório público**. Em
+repositório privado ele exige GitHub Pro ou superior, e o workflow falha com
+erro de permissão até que uma das duas coisas mude. Com o repositório público,
+não há nada a configurar: o próprio workflow habilita o Pages na primeira
+execução.
+
+Para hospedar sem tornar o repositório público, Netlify, Cloudflare Pages e
+Vercel publicam pasta estática de repositório privado no plano gratuito. Nesse
+caso, troque o `og:url` e o `og:image` pelo domínio novo.
 
 ## Antes de ir ao ar
 
