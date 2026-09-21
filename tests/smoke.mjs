@@ -1,6 +1,6 @@
 /* ==========================================================================
    ZERO GRAU · teste de fumaça
-//
+
    Sobe o site num servidor estático local e passa o Chromium por ele. Cobre o
    que já quebrou alguma vez: busca com acento, entrega fora do raio, o aviso
    de idade travando a página sem JavaScript, manchete estourando a coluna e
@@ -19,7 +19,16 @@ import { fileURLToPath } from 'node:url';
 
 const RAIZ    = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ZeroGrau');
 const FONTES  = process.env.FONTES_DIR || '';
-const LARGURAS = [320, 390, 600, 900, 1280, 1600];
+const LARGURAS = [320, 390, 600, 900, 1024, 1280, 1440, 1600, 1920];
+
+/* Os dois slogans que o sorteio pode trazer. O teste força os dois em vez de
+   aceitar o da vez: medir só o sorteado escondia falha de layout em metade
+   das rodadas — foi exatamente assim que uma passou na branch e falhou na
+   main, no mesmo commit. */
+const SLOGANS = [
+  ['Sexta à noite não é', 'hora de encarar',    'fila de mercado'],
+  ['O rolê não para',     'só porque a gelada', 'acabou']
+];
 
 const TIPOS = {
   '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8',
@@ -250,7 +259,12 @@ for(const largura of LARGURAS){
     if(js) await p.click('#gateYes');
     await p.waitForTimeout(250);
 
-    const r = await p.evaluate(() => {
+    const medir = async slogan => p.evaluate(s => {
+      /* com JS, força o slogan e remede; sem JS, sobra a reserva do CSS */
+      if(s && typeof ajustarManchete === 'function'){
+        document.querySelectorAll('.hero-title span').forEach((el,i) => el.textContent = s[i]);
+        ajustarManchete();
+      }
       const col = document.querySelector('.hero .wrap');
       const cs = getComputedStyle(col);
       const util = col.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
@@ -261,11 +275,18 @@ for(const largura of LARGURAS){
       return { util, larguras,
                scroll: document.documentElement.scrollWidth,
                client: document.documentElement.clientWidth };
-    });
+    }, slogan);
+
     const sufixo = `${largura}px ${js ? 'com' : 'sem'} JS`;
-    ok(`${sufixo}: sem barra horizontal`, r.scroll <= r.client + 1, `${r.scroll} > ${r.client}`);
-    ok(`${sufixo}: manchete dentro da coluna`, r.larguras.every(w => w <= r.util + 1),
-       `${Math.max(...r.larguras).toFixed(0)}px em ${r.util.toFixed(0)}px`);
+    const base = await medir(null);
+    ok(`${sufixo}: sem barra horizontal`, base.scroll <= base.client + 1, `${base.scroll} > ${base.client}`);
+
+    for(const slogan of (js ? SLOGANS : [null])){
+      const r = await medir(slogan);
+      const nome = js ? `${sufixo}: manchete "${slogan[0]}…" cabe` : `${sufixo}: manchete cabe`;
+      ok(nome, r.larguras.every(w => w <= r.util + 1),
+         `${Math.max(...r.larguras).toFixed(1)}px em ${r.util.toFixed(0)}px`);
+    }
     await ctx.close();
   }
 }

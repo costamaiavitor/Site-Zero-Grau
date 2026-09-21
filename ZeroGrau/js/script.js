@@ -703,21 +703,28 @@ function ajustarManchete(){
     r.selectNodeContents(linha);
     const largura = r.getBoundingClientRect().width;
     if(!largura) continue;                       /* fonte ainda não carregou */
-    let corpo = Math.min(util / (largura / CORPO_REF), CORPO_TETO);
-    linha.style.fontSize = corpo.toFixed(2) + "px";
 
-    /* A largura do texto não escala exatamente com o corpo: kerning e hinting
-       mudam de um tamanho para outro, e a regra de três erra por fração —
-       o bastante para a linha passar alguns pixels da coluna em tela larga.
-       Uma passada de correção sobre a medida real fecha a conta. */
-    const r2 = document.createRange();
-    r2.selectNodeContents(linha);
-    const real = r2.getBoundingClientRect().width;
-    if(real > util && real > 0){
-      corpo = Math.min(corpo * (util / real), CORPO_TETO);
-      linha.style.fontSize = corpo.toFixed(2) + "px";
+    /* A largura do texto não escala exatamente com o corpo da fonte: kerning e
+       hinting mudam de um tamanho para outro. A regra de três erra por fração,
+       e a correção sofre da mesma não-linearidade que tenta corrigir — por isso
+       uma passada só não fecha sempre, e a sobra de 1 ou 2 px aparecia ou não
+       conforme o arredondamento. Mede de novo e insiste até caber, com um fio
+       de folga a cada volta para garantir convergência. */
+    let corpo = Math.min(util / (largura / CORPO_REF), CORPO_TETO);
+    let real  = aplicarCorpo(linha, corpo);
+    for(let i = 0; i < 5 && real > util; i++){
+      corpo = corpo * (util / real) * 0.999;
+      real  = aplicarCorpo(linha, corpo);
     }
   }
+}
+
+/* escreve o corpo e devolve a largura que o texto passou a ocupar */
+function aplicarCorpo(linha, corpo){
+  linha.style.fontSize = corpo.toFixed(2) + "px";
+  const r = document.createRange();
+  r.selectNodeContents(linha);
+  return r.getBoundingClientRect().width;
 }
 
 /* as fontes chegam depois do primeiro layout — medir antes daria errado */
