@@ -81,10 +81,11 @@ endereço é `https://costamaiavitor.github.io/Site-Zero-Grau/` — sem `ZeroGra
 no caminho. É esse endereço que o `og:url` do `index.html` declara.
 
 No plano gratuito, **o Pages só funciona em repositório público**. Em
-repositório privado ele exige GitHub Pro ou superior, e o workflow falha com
-erro de permissão até que uma das duas coisas mude. Com o repositório público,
-não há nada a configurar: o próprio workflow habilita o Pages na primeira
-execução.
+repositório privado ele exige GitHub Pro ou superior. Com o repositório
+público não há nada a configurar à mão: o `configure-pages` roda com
+`enablement: true` e liga o Pages pela API na primeira execução — sem esse
+parâmetro, que é `false` por padrão, a action apenas consulta e falha com
+"Get Pages site failed".
 
 Para hospedar sem tornar o repositório público, Netlify, Cloudflare Pages e
 Vercel publicam pasta estática de repositório privado no plano gratuito. Nesse
