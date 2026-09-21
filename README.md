@@ -80,12 +80,17 @@ cada push na `main`. O conteúdo dessa pasta vira a raiz do site, então o
 endereço é `https://costamaiavitor.github.io/Site-Zero-Grau/` — sem `ZeroGrau`
 no caminho. É esse endereço que o `og:url` do `index.html` declara.
 
-No plano gratuito, **o Pages só funciona em repositório público**. Em
-repositório privado ele exige GitHub Pro ou superior. Com o repositório
-público não há nada a configurar à mão: o `configure-pages` roda com
-`enablement: true` e liga o Pages pela API na primeira execução — sem esse
-parâmetro, que é `false` por padrão, a action apenas consulta e falha com
-"Get Pages site failed".
+Duas condições, as duas fora do workflow e só na primeira vez:
+
+1. **Repositório público.** No plano gratuito o Pages não atende repositório
+   privado; em privado exige GitHub Pro ou superior.
+2. **Settings → Pages → Source = GitHub Actions.**
+
+O passo 2 não dá para automatizar: criar o site pela API exige permissão de
+administração, que o `GITHUB_TOKEN` do workflow não recebe — com
+`enablement: true` o `configure-pages` falha em "Resource not accessible by
+integration". Enquanto o site não existir, o deploy morre em "Get Pages site
+failed". Depois de criado uma vez, todo push na `main` publica sozinho.
 
 Para hospedar sem tornar o repositório público, Netlify, Cloudflare Pages e
 Vercel publicam pasta estática de repositório privado no plano gratuito. Nesse

@@ -1,7 +1,13 @@
 # Publica a pasta ZeroGrau/ no GitHub Pages, que passa a ser a raiz do site.
-# Não precisa configurar nada à mão: o enablement do configure-pages liga o
-# Pages pela API na primeira execução. Exige repositório público (ou GitHub
-# Pro), porque no plano gratuito o Pages não atende repositório privado.
+#
+# Duas condições, ambas fora deste arquivo:
+#   1. repositório público (no plano gratuito o Pages não atende repo privado);
+#   2. Settings → Pages → Source = GitHub Actions, uma única vez.
+#
+# O passo 2 não dá para automatizar aqui: criar o site pela API exige permissão
+# de administração, que o GITHUB_TOKEN do workflow não recebe — com
+# `enablement: true` o configure-pages morre em "Resource not accessible by
+# integration". Depois de criado uma vez, todo push na main publica sozinho.
 name: Publicar no Pages
 
 on:
@@ -27,9 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-        with:
-          # sem isto a action só consulta o Pages e falha se ele não existir
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ZeroGrau
