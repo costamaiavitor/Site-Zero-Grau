@@ -57,4 +57,11 @@ Depois do recorte, `ferramentas/padroniza-fotos.py` apara a moldura
 transparente, iguala altura, base e folga entre as 21, e exporta em WebP de 400
 e 200 px de altura, escolhidos pelo navegador conforme a densidade da tela.
 
+A lata do Spaten passa antes por `ferramentas/perspectiva.py`. Ela é a única
+foto do lote tirada com a câmera acima do produto: o corpo afunilava 4,42°,
+contra 0,14° da Estrella, que é outra lata, e destoava na prateleira. A
+retificação projetiva deixou o afunilamento em 0,55°. O aro superior continua
+visível, porque isso está na foto e nenhuma transformação 2D o remove sem
+inventar pixel de um produto real.
+
 Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.

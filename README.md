@@ -83,6 +83,7 @@ Para refazer o lote:
 pip install pillow
 python3 ferramentas/baixa-fotos.py        # frontais do Open Food Facts → /tmp/fonte2
 # subir cada foto ao Adobe e rodar image_remove_background → /tmp/adobe
+python3 ferramentas/perspectiva.py <in> <out>   # só quando a foto é de cima
 python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
 ```
 
