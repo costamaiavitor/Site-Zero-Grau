@@ -36,15 +36,43 @@ A foto do gelo vem do **Wikimedia Commons** (Alicia Fagerving, CC BY-SA 4.0).
 
 ## Tratamento aplicado
 
-1. Download da foto em resolução média
-2. Remoção do fundo por preenchimento a partir das bordas
-3. Reconstrução do miolo em garrafas transparentes, interpolando a cor entre as
-   bordas opacas de cada linha — sem isso o vidro claro some junto com o fundo
-4. Recorte no contorno do produto e normalização em 600 px de altura
-5. Revisão automática: rejeita imagem com buraco interno acima de 7,5 por cento,
-   franja de fundo acima de 16 por cento ou proporção horizontal
-6. Conversão para WebP em dois tamanhos, 200 e 400 px de altura, escolhidos pelo
-   navegador conforme a densidade da tela. Os PNG originais de 600 px ficam no
-   histórico do git, no commit `c000790`, caso seja preciso reprocessar
+O lote foi refeito. O pipeline anterior removia o fundo preenchendo a partir das
+bordas e "reconstruía" o miolo das garrafas transparentes interpolando cor entre
+as bordas opacas — o que deixava o vidro leitoso, além de franja branca em 14
+das 21 imagens, uma elipse de sombra sob o No. 3 e um borrão no saco de gelo.
 
-Todas as 21 imagens do catálogo passam nesse critério.
+Hoje cada imagem vem da melhor origem disponível:
+
+- **11 refeitas da origem**: foto frontal curada do Open Food Facts, buscada por
+  código de barras, quando tem altura suficiente para os 400 px de destino sem
+  ampliar.
+- **10 limpas do recorte anterior**: quando a origem é menor que o que já
+  tínhamos, trocar pioraria. Nesses casos o recorte antigo é corrigido, não
+  substituído.
+
+O recorte em si:
+
+1. Cor do fundo pela mediana da moldura externa da foto
+2. Fundo definitivo por conexão com a borda, e não por limiar global — assim
+   rótulo branco no meio do produto não é confundido com fundo
+3. Silhueta com buracos preenchidos, mantendo só o maior componente
+4. Alfa opaco por dentro, com transição de sub-pixel só na borda
+5. Descontaminação de cor na borda: desfaz a mistura com o branco do estúdio,
+   que é a causa da franja clara
+6. Normalização em 600 px de altura, com a mesma folga para todos
+7. WebP em 200 e 400 px de altura, escolhidos pelo navegador conforme a
+   densidade da tela
+
+Não se tentou dar transparência real ao vidro. Numa foto de fundo branco, vidro
+transparente e rótulo branco têm a mesma cor, e o alfa não os separa: a tentativa
+apagou a metade branca da lata do Red Bull e o texto da Estrella. Rótulo legível
+vale mais que vidro translúcido.
+
+Quatro itens precisaram de ajuste próprio, anotado no processamento: a
+Feldschlösschen (sombra colada na base), o fardo do Spaten (a origem é a lata
+cinza contra parede cinza, e o recorte antigo era melhor), o gelo (borrão escuro
+no mesmo componente do saco, separável só pela posição na borda) e o Monster
+(franja larga).
+
+Os PNG originais de 600 px do primeiro lote ficam no histórico do git, no commit
+`c000790`.

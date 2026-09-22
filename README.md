@@ -70,8 +70,21 @@ com link no rodapé do site, e o detalhamento técnico em
 
 São servidas em WebP em dois tamanhos, escolhidos pelo navegador conforme a
 densidade da tela (`srcset` com descritores `x`, porque o card exibe a foto
-sempre na mesma altura). Os PNG originais de 600 px ficam no histórico do git,
-no commit `c000790`, caso seja preciso reprocessar.
+sempre na mesma altura).
+
+O recorte é gerado por `ferramentas/`, e dá para refazer:
+
+```bash
+pip install pillow numpy scipy
+python3 ferramentas/baixa-fotos.py      # frontais do Open Food Facts → /tmp/fonte2
+python3 ferramentas/processa-fotos.py   # recorta e normaliza → /tmp/novo
+```
+
+`processa-fotos.py` decide, por produto, entre recortar da foto de origem e
+corrigir o recorte que já existe — quando a origem é menor que o atual, trocar
+pioraria. Os quatro produtos que precisaram de ajuste próprio estão anotados lá,
+cada um com o motivo. Os PNG do primeiro lote ficam no histórico do git, no
+commit `c000790`, caso seja preciso reprocessar.
 
 ## Publicar
 

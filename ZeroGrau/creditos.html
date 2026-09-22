@@ -110,14 +110,17 @@
     </table>
 
     <h2>Tratamento aplicado</h2>
+    <p>Onze imagens são recortadas da foto frontal em resolução plena, buscada aqui pelo código de barras. As outras dez vêm de um recorte anterior que foi corrigido, e não refeito: quando a foto de origem é menor que o que já havia, trocar pioraria.</p>
     <ol class="passos">
-      <li>Download da foto em resolução média.</li>
-      <li>Remoção do fundo por preenchimento a partir das bordas.</li>
-      <li>Reconstrução do miolo em garrafas transparentes, interpolando a cor entre as bordas opacas de cada linha — sem isso o vidro claro some junto com o fundo.</li>
-      <li>Recorte no contorno do produto e normalização em 600 px de altura.</li>
-      <li>Revisão automática: rejeita imagem com buraco interno acima de 7,5 por cento, franja de fundo acima de 16 por cento ou proporção horizontal.</li>
-      <li>Conversão para WebP em dois tamanhos, 200 e 400 px de altura, servidos por densidade de tela. As 21 imagens passam no critério de revisão.</li>
+      <li>Cor do fundo pela mediana da moldura externa da foto.</li>
+      <li>Fundo definitivo por conexão com a borda, e não por limiar global — assim um rótulo branco no meio do produto não é confundido com fundo.</li>
+      <li>Silhueta com buracos preenchidos, mantendo só o maior componente conectado. É o que descarta sombra de estúdio e resto de recorte.</li>
+      <li>Alfa opaco por dentro, com transição de sub-pixel apenas na borda.</li>
+      <li>Descontaminação de cor na borda: desfaz a mistura com o branco do estúdio, que é o que causa a franja clara.</li>
+      <li>Normalização em 600 px de altura, com a mesma folga para todos.</li>
+      <li>WebP em 200 e 400 px de altura, escolhidos pelo navegador conforme a densidade da tela.</li>
     </ol>
+    <p>Não se tentou dar transparência real ao vidro. Numa foto de fundo branco, vidro transparente e rótulo branco têm a mesma cor, e o alfa não consegue separá-los — a tentativa apagou a metade branca da lata do Red Bull e o texto da Estrella. Rótulo legível vale mais que vidro translúcido.</p>
 
     <h2>Marcas citadas</h2>
     <p>Os nomes e rótulos de produto pertencem aos respectivos titulares e aparecem aqui para identificar o item à venda. Este site não tem vínculo com nenhum deles.</p>
