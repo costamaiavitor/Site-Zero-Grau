@@ -26,6 +26,14 @@ seções virou vistas que se revezam no mesmo espaço; rola só a lista de
 produtos. Sem JavaScript as vistas voltam a empilhar e a página rola como
 qualquer documento, que é o que o buscador lê.
 
+O varejo abre na vista **Início**, não no catálogo: quem chega precisa saber
+de quem é a loja, quanto custa a entrega e em quanto tempo ela chega antes de
+encarar dezenove rótulos. O catálogo fica a um clique, na aba ou no botão.
+
+As duas lojas têm o botão **Trocar conta** no topo: ele limpa o documento
+desta aba e reabre a porta. Num site que escolhe a vitrine pelo documento,
+errar o documento não pode ser sem saída.
+
 ## Rodar
 
 ```bash

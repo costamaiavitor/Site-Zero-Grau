@@ -522,8 +522,8 @@ if(!semMovimento){
    o script não rode. */
 const heroLinhas = [...document.querySelectorAll(".manchete span")];
 const CORPO_REF  = 100;   /* px — só para medir */
-const CORPO_TETO = 40;    /* px — numa tela só, a manchete cede espaço à vitrine */
-const CORPO_TETO_M = 22;  /* px — no celular ela cede mais ainda: a vitrine vem primeiro */
+const CORPO_TETO = 84;    /* px — a manchete tem vista própria, então pode respirar */
+const CORPO_TETO_M = 30;  /* px — no celular, o bastante para caber com o resto da abertura */
 const CORPO_PISO = 11;    /* px — abaixo disso não é manchete, é rodapé */
 
 function ajustarManchete(){
@@ -599,10 +599,8 @@ heroLinhas.forEach((el, i) => el.textContent = slogan[i]);
 const abas = $("abas");
 
 function mostrarVista(nome){
-  for(const b of abas.querySelectorAll(".app-aba")){
-    const on = b.dataset.vista === nome;
-    b.setAttribute("aria-selected", String(on));
-  }
+  for(const b of abas.querySelectorAll(".app-aba"))
+    b.setAttribute("aria-selected", String(b.dataset.vista === nome));
   /* quem esconde é o CSS, pela classe: .js .vista{display:none} e
      .js .vista.ativa{display:flex}. Marcar `hidden` aqui também tiraria as
      outras vistas do documento sem script, e sem script elas são justamente
@@ -610,17 +608,23 @@ function mostrarVista(nome){
   for(const v of document.querySelectorAll(".vista"))
     v.classList.toggle("ativa", v.id === "v-" + nome);
   /* a manchete só tem largura quando a vista dela está à mostra */
-  if(nome === "catalogo") ajustarManchete();
+  if(nome === "inicio") ajustarManchete();
 }
 
-abas.addEventListener("click", e => {
-  const b = e.target.closest(".app-aba");
-  if(b) mostrarVista(b.dataset.vista);
+/* Um ouvinte só, no documento: serve as abas do topo, o botão "Ver o
+   catálogo" da abertura e o link de pular do teclado. Três lugares diferentes
+   pedindo a mesma coisa não precisam de três ouvintes. */
+document.addEventListener("click", e => {
+  const alvo = e.target.closest("[data-vista]");
+  if(alvo) mostrarVista(alvo.dataset.vista);
 });
 
-mostrarVista("catalogo");
+/* A porta abre na abertura, não na prateleira: quem chega precisa saber de
+   quem é a loja, quanto custa a entrega e em quanto tempo ela chega antes de
+   encarar dezenove rótulos. */
+mostrarVista("inicio");
 
-/* quem clica numa categoria a partir de outra vista volta para o catálogo */
+/* quem clica numa categoria a partir de outra vista vai para o catálogo */
 document.addEventListener("click", e => {
   if(e.target.closest("[data-ir]")) mostrarVista("catalogo");
 });

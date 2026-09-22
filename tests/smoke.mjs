@@ -88,13 +88,21 @@ async function contexto({ js = true, largura = 1280 } = {}){
 const externo = t => /fonts\.(googleapis|gstatic)\.com|ERR_CERT_AUTHORITY_INVALID/.test(t);
 
 /* A porta são duas perguntas: idade e documento. Quase todo teste começa
-   passando por ela, então passa por aqui. */
-async function entrar(p, doc = CPF){
+   passando por ela, então passa por aqui.
+
+   Depois da porta o varejo abre na vista de abertura, não no catálogo, e a
+   grade fica escondida — por isso o padrão é seguir para o catálogo. Quem
+   quiser testar a abertura passa `vista: null`. */
+async function entrar(p, doc = CPF, vista = 'catalogo'){
   await p.click('#gateYes');
   await p.waitForTimeout(120);
   await p.fill('#docInput', doc);
   await p.click('#docBtn');
   await p.waitForTimeout(250);
+  if(vista){
+    const aba = await p.$(`.app-aba[data-vista="${vista}"]`);
+    if(aba){ await aba.click(); await p.waitForTimeout(150); }
+  }
 }
 
 /* ====================================================================== */
@@ -216,7 +224,9 @@ secao('CEP e entrega');
   const ctx = await contexto();
   const p = await ctx.newPage();
   await p.goto(BASE, { waitUntil:'networkidle' });
-  await entrar(p);
+  /* o campo do CEP mora na vista de abertura, que é onde a porta deixa a
+     pessoa — por isso este teste fica lá em vez de ir ao catálogo */
+  await entrar(p, CPF, null);
   /* acima do pedido mínimo de propósito: abaixo dele o aviso do carrinho fala
      do mínimo, que é a informação certa a dar primeiro — e não da entrega */
   await p.evaluate(() => { for(let i=0;i<6;i++) document.querySelector('.card:not(.hide) .add').click(); });
@@ -276,11 +286,12 @@ secao('Sem JavaScript o site continua utilizável');
   ok('a identificação também não tranca', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
   ok('o catálogo continua alcançável', await p.$eval('#grid', e => !!e));
   ok('a manchete tem texto', (await p.$eval('.manchete', e => e.textContent.trim())).length > 0);
-  /* sem script não há abas para trocar de vista: as quatro têm de estar
-     visíveis e empilhadas, senão três quartos do site somem para quem não tem
-     JavaScript — e para o buscador */
+  /* sem script não há abas para trocar de vista: todas têm de estar visíveis e
+     empilhadas, senão a maior parte do site some para quem não tem JavaScript
+     — e para o buscador */
   const vistas = await p.$$eval('.vista', e => e.map(v => getComputedStyle(v).display !== 'none'));
-  ok('as quatro vistas ficam à mostra', vistas.length === 4 && vistas.every(Boolean), vistas.join(','));
+  ok(`as ${vistas.length} vistas ficam à mostra`,
+     vistas.length === 5 && vistas.every(Boolean), vistas.join(','));
   await ctx.close();
 }
 
@@ -318,6 +329,17 @@ secao('A porta separa as duas lojas');
   await p2.waitForTimeout(300);
   ok('com a chave desligada, 11 dígitos quaisquer entram',
      await p2.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+
+  /* quem entra não cai na prateleira: a abertura vem primeiro */
+  ok('o varejo abre na vista de abertura',
+     await p2.$eval('#v-inicio', e => e.classList.contains('ativa')));
+  ok('e o catálogo começa escondido',
+     await p2.$eval('#v-catalogo', e => getComputedStyle(e).display === 'none'));
+  await p2.click('.abertura-btns [data-vista="catalogo"]');
+  await p2.waitForTimeout(200);
+  ok('o botão da abertura leva ao catálogo',
+     await p2.$eval('#v-catalogo', e => e.classList.contains('ativa')));
+  ok('e a grade aparece', await p2.$eval('#grid', e => getComputedStyle(e).display !== 'none'));
 
   /* A chave está desligada na porta, mas o algoritmo continua no arquivo e
      volta a valer com uma linha. Testar aqui é o que impede de ele apodrecer
@@ -366,6 +388,22 @@ secao('A porta separa as duas lojas');
   await p4.click('.app-pe a[data-loja="atacado"]');
   await p4.waitForTimeout(600);
   ok('CPF no atacado esbarra na porta', /CNPJ/.test(await p4.textContent('#docMsg')), await p4.textContent('#docMsg'));
+
+  /* o botão de trocar conta existe nas duas lojas e devolve para a porta */
+  for(const [pag, doc, nome] of [['index.html', CPF, 'varejo'], ['atacado.html', CNPJ, 'atacado']]){
+    const pt = await ctx.newPage();
+    await pt.goto(`${BASE}/${pag}`, { waitUntil:'networkidle' });
+    await entrar(pt, doc, null);
+    await pt.waitForTimeout(250);
+    const botao = await pt.$('.conta-btn[data-trocar]');
+    ok(`${nome}: tem botão de trocar conta`, !!botao);
+    if(!botao) continue;
+    await botao.click();
+    await pt.waitForTimeout(250);
+    ok(`${nome}: trocar conta reabre a porta`,
+       await pt.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
+    ok(`${nome}: e o campo volta vazio`, (await pt.inputValue('#docInput')) === '');
+  }
   await ctx.close();
 }
 
@@ -456,7 +494,7 @@ for(const largura of LARGURAS){
     const p = await ctx.newPage();
     await p.goto(BASE, { waitUntil:'networkidle' });
     await p.evaluate(() => document.fonts.ready).catch(() => {});
-    if(js) await entrar(p);
+    if(js) await entrar(p, CPF, null);
     await p.waitForTimeout(250);
 
     const medir = async slogan => p.evaluate(s => {

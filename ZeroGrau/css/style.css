@@ -1415,3 +1415,59 @@ h3{
   .price b{font-size:1.16rem}
   .badges{top:7px;left:7px;gap:4px}
 }
+
+/* ============ 27. VISTA DE ABERTURA ============
+   Cair direto no catálogo é entrar numa loja pela porta dos fundos: não dá
+   tempo de dizer quem é a casa, quanto custa a entrega nem em quanto tempo
+   ela chega. A abertura é uma vista como as outras — não volta a rolar a
+   página, e a aba do catálogo fica a um clique. */
+.abertura{
+  max-width:var(--wrap);margin-inline:auto;width:100%;
+  display:grid;gap:clamp(14px,2.2vw,26px);
+  align-content:center;min-height:100%;
+}
+.abertura .hero-eyebrow{margin-bottom:0}
+.abertura .hero-stats{margin-top:0}
+.abertura-corpo{
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
+  gap:18px 40px;align-items:end;
+}
+.abertura-corpo > *{min-width:0}
+.abertura-corpo .lead{max-width:52ch;margin:0}
+.abertura-btns{display:flex;gap:12px;flex-wrap:wrap}
+@media(max-width:820px){
+  .abertura-corpo{grid-template-columns:1fr;gap:14px}
+  .abertura .hero-eyebrow span:nth-child(n+3){display:none}
+}
+
+/* ============ 28. BOTÃO DE CONTA ============
+   Trocar de conta é o caminho de volta para a porta: limpa o documento desta
+   aba e pergunta de novo. Existe igual nas duas lojas, porque num site que
+   decide a vitrine pelo documento, errar o documento não pode ser sem saída. */
+.conta-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  height:38px;padding:0 12px;
+  border:1px solid var(--rule);border-radius:var(--r-btn);
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;
+  color:var(--ink-2);white-space:nowrap;
+  transition:border-color .16s,color .16s;
+}
+.conta-btn:hover{border-color:var(--ink);color:var(--ink)}
+.conta-btn svg{flex:none}
+.conta-doc{color:var(--ink);letter-spacing:.02em}
+.conta-doc:empty{display:none}
+@media(max-width:1100px){.conta-txt{display:none}}
+@media(max-width:620px){.conta-doc{display:none}}
+
+/* No celular a abertura tem de caber inteira, com o botão do catálogo à vista:
+   uma chamada para a ação abaixo da dobra numa vista que não rola a página é
+   uma chamada que ninguém vê. */
+@media(max-width:560px){
+  .abertura{gap:11px}
+  .abertura .lead{font-size:.92rem;line-height:1.5}
+  .abertura .cep-label{margin-bottom:6px}
+  .abertura .hstat{padding:11px}
+  .abertura .hstat b{font-size:1.3rem}
+  .abertura .hstat span{font-size:.6rem;margin-top:5px;letter-spacing:.1em}
+  .abertura-btns .btn{flex:1;justify-content:center}
+}
