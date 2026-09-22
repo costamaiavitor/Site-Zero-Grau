@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="balcao">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero Grau · Atacado · Tabela de preços para revenda</title>
+<meta name="description" content="Balcão de atacado da Zero Grau Distribuidora: tabela por caixa fechada, preço de revenda e pedido mínimo de R$ 500. Acesso por CNPJ.">
+<meta name="theme-color" content="#101418">
+<meta name="robots" content="noindex,follow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/temas.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body data-publico="atacado">
+
+<!-- ============ SPRITE: silhuetas de reserva ============ -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="s-bottle" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M21.5 10h17v8.5c0 3.6.7 5.8 2.4 9.2l3.2 6.4c1.6 3.2 2.2 5.8 2.2 9.4V145c0 4-2.6 6.6-6.6 6.6H20.3c-4 0-6.6-2.6-6.6-6.6V43.5c0-3.6.6-6.2 2.2-9.4l3.2-6.4c1.7-3.4 2.4-5.6 2.4-9.2z"/>
+      <path d="M21.5 4.5h17V10h-17z"/>
+    </symbol>
+    <symbol id="s-can" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M15 26.5c0-3.2 2.3-5 15-5s15 1.8 15 5v107c0 3.2-2.3 5-15 5s-15-1.8-15-5z"/>
+      <ellipse cx="30" cy="26.5" rx="15" ry="5"/>
+    </symbol>
+    <symbol id="s-tall" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M23.6 9h12.8v17.6l5.5 8.2c2 3 2.8 5.4 2.8 9V145c0 4-2.6 6.6-6.6 6.6H22c-4 0-6.6-2.6-6.6-6.6V43.8c0-3.6.8-6 2.8-9l5.4-8.2z"/>
+      <path d="M22.6 3.5h14.8V13H22.6z"/>
+    </symbol>
+    <symbol id="s-pet" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M22 12h16v6.4c0 2.8 1 4.4 2.9 6.2l3.3 3.2c2.6 2.6 3.4 4.8 3.4 8.2V145c0 4-2.6 6.6-6.6 6.6H19c-4 0-6.6-2.6-6.6-6.6V36c0-3.4.8-5.6 3.4-8.2l3.3-3.2c1.9-1.8 2.9-3.4 2.9-6.2z"/>
+      <path d="M21.4 5h17.2v7.2H21.4z"/>
+    </symbol>
+    <symbol id="s-saco" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
+      <path d="M16.6 26h26.8l3.6 13.6c1.3 4.8 1.8 8.2 1.8 13V141c0 6.2-3.4 9.8-9.6 9.8H20.8c-6.2 0-9.6-3.6-9.6-9.8V52.6c0-4.8.5-8.2 1.8-13z"/>
+      <path d="M16.6 26 15 13.4h30L43.4 26"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ AVISO DE IDADE ============
+     Nasce fechado; quem abre é o script. Ver o cabeçalho de js/porta.js. -->
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Atacado</small></div>
+    </div>
+    <h3 id="gateTitle">Você tem 18 anos ou mais?</h3>
+    <p>A venda de bebida alcoólica é proibida para menores de 18 anos. O entregador confere um documento com foto na entrega.</p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" id="gateYes">Tenho 18 ou mais</button>
+      <a class="btn btn-ghost" href="https://www.gov.br" rel="noopener">Sou menor</a>
+    </div>
+    <small class="gate-legal">Lei nº 13.106/2015 · Aprecie com moderação. Se for dirigir, não beba.</small>
+  </div>
+</div>
+
+<!-- ============ IDENTIFICAÇÃO ============ -->
+<div class="gate porta" id="porta" role="dialog" aria-modal="true" aria-labelledby="portaTitle" aria-hidden="true">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+    </div>
+    <h3 id="portaTitle">CPF ou CNPJ</h3>
+    <p>É o que separa as duas lojas: com CPF você entra na vitrine de varejo; com CNPJ, no balcão de atacado, que vende por caixa fechada e com preço de revenda.</p>
+    <label class="doc-campo">
+      <span class="tag">Documento</span>
+      <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
+    </label>
+    <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
+    <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" id="docBtn">Entrar</button>
+    </div>
+    <small class="gate-legal">Conferimos só o dígito verificador do número. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
+  </div>
+</div>
+
+<!-- ============ TOPO ============ -->
+<header class="bal-topo">
+  <a href="atacado.html" class="logo" aria-label="Zero Grau, atacado">
+    <div class="logo-mark" aria-hidden="true">0°</div>
+    <div class="logo-word">Zero Grau<small>Atacado</small></div>
+  </a>
+
+  <div class="bal-doc">
+    <span class="tag">CNPJ</span>
+    <b class="num" data-doc>—</b>
+    <button class="link" data-trocar>trocar</button>
+  </div>
+
+  <div class="bal-acoes">
+    <a class="link bal-varejo" href="index.html" data-loja="varejo">Ver a loja de varejo</a>
+    <button class="cart-btn" id="cartBtn" aria-label="Abrir o pedido">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 5h3l2.4 11.2A2 2 0 0 0 10.4 18h8.2a2 2 0 0 0 2-1.6L22 8H6.6"/><circle cx="10.5" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+      </svg>
+      <span class="cart-total num" id="cartTotal"></span>
+      <b class="num" id="cartCount">0</b>
+    </button>
+  </div>
+</header>
+
+<!-- ============ FILTROS ============ -->
+<div class="bal-filtros">
+  <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
+    <button class="tab active" data-cat="all" role="tab" aria-selected="true" aria-controls="tabela">Tudo</button>
+  </div>
+  <div class="busca">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="buscaInput" type="search" placeholder="Buscar marca ou produto" aria-label="Buscar na tabela" autocomplete="off">
+  </div>
+</div>
+
+<!-- ============ TABELA E PEDIDO ============ -->
+<main class="bal-corpo">
+  <div class="bal-lista">
+    <table class="tabela-atacado" id="tabela">
+      <thead>
+        <tr>
+          <th scope="col">Produto</th>
+          <th scope="col" class="n">Caixa</th>
+          <th scope="col" class="n">Unidade</th>
+          <th scope="col" class="n">Por caixa</th>
+          <th scope="col" class="n">Estoque</th>
+          <th scope="col" class="n">Caixas</th>
+        </tr>
+      </thead>
+      <tbody id="linhas"></tbody>
+    </table>
+    <p class="sem-resultado" id="semResultado" hidden>Nenhum item encontrado. <button class="link" id="limparBusca">Limpar busca</button></p>
+  </div>
+
+  <aside class="pedido" id="pedido" aria-label="Resumo do pedido">
+    <header class="pedido-topo">
+      <h2>Pedido</h2>
+      <button class="cart-close" id="pedidoClose" aria-label="Fechar o pedido">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="pedido-itens" id="pedidoItens"></div>
+    <p class="pedido-vazio" id="pedidoVazio">Nenhuma caixa no pedido.</p>
+
+    <dl class="cart-resumo">
+      <div><dt>Caixas</dt><dd class="num" id="rCaixas">0</dd></div>
+      <div><dt>Mercadoria</dt><dd class="num" id="rSub">R$ 0,00</dd></div>
+      <div id="linhaFaixa" hidden><dt>Desconto por volume <span id="rFaixaNome"></span></dt><dd class="num desconto" id="rFaixa">− R$ 0,00</dd></div>
+      <div><dt>Frete</dt><dd class="num" id="rFrete">—</dd></div>
+      <div class="cart-total-linha"><dt>Total</dt><dd class="num" id="rTotal">R$ 0,00</dd></div>
+    </dl>
+
+    <p class="cart-aviso" id="pedidoAviso" role="status" aria-live="polite"></p>
+    <button class="btn btn-primary" id="enviar" disabled>Enviar pedido pelo WhatsApp</button>
+    <small class="pedido-nota" id="pedidoNota"></small>
+  </aside>
+</main>
+
+<!-- ============ RODAPÉ DE OPERAÇÃO ============ -->
+<footer class="bal-pe">
+  <span><b data-total="itens">19</b> itens em tabela</span>
+  <span>Pedido mínimo <b class="num" data-reg="minimo"></b></span>
+  <span>Frete grátis acima de <b class="num" data-reg="freteGratis"></b></span>
+  <span class="bal-pe-larga">Retirada no CD ou entrega em Fortaleza e região</span>
+  <a href="creditos.html">Créditos das imagens</a>
+</footer>
+
+<div class="cart-overlay" id="pedidoOverlay" hidden></div>
+
+<button class="bal-barra" id="barra" aria-controls="pedido">
+  <span><b class="num" id="barraCaixas">0</b> caixas</span>
+  <b class="num" id="barraTotal">R$ 0,00</b>
+  <span class="bal-barra-cta">Ver pedido</span>
+</button>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+  <span id="toastMsg"></span>
+</div>
+
+<script src="js/dados.js"></script>
+<script src="js/porta.js"></script>
+<script src="js/atacado.js"></script>
+</body>
+</html>

@@ -130,3 +130,63 @@
 }
 [data-tema="madrugada"] .btn-ghost{border-color:var(--acc-2);color:var(--acc-2)}
 [data-tema="madrugada"] .btn-ghost:hover{background:var(--acc-2);color:var(--paper);border-color:var(--acc-2)}
+
+/* ============ BALCÃO ============
+   A pele do atacado. Não é a Madrugada com menos brilho: é outro registro.
+
+   Quem compra para revender está trabalhando, de manhã, conferindo margem
+   linha a linha. Letreiro de neon em fundo preto atrapalha isso — tabela de
+   preço quer papel claro, tinta escura, número tabular e um acento só, que
+   sirva para marcar o que está no pedido e nada mais. O rosa da marca fica
+   no selo do logo, que é onde ele identifica em vez de decorar.
+   ========================================================================== */
+[data-tema="balcao"]{
+  --paper:#F2F3F5;
+  --paper-2:#E7EAEE;
+  --paper-blur:rgba(242,243,245,.94);
+  --card:#FFFFFF;
+  --deep:#101418;
+  --deep-2:#1A2026;
+
+  --ink:#101418;
+  --ink-2:#5A646E;
+  --ink-on-deep:#E6E9EC;
+  --ink-2-on-deep:#9AA4AE;
+
+  --rule:#C6CCD3;
+  --rule-2:#E0E4E8;
+  --rule-deep:#2A323A;
+
+  --acc:#14364F;         /* azul de tinta, não de letreiro */
+  --acc-2:#0E6E5C;
+  --acc-wash:#E2EAF0;
+  --on-acc:#FFFFFF;
+  --hot:#A32525;
+  --ok:#0E6E5C;
+  --marca:#C8286A;       /* o rosa da casa, reservado ao selo */
+
+  --display:"Gabarito",system-ui,sans-serif;
+  --body:"Manrope",system-ui,sans-serif;
+  --mono:"Manrope",system-ui,sans-serif;
+
+  --h-wght:800;
+  --h-wght-2:700;
+  --h-tt:none;           /* caixa alta em tabela cansa a leitura */
+  --h-ls:-.015em;
+  --h-lh:1.15;
+
+  --r:3px;
+  --r-btn:3px;
+  --r-card:3px;
+  --r-badge:2px;
+  --sh-btn:none;
+  --sh-card:0 0 0 0 transparent;
+  --grao:0;              /* grão é textura de cartaz; aqui é documento */
+}
+
+[data-tema="balcao"] .logo-mark{
+  border-color:var(--marca);
+  color:var(--marca);
+}
+[data-tema="balcao"] .btn-primary{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+[data-tema="balcao"] .btn-primary:hover{background:var(--deep);border-color:var(--deep)}

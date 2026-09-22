@@ -1,104 +1,10 @@
 /* ==========================================================================
-   ZERO GRAU · comportamento da vitrine
+   ZERO GRAU · comportamento da vitrine de varejo
+
+   Catálogo, contato e regras vêm de js/dados.js; o aviso de idade e a
+   identificação por CPF/CNPJ vêm de js/porta.js. Aqui fica só o que é desta
+   página.
    ========================================================================== */
-
-/* ---------- 1. ESTOQUE ----------
-   sku:   identidade do produto. É a chave do carrinho e do localStorage, e
-          existe separada de `foto` de propósito: a foto pode faltar, mudar de
-          nome ou chegar depois, e nada disso pode mexer no que o cliente já
-          colocou no carrinho.
-   cat:   a categoria de verdade — cada aba da vitrine e cada card de categoria
-          da home apontam para uma destas, sem apelido e sem agrupamento
-          escondido.
-   forma: bottle (long neck) · can (lata) · tall (destilado/vinho) · pet
-          (garrafão) · saco (gelo/carvão). É a silhueta de reserva.
-   foto:  nome-base do arquivo em img/. O card monta img/<foto>-200.webp e
-          img/<foto>-400.webp; se não existir, cai na silhueta — dá para ir
-          subindo as fotos uma a uma sem quebrar nada. */
-const BEBIDAS = [
-  {sku:"estrella-galicia-330",  marca:"Estrella Galicia",  nome:"Cerveza Especial · lata 330 ml", cat:"cerveja",    foto:"estrella-galicia-330",   forma:"can",    vol:"330 ml", teor:"5,5%",  preco:8.90,   promo:6.90,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:240},
-  {sku:"guinness-draught-500",  marca:"Guinness",          nome:"Draught Stout 500 ml",           cat:"cerveja",    foto:"guinness-draught-500",   forma:"can",    vol:"500 ml", teor:"4,2%",  preco:22.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:96},
-  {sku:"feldschlosschen-500",   marca:"Feldschlösschen",   nome:"Original 500 ml",                cat:"cerveja",    foto:"feldschlosschen-500",    forma:"can",    vol:"500 ml", teor:"4,8%",  preco:15.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:0},
-
-  {sku:"jack-daniels-1l",       marca:"Jack Daniel's",     nome:"Old No. 7 · 1 L",                cat:"destilado",  foto:"jack-daniels-1l",        forma:"tall",   vol:"1 L",    teor:"40%",   preco:189.90, promo:null,   gelada:false, retornavel:false,               alcoolica:true,  estoque:14},
-  {sku:"absolut-1l",            marca:"Absolut",           nome:"Vodka Original 1 L",             cat:"destilado",  foto:"absolut-1l",             forma:"tall",   vol:"1 L",    teor:"40%",   preco:89.90,  promo:74.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:52},
-  {sku:"absolut-mango-1l",      marca:"Absolut",           nome:"Vodka Mango 1 L",                cat:"destilado",  foto:"absolut-mango-1l",       forma:"tall",   vol:"1 L",    teor:"38%",   preco:94.90,  promo:79.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:31},
-  {sku:"ivanov-vodka-1l",       marca:"Ivanov",            nome:"Imperial Vodka 1 L",             cat:"destilado",  foto:"ivanov-vodka-1l",        forma:"tall",   vol:"1 L",    teor:"37,5%", preco:44.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:120},
-  {sku:"tanqueray-750",         marca:"Tanqueray",         nome:"London Dry Gin 750 ml",          cat:"destilado",  foto:"tanqueray-750",          forma:"tall",   vol:"750 ml", teor:"47,3%", preco:129.90, promo:109.90, gelada:false, retornavel:false,               alcoolica:true,  estoque:21},
-  {sku:"no3-gin-700",           marca:"No. 3",             nome:"London Dry Gin 700 ml",          cat:"destilado",  foto:"no3-gin-700",            forma:"tall",   vol:"700 ml", teor:"46%",   preco:189.90, promo:null,   gelada:false, retornavel:false,               alcoolica:true,  estoque:8},
-  {sku:"seagrams-gin-700",      marca:"Seagram's",         nome:"Extra Dry Gin 700 ml",           cat:"destilado",  foto:"seagrams-gin-700",       forma:"tall",   vol:"700 ml", teor:"40%",   preco:69.90,  promo:57.90,  gelada:false, retornavel:false,               alcoolica:true,  estoque:64},
-
-  {sku:"martini-rosso-1l",      marca:"Martini",           nome:"Rosso 1 L",                      cat:"vinho",      foto:"martini-rosso-1l",       forma:"tall",   vol:"1 L",    teor:"15%",   preco:64.90,  promo:52.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:26},
-  {sku:"villageoise-branco-250",marca:"La Villageoise",    nome:"Vinho Branco Seco 250 ml",       cat:"vinho",      foto:"villageoise-branco-250", forma:"tall",   vol:"250 ml", teor:"11%",   preco:12.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:88},
-  {sku:"coventry-fizz-750",     marca:"Coventry",          nome:"Fizz Elderflower 750 ml",        cat:"vinho",      foto:"coventry-fizz-750",      forma:"tall",   vol:"750 ml", teor:"5,5%",  preco:39.90,  promo:32.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:37},
-  {sku:"smirnoff-ice-275",      marca:"Smirnoff",          nome:"Ice Tropical 275 ml",            cat:"vinho",      foto:"smirnoff-ice-275",       forma:"bottle", vol:"275 ml", teor:"5%",    preco:11.90,  promo:9.90,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:210},
-
-  {sku:"red-bull-250",          marca:"Red Bull",          nome:"Energy Drink 250 ml",            cat:"energetico", foto:"red-bull-250",           forma:"can",    vol:"250 ml", teor:"0%",    preco:9.90,   promo:7.90,   gelada:true,  retornavel:false,               alcoolica:false, estoque:310},
-  {sku:"monster-ultra-500",     marca:"Monster",           nome:"Energy Ultra 500 ml",            cat:"energetico", foto:"monster-ultra-500",      forma:"can",    vol:"500 ml", teor:"0%",    preco:12.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:false, estoque:150},
-
-  {sku:"coca-cola-2l",          marca:"Coca-Cola",         nome:"Sabor Original 2 L",             cat:"agua",       foto:"coca-cola-2l",           forma:"pet",    vol:"2 L",    teor:"0%",    preco:11.90,  promo:null,   gelada:true,  retornavel:true, casco:2.00,    alcoolica:false, estoque:150},
-  {sku:"evian-15l",             marca:"Evian",             nome:"Água Mineral 1,5 L",             cat:"agua",       foto:"evian-15l",              forma:"pet",    vol:"1,5 L",  teor:"0%",    preco:8.90,   promo:null,   gelada:true,  retornavel:false,               alcoolica:false, estoque:420},
-
-  {sku:"gelo-cubos-5kg",        marca:"Zero Grau",         nome:"Gelo em Cubos 5 kg",             cat:"gelo",       foto:"gelo-cubos-5kg",         forma:"saco",   vol:"5 kg",   teor:"—",     preco:14.90,  promo:11.90,  gelada:true,  retornavel:false,               alcoolica:false, estoque:88}
-];
-
-/* Rótulo de cada categoria, na ordem em que aparecem nas abas e nos cards.
-   É a única lista de categorias do site: abas, cards da home e contagens
-   saem toda daqui, então não há como uma discordar da outra. */
-const CATEGORIAS = [
-  {id:"cerveja",    nome:"Cervejas",              detalhe:"long neck, lata, 600 ml"},
-  {id:"destilado",  nome:"Destilados",            detalhe:"whisky, vodka, gin"},
-  {id:"vinho",      nome:"Vinhos e espumantes",   detalhe:"tinto, branco, rosé"},
-  {id:"energetico", nome:"Energéticos",           detalhe:"lata avulsa e fardo"},
-  {id:"agua",       nome:"Águas e refrigerantes", detalhe:"2 L, 1,5 L, lata"},
-  {id:"gelo",       nome:"Gelo e carvão",         detalhe:"sacos de 5 kg e 10 kg"}
-];
-
-/* ---------- CONTATO ----------
-   ⚠ VALORES DE EXEMPLO — trocar pelos reais antes de publicar.
-   Tudo o que identifica a loja mora aqui e é escrito na página pelo script,
-   para que trocar o número não vire uma caça a string espalhada pelo HTML.
-   O mesmo vale para o CNPJ e o endereço no rodapé. */
-const CONTATO = {
-  whatsapp:  "https://wa.me/5585999999999",
-  telefone:  "(85) 3000-0000",
-  email:     "oi@zerograu.com.br",
-  cnpj:      "00.000.000/0001-00",
-  endereco:  "Av. Santos Dumont, 1580",
-  bairro:    "Aldeota · Fortaleza / CE",
-  instagram: "#",
-  facebook:  "#"
-};
-
-/* taxa de entrega — mesma regra usada no diagrama de zonas */
-const TAXA_BASE = 4.90;
-const TAXA_KM   = 1.20;
-const RAIO_MAX  = 12;
-
-const brl = v => v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
-const $   = id => document.getElementById(id);
-
-/* "Água" e "agua" têm de achar a mesma coisa. Tira o acento por decomposição
-   e joga para minúscula: vale para o que o cliente digita e para o texto do
-   card, então os dois lados se encontram no meio. */
-const semAcento = s => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-
-/* Altura da silhueta em função do volume, para que a estante fique proporcional.
-   Escala logarítmica: na prateleira uma garrafa de 2 L não é oito vezes maior
-   que uma lata de 250 ml. */
-function alturaSilhueta(vol){
-  const n = parseFloat(vol.replace(",", "."));
-  const ml = /\bL\b/.test(vol) ? n * 1000
-           : /kg/.test(vol)    ? n * 300   /* saco de gelo, aproximado pelo volume ocupado */
-           : n;
-  const t = Math.min(1, Math.max(0, Math.log(ml / 250) / Math.log(2000 / 250)));
-  return Math.round(140 + t * 46);
-}
-
-/* A foto ocupa sempre a mesma altura na tela (o .card-art é fixo), então o que
-   muda de aparelho para aparelho é só a densidade — daí descritor x, e não w. */
-const fotoAttrs = foto =>
-  `src="img/${foto}-200.webp" srcset="img/${foto}-200.webp 1x, img/${foto}-400.webp 2x"`;
 
 /* ---------- 2. VITRINE ---------- */
 function cardHTML(b){
@@ -166,8 +72,6 @@ const porCategoria = cat => BEBIDAS.filter(b => b.cat === cat).length;
 const unidades     = BEBIDAS.reduce((t, b) => t + b.estoque, 0);
 const emEstoque    = BEBIDAS.filter(b => b.estoque > 0).length;
 
-$("estoqueTotal").textContent = `${BEBIDAS.length} itens · ${unidades.toLocaleString("pt-BR")} unidades`;
-
 for(const el of document.querySelectorAll("[data-conta]")){
   const n = porCategoria(el.dataset.conta);
   el.textContent = `${n} ${n === 1 ? "item" : "itens"}`;
@@ -176,7 +80,8 @@ for(const el of document.querySelectorAll("[data-total]")){
   el.textContent = {
     itens:      BEBIDAS.length,
     disponivel: emEstoque,
-    categorias: CATEGORIAS.length
+    categorias: CATEGORIAS.length,
+    unidades:   unidades.toLocaleString("pt-BR")
   }[el.dataset.total];
 }
 
@@ -189,6 +94,12 @@ for(const el of document.querySelectorAll("[data-contato]")){
   else if(k === "whatsapp" || k === "instagram" || k === "facebook"){ el.href = CONTATO[k]; }
   else el.textContent = CONTATO[k];
 }
+
+/* As abas saem da mesma lista de categorias do atacado: escrever os rótulos à
+   mão no HTML era como as duas páginas discordariam primeiro. */
+$("tabs").insertAdjacentHTML("beforeend", CATEGORIAS.map(c =>
+  `<button class="tab" data-cat="${c.id}" role="tab" aria-selected="false" aria-controls="grid">${c.nome}</button>`
+).join(""));
 
 /* ---------- 4. BUSCA E FILTRO DE CATEGORIA ----------
    Filtro e busca são a mesma operação: cada card decide se aparece a partir do
@@ -249,31 +160,9 @@ document.addEventListener("click", e => {
   irParaCategoria(alvo.dataset.ir);
 });
 
-/* ---------- 5. FOCO PRESO ----------
-   Um diálogo que cobre a tela mas deixa o Tab passear pelo conteúdo atrás não
-   é um diálogo. Vale para o aviso de idade e para o carrinho. */
-const FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
-
-function prenderFoco(caixa){
-  return e => {
-    if(e.key !== "Tab") return;
-    const alvos = [...caixa.querySelectorAll(FOCAVEIS)].filter(el => el.offsetParent !== null);
-    if(!alvos.length) return;
-    const primeiro = alvos[0], ultimo = alvos[alvos.length - 1];
-    if(e.shiftKey && document.activeElement === primeiro){ e.preventDefault(); ultimo.focus(); }
-    else if(!e.shiftKey && document.activeElement === ultimo){ e.preventDefault(); primeiro.focus(); }
-  };
-}
-
 /* ---------- 6. CARRINHO ----------
    Estado em memória: mapa de sku -> {item, qtd}. O total é sempre recalculado
    a partir do estado, nunca acumulado — evita divergência depois de remover. */
-const REGRAS = {
-  minimo: 30,          /* pedido mínimo, em reais */
-  freteGratis: 120,    /* acima disso a entrega sai de graça */
-  cupom: {codigo:"PRIMEIRAGELADA", desconto:.15, minimo:60}
-};
-
 const carrinho = new Map();
 let entrega = null;    /* {km, taxa, minutos, retirada} preenchido pelo cálculo do CEP */
 let cupomAtivo = false;
@@ -612,60 +501,6 @@ $("code").addEventListener("click", function(){
   }
 });
 
-/* ---------- 10. VERIFICAÇÃO DE IDADE ----------
-   O aviso nasce fechado no CSS e é o script que o abre. Antes era o contrário,
-   e sem JavaScript a tela ficava coberta por um diálogo que ninguém conseguia
-   dispensar — o site inteiro virava uma parede. Falhar para o lado de deixar
-   passar é melhor: a idade é conferida com documento na entrega, que é onde a
-   lei exige. Dentro da mesma aba a resposta é lembrada. */
-const gate = $("gate");
-const focoGate = prenderFoco(gate);
-
-const jaConfirmou = () => { try{ return sessionStorage.getItem("zg-idade") === "ok" }catch{ return false } };
-
-function fecharGate(){
-  gate.classList.remove("aberto");
-  gate.setAttribute("aria-hidden", "true");
-  gate.removeEventListener("keydown", focoGate);
-  document.body.classList.remove("locked");
-  try{ sessionStorage.setItem("zg-idade", "ok") }catch{ /* segue sem lembrar */ }
-}
-
-if(!jaConfirmou()){
-  gate.classList.add("aberto");
-  gate.setAttribute("aria-hidden", "false");
-  gate.addEventListener("keydown", focoGate);
-  document.body.classList.add("locked");
-  $("gateYes").focus();
-}
-
-$("gateYes").addEventListener("click", fecharGate);
-
-/* ---------- 11. HEADER E MENU ---------- */
-const header = $("header");
-const nav    = $("nav");
-const burger = $("burger");
-
-addEventListener("scroll", () => header.classList.toggle("stuck", scrollY > 8), {passive:true});
-
-burger.addEventListener("click", () => {
-  const aberto = nav.classList.toggle("open");
-  burger.setAttribute("aria-expanded", String(aberto));
-  burger.setAttribute("aria-label", aberto ? "Fechar menu" : "Abrir menu");
-});
-
-nav.addEventListener("click", e => {
-  if(e.target.tagName === "A"){
-    nav.classList.remove("open");
-    burger.setAttribute("aria-expanded", "false");
-    burger.setAttribute("aria-label", "Abrir menu");
-  }
-});
-
-/* ---------- 12. MARQUEE (duplica a lista para o loop fechar) ---------- */
-const mq = $("mq");
-mq.innerHTML += mq.innerHTML;
-
 /* ---------- 13. FAIXA DE OPERAÇÃO ---------- */
 const semMovimento = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -676,7 +511,6 @@ if(!semMovimento){
   };
   setInterval(() => {
     oscila($("t1"), -2.0, 0.4);
-    oscila($("t2"), -4.5, 0.4);
     $("rotas").textContent = 4 + Math.floor(Math.random() * 5);
   }, 4200);
 }
@@ -686,14 +520,21 @@ if(!semMovimento){
    ela preencha a coluna. Assim qualquer fonte e qualquer slogan se compõem
    sozinhos, sem calibragem à mão. Os valores em CSS ficam como reserva caso
    o script não rode. */
-const heroLinhas = [...document.querySelectorAll(".hero-title span")];
+const heroLinhas = [...document.querySelectorAll(".manchete span")];
 const CORPO_REF  = 100;   /* px — só para medir */
-const CORPO_TETO = 168;   /* px — impede manchete absurda em tela larga */
+const CORPO_TETO = 40;    /* px — numa tela só, a manchete cede espaço à vitrine */
+const CORPO_TETO_M = 22;  /* px — no celular ela cede mais ainda: a vitrine vem primeiro */
+const CORPO_PISO = 11;    /* px — abaixo disso não é manchete, é rodapé */
 
 function ajustarManchete(){
-  const col = document.querySelector(".hero .wrap");
+  const col = document.querySelector(".manchete");
+  if(!col) return;
   const cs  = getComputedStyle(col);
-  const util = col.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  /* 1,5% de folga: medir e preencher a coluna exata deixava a última letra
+     raspando a borda, e com a sombra do tema ela chegava a ser cortada */
+  const util = (col.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) * 0.985;
+  if(util <= 0) return;                          /* vista escondida não mede */
+  const teto = innerWidth < 820 ? CORPO_TETO_M : CORPO_TETO;
 
   for(const linha of heroLinhas){
     linha.style.fontSize = CORPO_REF + "px";
@@ -708,10 +549,10 @@ function ajustarManchete(){
        uma passada só não fecha sempre, e a sobra de 1 ou 2 px aparecia ou não
        conforme o arredondamento. Mede de novo e insiste até caber, com um fio
        de folga a cada volta para garantir convergência. */
-    let corpo = Math.min(util / (largura / CORPO_REF), CORPO_TETO);
+    let corpo = Math.max(CORPO_PISO, Math.min(util / (largura / CORPO_REF), teto));
     let real  = aplicarCorpo(linha, corpo);
-    for(let i = 0; i < 5 && real > util; i++){
-      corpo = corpo * (util / real) * 0.999;
+    for(let i = 0; i < 5 && real > util && corpo > CORPO_PISO; i++){
+      corpo = Math.max(CORPO_PISO, corpo * (util / real) * 0.999);
       real  = aplicarCorpo(linha, corpo);
     }
   }
@@ -746,17 +587,40 @@ const SLOGANS = [
 const slogan = SLOGANS[Math.floor(Math.random() * SLOGANS.length)];
 heroLinhas.forEach((el, i) => el.textContent = slogan[i]);
 
-/* ---------- 16. REVELAR AO ROLAR ---------- */
-const io = new IntersectionObserver(entradas => {
-  entradas.forEach(en => {
-    if(en.isIntersecting){
-      en.target.classList.add("in");
-      io.unobserve(en.target);
-    }
-  });
-}, {threshold:.1, rootMargin:"0px 0px -40px 0px"});
+/* ---------- 16. VISTAS ----------
+   O site deixou de ser uma página que rola e virou quatro vistas que se
+   revezam no mesmo espaço. A regra é uma só: a aba marcada manda, e a vista
+   correspondente é a única sem `hidden`.
 
-document.querySelectorAll(".rv").forEach((el, i) => {
-  el.style.transitionDelay = `${(i % 4) * 60}ms`;
-  io.observe(el);
+   O `hidden` no HTML e a classe `.ativa` dizem a mesma coisa de propósito. A
+   classe é quem o CSS lê na casca de uma tela; o `hidden` é quem vale sem
+   script, e é o que impede as quatro vistas de aparecerem empilhadas antes
+   de o script rodar. */
+const abas = $("abas");
+
+function mostrarVista(nome){
+  for(const b of abas.querySelectorAll(".app-aba")){
+    const on = b.dataset.vista === nome;
+    b.setAttribute("aria-selected", String(on));
+  }
+  /* quem esconde é o CSS, pela classe: .js .vista{display:none} e
+     .js .vista.ativa{display:flex}. Marcar `hidden` aqui também tiraria as
+     outras vistas do documento sem script, e sem script elas são justamente
+     o que sobra do site — e o que o buscador lê. */
+  for(const v of document.querySelectorAll(".vista"))
+    v.classList.toggle("ativa", v.id === "v-" + nome);
+  /* a manchete só tem largura quando a vista dela está à mostra */
+  if(nome === "catalogo") ajustarManchete();
+}
+
+abas.addEventListener("click", e => {
+  const b = e.target.closest(".app-aba");
+  if(b) mostrarVista(b.dataset.vista);
+});
+
+mostrarVista("catalogo");
+
+/* quem clica numa categoria a partir de outra vista volta para o catálogo */
+document.addEventListener("click", e => {
+  if(e.target.closest("[data-ir]")) mostrarVista("catalogo");
 });

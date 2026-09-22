@@ -469,6 +469,9 @@ h3{
   color:var(--ink-2);
   max-width:46ch;
 }
+/* sem mensagem não há por que reservar 36 px: numa tela que não rola isso
+   era um vão morto entre o campo do CEP e as abas */
+.cep-msg:empty{min-height:0;margin-top:0}
 .cep-msg.ok{color:var(--ok)}
 .cep-msg.bad{color:var(--hot)}
 
@@ -914,7 +917,10 @@ h3{
 /* ============ 19. TOAST ============ */
 .toast{
   position:fixed;left:50%;bottom:26px;z-index:150;
-  transform:translate(-50%,140%);
+  /* 140% da própria altura não bastava: com 43 px de altura e 26 px de fundo,
+     sobravam 9 px do aviso à mostra o tempo todo, no meio do rodapé. O cálculo
+     abaixo não depende da altura — sai inteiro, e ainda com folga. */
+  transform:translate(-50%,calc(100% + 30px));
   background:var(--deep);color:var(--ink-on-deep);
   border:1px solid var(--rule-deep);
   border-left:3px solid var(--acc-2);
@@ -1097,4 +1103,315 @@ h3{
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
   .rv{opacity:1;transform:none}
+}
+
+/* ============ 24. A PORTA (CPF ou CNPJ) ============
+   Mesma caixa do aviso de idade, por isso reaproveita .gate: nasce fechada e
+   é o script que abre. Ver o cabeçalho de js/porta.js. */
+.porta .gate-card{max-width:460px}
+.doc-campo{display:block;margin-bottom:10px}
+.doc-campo .tag{display:block;margin-bottom:8px}
+.doc-campo input{
+  width:100%;padding:14px 16px;
+  border:1px solid var(--rule);border-radius:var(--r-btn);
+  background:var(--paper-2);
+  font-family:var(--mono);font-size:1.05rem;
+  letter-spacing:.06em;font-variant-numeric:tabular-nums;
+}
+.doc-campo input:focus{border-color:var(--acc);outline:none}
+.doc-tipo,.doc-msg{
+  font-family:var(--mono);font-size:.72rem;line-height:1.5;
+  color:var(--ink-2);min-height:1.1em;
+}
+.doc-tipo.ok,.doc-msg.ok{color:var(--ok)}
+.doc-tipo.bad,.doc-msg.bad{color:var(--hot)}
+.doc-msg{margin-bottom:14px}
+.doc-msg:empty{margin-bottom:0;min-height:0}
+
+/* ============ 25. VITRINE EM UMA TELA ============
+   A página não rola: rola só a lista de produtos. As seções que antes vinham
+   uma embaixo da outra viraram vistas que se revezam no mesmo espaço.
+
+   Tudo isto depende da classe .js, escrita no <html> por um script de uma
+   linha no <head>. Sem JavaScript as vistas empilham e a página rola como
+   qualquer documento — que é o comportamento certo para quem não tem script,
+   e é o que os buscadores enxergam. */
+.js body{height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+
+.app-topo{
+  flex:none;display:flex;align-items:center;gap:16px;
+  padding-inline:var(--gut);min-height:60px;
+  border-bottom:1px solid var(--rule);
+  background:var(--paper);
+}
+.app-topo .logo{margin-right:auto}
+.app-acoes{display:flex;align-items:center;gap:10px;margin-left:auto}
+
+.app-abas{
+  display:flex;width:max-content;max-width:100%;
+  border:1px solid var(--rule);border-radius:var(--r-btn);overflow:hidden;
+}
+.app-aba{
+  padding:9px 15px;white-space:nowrap;
+  font-family:var(--mono);font-size:.69rem;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-2);
+  border-right:1px solid var(--rule);
+  transition:background .16s,color .16s;
+}
+.app-aba:last-child{border-right:none}
+.app-aba:hover{color:var(--ink);background:var(--paper-2)}
+.app-aba[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+
+/* Em tela estreita as abas descem para a própria linha: espremer seis rótulos
+   ao lado do logo dava três pixels por letra. */
+@media(max-width:900px){
+  .app-topo{flex-wrap:wrap;padding-block:10px;gap:10px}
+  .app-abas{order:3;width:100%;overflow-x:auto;scrollbar-width:none}
+  .app-abas::-webkit-scrollbar{display:none}
+  .app-aba{text-align:center}
+}
+
+/* Item de flex e de grid nasce com min-width:auto, que resolve para
+   min-content — e o min-content destas colunas é o <input> do CEP, que sem
+   atributo size carrega 213 px intrínsecos, mais a fileira de abas, que não
+   quebra linha. Sem zerar isso a casca inteira estica e a página ganha barra
+   horizontal em tela estreita. Mesma armadilha do hero antigo, em contêiner
+   novo — por isso a regra está junta e comentada. */
+.vistas,.vista,.vista-cab,.vista-rola,
+.vista-cab > *,.vitrine-hero > *,.vitrine-linha > *,.filtro-linha > *,
+.app-topo > *,.app-abas,.tabs,
+.js body[data-publico="atacado"] > *,
+.bal-topo > *,.bal-filtros > *,.bal-corpo > *{min-width:0}
+.cep-form input{min-width:0}
+
+.vistas{flex:1;min-height:0}
+.js .vistas{display:flex}
+.vista{display:flex;flex-direction:column;min-height:0;flex:1}
+.js .vista{display:none}
+.js .vista.ativa{display:flex}
+
+.vista-cab{flex:none;padding:16px var(--gut) 14px;border-bottom:1px solid var(--rule-2);display:grid;gap:14px}
+.vista-rola{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px var(--gut) 26px}
+.vista-rola > .doc-corpo{max-width:var(--wrap);margin-inline:auto}
+
+/* manchete compacta: o slogan continua, mas deixa de ser um cartaz de tela
+   cheia — é o que devolve a vitrine para a primeira dobra */
+.vitrine-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:18px 30px;align-items:end}
+.manchete{min-width:0}
+.manchete span{
+  display:block;
+  /* A linha não pode quebrar: o ajuste da seção 14 do script mede a linha com
+     um Range, e texto já quebrado devolve a largura da caixa, não a do texto.
+     Com quebra permitida o cálculo convergia numa manchete grande e partida,
+     que em tela de celular empurrava a vitrine para fora da primeira dobra. */
+  white-space:nowrap;
+  font-family:var(--display);
+  font-weight:var(--h-wght);
+  text-transform:var(--h-tt);
+  letter-spacing:var(--h-ls);
+  line-height:1.02;
+  font-size:clamp(1rem,3vw,2.3rem);
+}
+.vitrine-linha{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.vitrine-linha .cep-form{flex:1;margin:0}
+@media(max-width:820px){
+  .vitrine-hero{grid-template-columns:1fr;gap:10px}
+  .vista-cab{gap:10px;padding-block:12px 10px}
+  /* uma fileira que rola, em vez de três empilhadas */
+  .filtro-linha{gap:10px}
+  .filtro-linha .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .filtro-linha .tabs::-webkit-scrollbar{display:none}
+  .filtro-linha .tab{white-space:nowrap}
+  .filtro-linha .busca{flex:1 0 100%}
+}
+
+.filtro-linha{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.filtro-linha .tabs{margin-bottom:0}
+.filtro-linha .busca{flex:1;min-width:160px}
+
+.app-pe{
+  flex:none;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  padding:9px var(--gut);border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;color:var(--ink-2);
+  background:var(--paper);
+}
+.app-pe b{color:var(--ink)}
+.app-pe a{text-decoration:underline;text-underline-offset:3px}
+.app-pe a:hover{color:var(--acc)}
+.app-pe .fim{margin-left:auto}
+@media(max-width:700px){.app-pe .some{display:none}}
+
+/* corpo de documento dentro de uma vista (entrega, como pedir, cupom) */
+.doc-corpo{display:grid;gap:clamp(22px,3vw,34px)}
+.doc-corpo h2{font-size:clamp(1.2rem,2.4vw,1.7rem)}
+.doc-corpo .split{gap:clamp(24px,4vw,52px)}
+
+/* ============ 26. BALCÃO DE ATACADO ============
+   Tabela, não vitrine: quem compra para revender compara preço por unidade
+   entre dez itens de uma vez, e card com foto grande atrapalha essa conta. */
+/* a coluna precisa ser minmax(0,1fr) e não auto: com auto a trilha cresce
+   até o max-content da tabela e leva a página junto */
+.js body[data-publico="atacado"]{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+}
+
+.bal-topo{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:10px var(--gut);border-bottom:1px solid var(--rule);
+}
+.bal-doc{display:flex;align-items:center;gap:9px;font-size:.78rem}
+.bal-doc b{font-size:.84rem;letter-spacing:.02em}
+.bal-acoes{display:flex;align-items:center;gap:14px;margin-left:auto}
+.bal-varejo{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em}
+@media(max-width:720px){.bal-varejo{display:none}}
+
+.bal-filtros{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  padding:12px var(--gut);border-bottom:1px solid var(--rule-2);
+}
+.bal-filtros .tabs{margin-bottom:0}
+.bal-filtros .busca{flex:1;min-width:160px}
+
+.bal-corpo{display:grid;grid-template-columns:minmax(0,1fr) 344px;min-height:0}
+/* a tabela tem largura mínima própria: em tela estreita ela rola dentro da
+   própria caixa, em vez de empurrar a página */
+.bal-lista{min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 var(--gut) 30px}
+.tabela-atacado{min-width:620px}
+
+.tabela-atacado{width:100%;border-collapse:collapse;font-size:.86rem}
+.tabela-atacado thead th{
+  position:sticky;top:0;z-index:2;
+  background:var(--paper);
+  text-align:left;padding:12px 10px;
+  border-bottom:1px solid var(--ink);
+  font-family:var(--mono);font-size:.64rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-2);font-weight:600;white-space:nowrap;
+}
+.tabela-atacado .n{text-align:right}
+.tabela-atacado td,.tabela-atacado tbody th{
+  padding:10px;border-bottom:1px solid var(--rule-2);vertical-align:middle;
+  font-variant-numeric:tabular-nums;
+}
+/* th de linha nasce centralizado; numa tabela de preço a coluna do produto é
+   a única que se lê da esquerda */
+.tabela-atacado tbody th{text-align:left}
+.tabela-atacado tbody tr:hover td,.tabela-atacado tbody tr:hover th{background:var(--paper-2)}
+.tabela-atacado tr.no-pedido td,.tabela-atacado tr.no-pedido th{background:var(--acc-wash)}
+.tabela-atacado tr.hide{display:none}
+.tabela-atacado tr.esgotado{opacity:.45}
+.tabela-atacado .forte{font-weight:700}
+.tabela-atacado .zero{color:var(--hot)}
+.tabela-atacado .qtd{margin-left:auto;width:max-content}
+
+.prod{font-weight:400}
+.prod-marca{
+  display:block;font-family:var(--mono);font-size:.63rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
+}
+.prod-nome{display:block;font-size:.9rem;line-height:1.3}
+.prod-nota{display:block;font-family:var(--mono);font-size:.63rem;color:var(--ok);margin-top:3px}
+/* em tela larga a embalagem e o estoque têm coluna própria; no celular as
+   colunas somem e a informação desce para dentro da linha do produto */
+.prod-emb{display:none;font-family:var(--mono);font-size:.63rem;color:var(--ink-2);margin-top:3px}
+.tabela-atacado .n{white-space:nowrap}
+
+/* Em tela larga o resumo é coluna fixa e está sempre à vista, que é o que um
+   balcão precisa; abaixo de 1080 ele vira gaveta, chamada pela barra do pé. */
+.pedido{
+  display:flex;flex-direction:column;min-height:0;gap:12px;
+  border-left:1px solid var(--rule);padding:16px var(--gut) 18px;
+  background:var(--paper);
+}
+.pedido-topo{display:flex;align-items:center;justify-content:space-between}
+.pedido-topo h2{font-size:1.05rem}
+.pedido-topo .cart-close{display:none}
+.pedido-itens{flex:1;min-height:0;overflow-y:auto;display:grid;gap:2px;align-content:start}
+.pedido-item{
+  display:grid;grid-template-columns:1fr auto;gap:12px;
+  padding:10px 0;border-bottom:1px solid var(--rule-2);
+}
+.pedido-item .marca{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.pedido-item .nome{font-size:.84rem;line-height:1.3}
+.pedido-item .un{font-family:var(--mono);font-size:.66rem;color:var(--ink-2);margin-top:3px}
+.pedido-item .linha-fim{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.pedido-item .sub{font-family:var(--mono);font-size:.8rem;font-weight:600;white-space:nowrap}
+.pedido-vazio{font-family:var(--mono);font-size:.74rem;color:var(--ink-2);padding:18px 0}
+.pedido-nota{font-family:var(--mono);font-size:.64rem;line-height:1.5;color:var(--ink-2)}
+.pedido .btn-primary:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+
+.bal-pe{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:9px var(--gut);border-top:1px solid var(--rule);
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;color:var(--ink-2);
+}
+.bal-pe b{color:var(--ink)}
+.bal-pe a{margin-left:auto;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:860px){.bal-pe-larga{display:none}}
+
+/* barra do pé: só existe quando o resumo virou gaveta e há algo no pedido */
+.bal-barra{
+  display:none;
+  position:fixed;left:0;right:0;bottom:0;z-index:70;
+  align-items:center;gap:14px;
+  padding:12px var(--gut);
+  background:var(--ink);color:var(--paper);
+  font-family:var(--mono);font-size:.76rem;
+}
+.bal-barra b{font-size:.92rem}
+.bal-barra-cta{margin-left:auto;text-decoration:underline;text-underline-offset:3px}
+
+@media(max-width:720px){
+  .bal-topo{gap:10px 14px;padding-block:8px}
+  .bal-topo .logo-word{font-size:1.05rem}
+  .bal-doc .tag{display:none}
+  .bal-doc{order:3;font-size:.72rem}
+  .bal-acoes{order:2}
+  .bal-filtros{padding-block:9px;gap:9px}
+  .bal-filtros .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .bal-filtros .tabs::-webkit-scrollbar{display:none}
+  .bal-filtros .tab{white-space:nowrap}
+  .bal-filtros .busca{flex:1 0 100%}
+  /* as duas colunas que cabem na linha do produto saem da tabela */
+  .tabela-atacado{min-width:0}
+  .tabela-atacado th:nth-child(2),.tabela-atacado td:nth-child(2),
+  .tabela-atacado th:nth-child(3),.tabela-atacado td:nth-child(3),
+  .tabela-atacado th:nth-child(5),.tabela-atacado td:nth-child(5){display:none}
+  .prod-emb{display:block}
+  /* a barra do pedido ocupa o lugar do rodapé, em vez de cobri-lo */
+  body.tem-pedido .bal-pe{display:none}
+}
+
+@media(max-width:1080px){
+  .bal-corpo{grid-template-columns:minmax(0,1fr)}
+  .pedido{
+    /* acima do véu, que está em 180 — com 90 o painel abria por baixo do
+       próprio escurecimento e saía ilegível */
+    position:fixed;top:0;right:0;bottom:0;z-index:190;
+    width:min(400px,100%);
+    transform:translateX(101%);transition:transform .3s cubic-bezier(.2,.7,.3,1);
+    border-left:1px solid var(--rule);
+  }
+  .pedido.aberto{transform:none}
+  .pedido-topo .cart-close{display:grid}
+  .bal-lista{padding-bottom:80px}
+  body.tem-pedido .bal-barra{display:flex}
+}
+
+.cep-bloco{flex:1;min-width:0}
+
+/* Duas colunas no celular. A grade nasce com minmax(240px,1fr), o que em 390 px
+   dá uma coluna só e um card de tela inteira — numa vitrine que não rola, isso
+   é um produto por vez. Encolher a arte e forçar duas colunas devolve quatro
+   itens à primeira dobra. */
+@media(max-width:560px){
+  .prod-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card-art{height:140px;padding-bottom:9px}
+  .card-body{padding:11px}
+  .card .nome{font-size:.86rem;margin:4px 0 8px}
+  .card .spec{font-size:.62rem;gap:4px;padding-top:7px}
+  .card .spec i{display:none}
+  .price b{font-size:1.16rem}
+  .badges{top:7px;left:7px;gap:4px}
 }

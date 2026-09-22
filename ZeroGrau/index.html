@@ -32,8 +32,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/temas.css">
+
+<!-- A casca de uma tela só existe com script. Marcar aqui, e não depois que o
+     script.js roda, evita a página nascer rolando e encolher na cara de quem
+     olha. Sem JavaScript a classe não entra e as vistas empilham num
+     documento comum, que rola — é o que o buscador enxerga. -->
+<script>document.documentElement.classList.add("js")</script>
 </head>
-<body>
+<body data-publico="varejo">
 
 <!-- ============ SPRITE: silhuetas técnicas (traço 1px, sem preenchimento) ============ -->
 <svg class="sprite" aria-hidden="true" focusable="false">
@@ -87,11 +93,11 @@
   </defs>
 </svg>
 
-<a class="pular" href="#catalogo">Pular para o catálogo</a>
+<a class="pular" href="#grid">Pular para o catálogo</a>
 
-<!-- ============ AGE GATE ============
+<!-- ============ AVISO DE IDADE ============
      Nasce fechado: quem abre é o script. Sem JavaScript não há diálogo
-     cobrindo a tela e o site continua navegável. -->
+     cobrindo a tela e o site continua navegável. Ver js/porta.js. -->
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
   <div class="gate-card">
     <div class="logo">
@@ -108,246 +114,111 @@
   </div>
 </div>
 
-<!-- ============ FAIXA DE OPERAÇÃO ============ -->
-<div class="opstrip">
-  <div class="wrap">
-    <span class="op"><i class="live" aria-hidden="true"></i> <b>Aberto</b> até 03h00</span>
-    <span class="op">Câmara 01 <b class="num" id="t1">−2,0 °C</b></span>
-    <span class="op">Câmara 02 <b class="num" id="t2">−4,5 °C</b></span>
-    <span class="op">Em rota <b class="num" id="rotas">6</b></span>
-    <span class="op">Frete grátis acima de <b class="num">R$ 120</b></span>
+<!-- ============ IDENTIFICAÇÃO ============ -->
+<div class="gate porta" id="porta" role="dialog" aria-modal="true" aria-labelledby="portaTitle" aria-hidden="true">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+    </div>
+    <h3 id="portaTitle">CPF ou CNPJ</h3>
+    <p>É o que separa as duas lojas: com CPF você entra aqui, na vitrine de varejo; com CNPJ, no balcão de atacado, que vende por caixa fechada e com preço de revenda.</p>
+    <label class="doc-campo">
+      <span class="tag">Documento</span>
+      <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
+    </label>
+    <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
+    <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" id="docBtn">Entrar</button>
+    </div>
+    <small class="gate-legal">Conferimos só o dígito verificador do número. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
   </div>
 </div>
 
-<!-- ============ HEADER ============ -->
-<header class="site-head" id="header">
-  <div class="wrap">
-    <a href="#" class="logo" aria-label="Zero Grau, início">
-      <div class="logo-mark" aria-hidden="true">0°</div>
-      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
-    </a>
+<!-- ============ TOPO ============ -->
+<header class="app-topo">
+  <a href="#" class="logo" aria-label="Zero Grau, início">
+    <div class="logo-mark" aria-hidden="true">0°</div>
+    <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+  </a>
 
-    <nav class="nav-main" id="nav" aria-label="Principal">
-      <a href="#catalogo">Catálogo</a>
-      <a href="#destaques">Destaques</a>
-      <a href="#promocoes">Cupom</a>
-      <a href="#como-funciona">Como pedir</a>
-      <a href="#entrega">Entrega</a>
-    </nav>
+  <nav class="app-abas" id="abas" role="tablist" aria-label="Seções do site">
+    <button class="app-aba" role="tab" aria-selected="true"  aria-controls="v-catalogo" data-vista="catalogo">Catálogo</button>
+    <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-entrega"  data-vista="entrega">Entrega</button>
+    <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-pedir"    data-vista="pedir">Como pedir</button>
+    <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-cupom"    data-vista="cupom">Cupom</button>
+  </nav>
 
-    <div class="head-actions">
-      <a href="#destaques" class="btn btn-primary btn-sm">Peça agora
-        <svg class="seta" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
-      <button class="cart-btn" id="cartBtn" aria-label="Abrir carrinho">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
-          <path d="M2 3h3l2.7 12.6a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
-        </svg>
-        <span class="cart-total num" id="cartTotal" aria-live="polite"></span>
-        <b class="num" id="cartCount">0</b>
-      </button>
-      <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-          <path d="M3 6h18M3 12h18M3 18h18"/>
-        </svg>
-      </button>
-    </div>
+  <div class="app-acoes">
+    <button class="cart-btn" id="cartBtn" aria-label="Abrir carrinho">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+        <path d="M2 3h3l2.7 12.6a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
+      </svg>
+      <span class="cart-total num" id="cartTotal" aria-live="polite"></span>
+      <b class="num" id="cartCount">0</b>
+    </button>
   </div>
 </header>
 
-<!-- ============ HERO ============ -->
-<section class="sec hero">
-  <div class="wrap">
-    <div class="hero-eyebrow rv">
-      <span>Distribuidora de bebidas</span>
-      <span>Fortaleza / CE</span>
-      <span>Câmara fria própria desde 2014</span>
-    </div>
+<main class="vistas" id="vistas">
 
-    <!-- o script sorteia entre os slogans; estas linhas são o que fica sem JS -->
-    <h1 class="hero-title rv">
-      <span class="ht-1">Sexta à noite não é</span>
-      <span class="ht-2">hora de encarar</span>
-      <span class="ht-3">fila de mercado</span>
-    </h1>
+  <!-- ============ VISTA: CATÁLOGO ============ -->
+  <section class="vista ativa" id="v-catalogo" role="tabpanel" aria-label="Catálogo">
+    <div class="vista-cab">
+      <div class="vitrine-hero">
+        <!-- o script sorteia entre os slogans; estas linhas são o que fica sem JS -->
+        <h1 class="manchete">
+          <span class="ht-1">Sexta à noite não é</span>
+          <span class="ht-2">hora de encarar</span>
+          <span class="ht-3">fila de mercado</span>
+        </h1>
 
-    <div class="hero-body">
-      <!-- os números vêm do estoque, nunca escritos à mão: ver seção 3 do script -->
-      <p class="lead rv"><span data-total="itens">19</span> rótulos entre cervejas, destilados, vinhos, energéticos e não alcoólicos. Estoque contado em tempo real, preço de distribuidora, sem pedido mínimo escondido.</p>
-
-      <div class="rv">
-        <p class="tag cep-label">Consulte a taxa do seu endereço</p>
-        <div class="cep-form">
-          <input id="cepInput" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" aria-label="Seu CEP" aria-describedby="cepMsg">
-          <button class="btn btn-primary btn-sm" id="cepBtn">Calcular</button>
+        <div class="vitrine-linha">
+          <div class="cep-bloco">
+            <p class="tag cep-label">Consulte a taxa do seu endereço</p>
+            <div class="cep-form">
+              <input id="cepInput" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" aria-label="Seu CEP" aria-describedby="cepMsg">
+              <button class="btn btn-primary btn-sm" id="cepBtn">Calcular</button>
+            </div>
+            <p class="cep-msg" id="cepMsg" role="status" aria-live="polite"></p>
+          </div>
         </div>
-        <p class="cep-msg" id="cepMsg" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="filtro-linha">
+        <!-- uma aba por categoria real; o script preenche a partir de CATEGORIAS -->
+        <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
+          <button class="tab active" data-cat="all" role="tab" aria-selected="true" aria-controls="grid">Tudo</button>
+        </div>
+        <div class="busca">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="buscaInput" type="search" placeholder="Buscar marca ou produto" aria-label="Buscar no catálogo" autocomplete="off">
+        </div>
       </div>
     </div>
 
-    <div class="hero-stats rv">
-      <div class="hstat"><b>38 min</b><span>Tempo médio<br>das últimas 500 entregas</span></div>
-      <div class="hstat"><b>R$ 4,90</b><span>Taxa base<br>+ R$ 1,20 por km</span></div>
-      <div class="hstat"><b>R$ 30</b><span>Pedido mínimo<br>em toda a área</span></div>
-      <div class="hstat"><b data-total="disponivel">18</b><span>Rótulos<br>disponíveis hoje</span></div>
+    <div class="vista-rola">
+      <p class="sem-resultado" id="semResultado" hidden>Nenhum item encontrado. <button class="link" id="limparBusca">Limpar busca</button></p>
+      <div class="prod-grid" id="grid" role="tabpanel" aria-live="polite"></div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ============ MARCAS ============ -->
-<div class="marquee" aria-label="Marcas distribuídas">
-  <div class="marquee-track" id="mq">
-    <span>Heineken</span><span>Original</span><span>Spaten</span><span>Corona</span><span>Budweiser</span><span>Stella Artois</span>
-    <span>Johnnie Walker</span><span>Absolut</span><span>Tanqueray</span><span>Jack Daniel's</span><span>Campari</span>
-    <span>Casillero del Diablo</span><span>Chandon</span><span>Red Bull</span><span>Coca-Cola</span><span>Indaiá</span>
-  </div>
-</div>
-
-<!-- ============ CATEGORIAS ============ -->
-<section class="sec" id="catalogo">
-  <div class="wrap">
-    <div class="srule rv">
-      <span class="srule-k">Catálogo</span>
-      <span class="srule-line"></span>
-      <span class="srule-v"><span data-total="itens">19</span> itens · <span data-total="categorias">6</span> categorias</span>
-    </div>
-    <div class="sec-intro rv">
-      <h2>Escolha por categoria</h2>
-      <p class="lead">Do fardo de long neck ao saco de gelo do churrasco. Tudo sai do mesmo estoque, num pedido só.</p>
-    </div>
-
-    <div class="cat-grid">
-      <!-- Cada card leva a uma categoria que existe na vitrine. Antes três deles
-           apontavam para a mesma aba, e clicar em "Gelo e carvão" trazia Red Bull.
-           A contagem vem do estoque, via data-conta. -->
-      <a href="#destaques" class="cat rv" data-ir="cerveja">
-        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v5M13 12v5"/><path d="M3 5h14v11a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M3 9h14"/></svg></span>
-        <span><b>Cervejas</b><small><span data-conta="cerveja"></span> · long neck, lata, 600 ml</small></span>
-      </a>
-      <a href="#destaques" class="cat rv" data-ir="destilado">
-        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2h4v5l3 5v9a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-9l3-5z"/><path d="M7 14h10"/></svg></span>
-        <span><b>Destilados</b><small><span data-conta="destilado"></span> · whisky, vodka, gin</small></span>
-      </a>
-      <a href="#destaques" class="cat rv" data-ir="vinho">
-        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l-1 7a4 4 0 0 1-6 0z"/><path d="M12 14v7M8 21h8"/></svg></span>
-        <span><b>Vinhos e espumantes</b><small><span data-conta="vinho"></span> · tinto, branco, rosé</small></span>
-      </a>
-      <a href="#destaques" class="cat rv" data-ir="energetico">
-        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>
-        <span><b>Energéticos</b><small><span data-conta="energetico"></span> · lata avulsa e fardo</small></span>
-      </a>
-      <a href="#destaques" class="cat rv" data-ir="agua">
-        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c3.5 4.5 6 7.8 6 11a6 6 0 0 1-12 0c0-3.2 2.5-6.5 6-11z"/></svg></span>
-        <span><b>Águas e refrigerantes</b><small><span data-conta="agua"></span> · 2 L, 1,5 L, lata</small></span>
-      </a>
-      <a href="#destaques" class="cat rv" data-ir="gelo">
-        <span class="cat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M4.9 6.5l14.2 11M19.1 6.5 4.9 17.5"/></svg></span>
-        <span><b>Gelo e carvão</b><small><span data-conta="gelo"></span> · sacos de 5 kg e 10 kg</small></span>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ============ DESTAQUES ============ -->
-<section class="sec sec--tight" id="destaques">
-  <div class="wrap">
-    <div class="srule rv">
-      <span class="srule-k">Mais pedidos</span>
-      <span class="srule-line"></span>
-      <span class="srule-v" id="estoqueTotal">Estoque conferido hoje</span>
-    </div>
-    <div class="sec-intro rv">
-      <h2>Destaques da adega</h2>
-      <p class="lead">Os itens que mais saíram esta semana. O contador de unidades é o estoque real da loja — quando zera, o item sai do ar.</p>
-    </div>
-
-    <div class="filtros rv">
-      <!-- uma aba por categoria real, na mesma ordem dos cards da home -->
-      <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
-      <button class="tab active" data-cat="all" role="tab" aria-selected="true" aria-controls="grid">Tudo</button>
-      <button class="tab" data-cat="cerveja" role="tab" aria-selected="false" aria-controls="grid">Cervejas</button>
-      <button class="tab" data-cat="destilado" role="tab" aria-selected="false" aria-controls="grid">Destilados</button>
-      <button class="tab" data-cat="vinho" role="tab" aria-selected="false" aria-controls="grid">Vinhos</button>
-      <button class="tab" data-cat="energetico" role="tab" aria-selected="false" aria-controls="grid">Energéticos</button>
-      <button class="tab" data-cat="agua" role="tab" aria-selected="false" aria-controls="grid">Águas</button>
-      <button class="tab" data-cat="gelo" role="tab" aria-selected="false" aria-controls="grid">Gelo</button>
-      </div>
-      <div class="busca">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="buscaInput" type="search" placeholder="Buscar marca ou produto" aria-label="Buscar no catálogo" autocomplete="off">
-      </div>
-    </div>
-    <p class="sem-resultado" id="semResultado" hidden>Nenhum item encontrado. <button class="link" id="limparBusca">Limpar busca</button></p>
-
-    <div class="prod-grid rv" id="grid" role="tabpanel" aria-live="polite"></div>
-  </div>
-</section>
-
-<!-- ============ CUPOM ============ -->
-<section class="sec sec--tight" id="promocoes">
-  <div class="wrap">
-    <div class="srule rv">
-      <span class="srule-k">Cupom de estreia</span>
-      <span class="srule-line"></span>
-      <span class="srule-v">Válido até 31/12/2026</span>
-    </div>
-
-    <div class="cupom rv">
-      <div>
-        <p class="tag">Primeiro pedido</p>
-        <h2>15% off em todo o catálogo</h2>
-        <p class="lead">Sem teto de desconto e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
-        <ul class="cupom-list">
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ 60,00</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ 120,00</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
-        </ul>
-      </div>
-      <div class="ticket">
-        <small>Código</small>
-        <button class="code" id="code" aria-describedby="codeHint">PRIMEIRAGELADA</button>
-        <small id="codeHint">Clique para copiar</small>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ COMO FUNCIONA ============ -->
-<section class="sec sec--deep" id="como-funciona">
-  <div class="wrap">
-    <div class="srule rv">
-      <span class="srule-k">Do carrinho à porta</span>
-      <span class="srule-line"></span>
-      <span class="srule-v">Quatro passos · nenhum telefonema</span>
-    </div>
-    <div class="sec-intro rv">
-      <h2>Como pedir</h2>
-      <p class="lead">Você acompanha o entregador no mapa desde o momento em que ele aceita a corrida.</p>
-    </div>
-
-    <ol class="steps">
-      <li class="step rv"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
-      <li class="step rv"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
-      <li class="step rv"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
-      <li class="step rv"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
-    </ol>
-  </div>
-</section>
-
-<!-- ============ ENTREGA ============ -->
-<section class="sec" id="entrega">
-  <div class="wrap">
-    <div class="srule rv">
-      <span class="srule-k">Área de cobertura</span>
-      <span class="srule-line"></span>
-      <span class="srule-v">Raio de 12 km · Aldeota, Fortaleza</span>
-    </div>
-
-    <div class="split">
-      <div class="rv">
-        <h2>Entregamos num raio de 12 km da loja</h2>
-        <p class="lead lead--spaced">Loja física na Av. Santos Dumont, com câmara fria própria e frota de entregadores parceiros. Fora do raio, você retira no balcão sem pagar taxa.</p>
+  <!-- ============ VISTA: ENTREGA ============ -->
+  <section class="vista" id="v-entrega" role="tabpanel" aria-label="Entrega">
+    <div class="vista-rola">
+      <div class="doc-corpo">
+        <div>
+          <div class="srule">
+            <span class="srule-k">Área de cobertura</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Raio de 12 km · Aldeota, Fortaleza</span>
+          </div>
+          <div class="split">
+            <div>
+              <h2>Entregamos num raio de 12 km da loja</h2>
+              <p class="lead lead--spaced">Loja física na Av. Santos Dumont, com câmara fria própria e frota de entregadores parceiros. Fora do raio, você retira no balcão sem pagar taxa.</p>
         <div class="info-list">
           <div class="info-row"><span>Funcionamento</span><b>Seg a dom · 10h00 – 03h00</b></div>
           <div class="info-row"><span>Raio de entrega</span><b>12 km</b></div>
@@ -356,10 +227,10 @@
           <div class="info-row"><span>Frete grátis</span><b class="hl">Acima de R$ 120,00</b></div>
           <div class="info-row"><span>Tempo médio</span><b class="hl">38 minutos</b></div>
         </div>
-      </div>
+            </div>
 
       <!-- diagrama de zonas: cada anel mostra a taxa real daquele raio -->
-      <div class="zones rv">
+      <div class="zones">
         <!-- as cores vêm dos tokens do tema: o diagrama acompanha a identidade -->
         <svg viewBox="0 0 400 362" role="img" aria-label="Diagrama das zonas de entrega: 4 km custa R$ 9,70, 8 km custa R$ 14,50 e 12 km custa R$ 19,30.">
           <g fill="none" stroke="var(--rule)" stroke-width="1">
@@ -392,112 +263,129 @@
           <span>Acima de 12 km: retirada no balcão</span>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+          </div>
+        </div>
 
-<!-- ============ PAGAMENTO ============ -->
-<section class="sec sec--tight">
-  <div class="wrap">
-    <div class="srule rv">
-      <span class="srule-k">Pagamento</span>
-      <span class="srule-line"></span>
-      <span class="srule-v">4 formas aceitas</span>
-    </div>
-    <div class="sec-intro rv"><h2>Pague do jeito que der</h2></div>
-
+        <div>
+          <div class="srule">
+            <span class="srule-k">Pagamento</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">4 formas aceitas</span>
+          </div>
     <div class="pay-grid">
-      <div class="pay rv">
+      <div class="pay">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 4 4-4 4-4-4z"/><path d="m12 14 4 4-4 4-4-4z"/><path d="m6 8 4 4-4 4-4-4z"/><path d="m18 8 4 4-4 4-4-4z"/></svg></span>
         <b>Pix</b><small>Aprovação na hora. O pedido só sai depois da confirmação.</small>
       </div>
-      <div class="pay rv">
+      <div class="pay">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1"/><path d="M2 10h20M6 15h4"/></svg></span>
         <b>Crédito e débito</b><small>No site ou na maquininha do entregador. Todas as bandeiras.</small>
       </div>
-      <div class="pay rv">
+      <div class="pay">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="1"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></span>
         <b>Dinheiro</b><small>Informe para quanto precisa de troco e ele já vai separado.</small>
       </div>
-      <div class="pay rv">
+      <div class="pay">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
         <b>Vale-refeição</b><small>Alelo, Sodexo e Ticket, válidos para itens sem álcool.</small>
       </div>
     </div>
-  </div>
-</section>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<!-- ============ AVISO 18+ ============ -->
-<section class="sec sec--tight">
-  <div class="wrap">
-    <div class="aviso rv">
+  <!-- ============ VISTA: COMO PEDIR ============ -->
+  <section class="vista" id="v-pedir" role="tabpanel" aria-label="Como pedir">
+    <div class="vista-rola">
+      <div class="doc-corpo">
+        <div>
+          <div class="srule">
+            <span class="srule-k">Do carrinho à porta</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Quatro passos · nenhum telefonema</span>
+          </div>
+    <ol class="steps">
+      <li class="step"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
+      <li class="step"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
+      <li class="step"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
+      <li class="step"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
+    </ol>
+        </div>
+
+    <div class="aviso">
       <div class="m18" aria-hidden="true">18+</div>
       <div>
         <h3>Venda proibida para menores de 18 anos</h3>
         <p>A idade é verificada no cadastro e conferida com documento com foto na entrega. Sem documento, a bebida alcoólica volta para a loja e o valor é estornado. Aprecie com moderação — se for dirigir, não beba.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ============ CTA FINAL ============ -->
-<section class="sec--deep">
-  <div class="wrap cta">
-    <p class="tag">Estoque aberto agora</p>
-    <h2>Sua próxima gelada está a 40 minutos daqui</h2>
-    <p>Primeiro pedido com 15% de desconto usando o cupom PRIMEIRAGELADA.</p>
-    <div class="cta-btns">
-      <a href="#destaques" class="btn btn-primary">Ver o catálogo
-        <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
-      <a data-contato="whatsapp" class="btn btn-ghost" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2m0 2a8 8 0 1 1-4.1 14.8l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 0 1 12 4m-3.4 4c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s1 2.4 1.1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.7s1.6-.6 1.8-1.3c.2-.6.2-1.2.1-1.3l-.6-.3-1.6-.8c-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.1-.2 0-.4.1-.5l.5-.6.3-.5v-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4z"/></svg>
-        Pedir pelo WhatsApp
-      </a>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ============ FOOTER ============ -->
-<footer class="site-foot">
-  <div class="wrap">
-    <div class="f-grid">
-      <div class="f-col">
-        <a href="#" class="logo">
-          <div class="logo-mark" aria-hidden="true">0°</div>
-          <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
-        </a>
-        <p class="f-about">Distribuidora de bebidas com entrega em Fortaleza e região metropolitana. Câmara fria própria desde 2014.</p>
-        <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
-        <div class="socials">
-          <a data-contato="instagram" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
-          <a data-contato="whatsapp" aria-label="WhatsApp"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2m0 2a8 8 0 1 1-4.1 14.8l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 0 1 12 4"/></svg></a>
-          <a data-contato="facebook" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 22v-8h3l.5-3H13V9c0-.9.3-1.5 1.6-1.5H17V4.8c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2V11H8v3h2.5v8z"/></svg></a>
+  <!-- ============ VISTA: CUPOM ============ -->
+  <section class="vista" id="v-cupom" role="tabpanel" aria-label="Cupom">
+    <div class="vista-rola">
+      <div class="doc-corpo">
+        <div>
+          <div class="srule">
+            <span class="srule-k">Cupom de estreia</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Válido até 31/12/2026</span>
+          </div>
+    <div class="cupom">
+      <div>
+        <p class="tag">Primeiro pedido</p>
+        <h2>15% off em todo o catálogo</h2>
+        <p class="lead">Sem teto de desconto e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
+        <ul class="cupom-list">
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ 60,00</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ 120,00</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
+        </ul>
+      </div>
+      <div class="ticket">
+        <small>Código</small>
+        <button class="code" id="code" aria-describedby="codeHint">PRIMEIRAGELADA</button>
+        <small id="codeHint">Clique para copiar</small>
+      </div>
+    </div>
+        </div>
+
+        <div>
+          <div class="srule">
+            <span class="srule-k">A loja</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Seg a dom · 10h00 – 03h00</span>
+          </div>
+          <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
+          <div class="info-list">
+            <div class="info-row"><span>Telefone</span><b><a data-contato="tel"></a></b></div>
+            <div class="info-row"><span>E-mail</span><b><a data-contato="mailto"></a></b></div>
+            <div class="info-row"><span>Endereço</span><b><span data-contato="endereco"></span> · <span data-contato="bairro"></span></b></div>
+            <div class="info-row"><span>CNPJ</span><b class="num" data-contato="cnpj"></b></div>
+            <!-- ⚠ sem página própria ainda: por ora caem no WhatsApp, que responde de verdade -->
+            <div class="info-row"><span>Trocas e devoluções</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
+            <div class="info-row"><span>Política de casco</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
+          </div>
         </div>
       </div>
-      <div class="f-col">
-        <h4>Catálogo</h4>
-        <a href="#destaques" data-ir="cerveja">Cervejas</a><a href="#destaques" data-ir="destilado">Destilados</a><a href="#destaques" data-ir="vinho">Vinhos</a><a href="#destaques" data-ir="energetico">Energéticos</a><a href="#destaques" data-ir="agua">Águas e refrigerantes</a><a href="#destaques" data-ir="gelo">Gelo e carvão</a>
-      </div>
-      <div class="f-col">
-        <h4>Ajuda</h4>
-        <a href="#entrega">Área de entrega</a><a href="#como-funciona">Como pedir</a><a href="#promocoes">Cupons</a>
-        <!-- ⚠ sem página própria ainda: por ora caem no WhatsApp, que responde de verdade -->
-        <a data-contato="whatsapp">Trocas e devoluções</a><a data-contato="whatsapp">Política de casco</a>
-        <a href="creditos.html">Créditos das imagens</a>
-      </div>
-      <div class="f-col">
-        <h4>Contato</h4>
-        <p><a data-contato="tel"></a></p>
-        <p><a data-contato="mailto"></a></p>
-        <p><span data-contato="endereco"></span><br><span data-contato="bairro"></span></p>
-      </div>
     </div>
-    <div class="f-bottom">
-      <span>© 2026 Zero Grau Distribuidora de Bebidas LTDA · CNPJ <span data-contato="cnpj"></span></span>
-      <span>Venda proibida para menores de 18 anos · Beba com moderação</span>
-    </div>
-  </div>
+  </section>
+
+</main>
+
+<!-- ============ RODAPÉ DE OPERAÇÃO ============ -->
+<footer class="app-pe">
+  <span><i class="live" aria-hidden="true"></i> <b>Aberto</b> até 03h00</span>
+  <span class="some">Câmara <b class="num" id="t1">−2,0 °C</b></span>
+  <span class="some">Em rota <b class="num" id="rotas">6</b></span>
+  <span><b class="num" data-total="itens">19</b> itens · <b class="num" data-total="unidades">2125</b> unidades</span>
+  <span class="some"><b class="num" data-total="disponivel">18</b> à venda agora</span>
+  <span class="some">Frete grátis acima de <b class="num">R$ 120</b></span>
+  <span class="fim"><a href="atacado.html" data-loja="atacado">Compro para revender</a></span>
+  <span><a href="creditos.html">Créditos</a></span>
 </footer>
 
 <!-- ============ CARRINHO ============ -->
@@ -547,6 +435,8 @@
   <span id="toastMsg"></span>
 </div>
 
+<script src="js/dados.js"></script>
+<script src="js/porta.js"></script>
 <script src="js/script.js"></script>
 </body>
 </html>

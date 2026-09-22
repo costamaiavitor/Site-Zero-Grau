@@ -1,9 +1,26 @@
 # Zero Grau · Distribuidora de Bebidas
 
-Vitrine estática de uma distribuidora de bebidas com entrega: catálogo com
-busca e filtro, carrinho, cupom, cálculo de frete por CEP e fechamento do
-pedido pelo WhatsApp. Sem framework, sem build — HTML, CSS e um arquivo de
+Site estático de uma distribuidora que atende as duas pontas: quem vai beber e
+quem vai revender. Sem framework e sem build — HTML, CSS e alguns arquivos de
 JavaScript.
+
+São duas lojas sobre o mesmo estoque:
+
+| | quem entra | como é | unidade de venda |
+|---|---|---|---|
+| **Varejo** `index.html` | CPF | vitrine, foto grande, slogan | unidade |
+| **Atacado** `atacado.html` | CNPJ | tabela sóbria, sem slogan | caixa fechada |
+
+Quem decide é a porta, em `js/porta.js`: depois do aviso de idade o site pede
+CPF ou CNPJ e manda para a loja correspondente. É identificação, não
+autenticação — não há senha, não há servidor e não há consulta à Receita. O que
+se confere é o dígito verificador, que diz se o número é bem formado, não se é
+seu. Num site estático não dá para ir além, e fingir que dá seria pior.
+
+Nenhuma das duas rola a página. O conteúdo que antes vinha empilhado em onze
+seções virou vistas que se revezam no mesmo espaço; rola só a lista de
+produtos. Sem JavaScript as vistas voltam a empilhar e a página rola como
+qualquer documento, que é o que o buscador lê.
 
 ## Rodar
 
@@ -22,11 +39,12 @@ npx playwright install chromium
 npm test
 ```
 
-O `tests/smoke.mjs` sobe um servidor próprio e passa o Chromium pelo site em
-seis larguras, com e sem JavaScript. Cobre o que já quebrou alguma vez: busca
-com acento, entrega fora do raio, o aviso de idade travando a página sem
-JavaScript, manchete estourando a coluna e números de catálogo divergindo do
-estoque. Roda também em cada push, por `.github/workflows/ci.yml`.
+O `tests/smoke.mjs` sobe um servidor próprio e passa o Chromium pelas duas
+lojas em nove larguras, com e sem JavaScript. Cobre o que já quebrou alguma
+vez: busca com acento, entrega fora do raio, o aviso de idade travando a página
+sem JavaScript, manchete estourando a coluna, números de catálogo divergindo do
+estoque, a página voltando a rolar e o pingue-pongue entre varejo e atacado.
+Roda também em cada push, por `.github/workflows/ci.yml`.
 
 Em rede sem saída para o Google Fonts, aponte as fontes para um espelho local:
 
@@ -38,12 +56,16 @@ FONTES_DIR=/caminho/para/fontes npm test
 
 ```
 ZeroGrau/
-  index.html        vitrine, seção a seção
+  index.html        varejo: vitrine em quatro vistas
+  atacado.html      atacado: tabela por caixa fechada
   creditos.html     atribuição das fotos (exigida pelas licenças CC BY-SA)
   identidade.html   estudo das quatro identidades visuais consideradas
   css/style.css     estrutura e componentes; o :root guarda todos os tokens
-  css/temas.css     a pele que o site veste — redefine só os tokens
-  js/script.js      catálogo, busca, carrinho, CEP, cupom
+  css/temas.css     as duas peles: "Madrugada" no varejo, "Balcão" no atacado
+  js/dados.js       catálogo, contato e regras de venda — fonte única das duas
+  js/porta.js       aviso de idade e identificação por CPF/CNPJ
+  js/script.js      varejo: vistas, busca, carrinho, CEP, cupom
+  js/atacado.js     atacado: tabela, pedido por caixa, faixas de desconto
   img/              fotos de produto em WebP, 200 e 400 px de altura
 ```
 
@@ -51,15 +73,21 @@ ZeroGrau/
 
 | Para mudar | Vá em |
 |---|---|
-| produtos, preço, estoque | `BEBIDAS`, no topo de `js/script.js` |
-| categorias, abas e cards | `CATEGORIAS`, logo abaixo |
+| produtos, preço, estoque | `BEBIDAS`, no topo de `js/dados.js` |
+| categorias e abas | `CATEGORIAS`, logo abaixo |
 | telefone, WhatsApp, CNPJ, endereço | `CONTATO`, logo abaixo |
 | taxa, raio, pedido mínimo, cupom | `TAXA_BASE`, `RAIO_MAX` e `REGRAS` |
+| desconto de revenda, pedido mínimo do atacado | `ATACADO` |
+| quantas unidades tem cada caixa | `CAIXA_PADRAO` e `CAIXA_EXCECAO` |
 | cor, tipografia, forma | os tokens em `css/temas.css` |
 
-Nenhum número de catálogo é escrito à mão no HTML. Os `data-total` e
-`data-conta` da página são preenchidos a partir de `BEBIDAS`, justamente para
-que os textos não possam divergir do estoque.
+Nenhum número de catálogo é escrito à mão no HTML. Os `data-total` da página
+são preenchidos a partir de `BEBIDAS`, justamente para que os textos não possam
+divergir do estoque — e as duas lojas leem a mesma lista, que é como elas
+discordariam primeiro.
+
+O preço de atacado sai do preço cheio de varejo, não da promoção: promoção de
+fim de semana é isca, e não tem por que valer para quem leva vinte caixas.
 
 ## Imagens
 
