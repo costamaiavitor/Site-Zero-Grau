@@ -30,8 +30,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/temas.css">
+<!-- ?v= é selo de versão contra cache. O GitHub Pages serve CSS e JS com
+     max-age=600, então uma mudança recém-publicada continua chegando velha
+     no navegador de quem esteve aqui nos últimos dez minutos — e o site
+     parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
+<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/temas.css?v=2">
 
 <!-- A casca de uma tela só existe com script. Marcar aqui, e não depois que o
      script.js roda, evita a página nascer rolando e encolher na cara de quem
@@ -132,7 +136,7 @@
     <div class="gate-btns">
       <button class="btn btn-primary" id="docBtn">Entrar</button>
     </div>
-    <small class="gate-legal">Conferimos só o dígito verificador do número. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
+    <small class="gate-legal">O número não sai desta aba: fica só no navegador, para escolher a loja. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
   </div>
 </div>
 
@@ -435,8 +439,8 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/dados.js"></script>
-<script src="js/porta.js"></script>
-<script src="js/script.js"></script>
+<script src="js/dados.js?v=2"></script>
+<script src="js/porta.js?v=2"></script>
+<script src="js/script.js?v=2"></script>
 </body>
 </html>

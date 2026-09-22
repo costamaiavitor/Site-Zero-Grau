@@ -84,6 +84,12 @@ ZeroGrau/
 | desconto de revenda, pedido mínimo do atacado | `ATACADO` |
 | quantas unidades tem cada caixa | `CAIXA_PADRAO` e `CAIXA_EXCECAO` |
 | cor, tipografia, forma | os tokens em `css/temas.css` |
+| conferir o dígito verificador na porta | `CONFERE_DIGITO`, em `js/porta.js` |
+
+Ao mexer em `css/` ou `js/`, suba o `?v=` dos `<link>` e `<script>` das três
+páginas. O GitHub Pages serve esses arquivos com `max-age=600`: sem o selo de
+versão, quem esteve no site nos últimos dez minutos continua recebendo a
+versão velha e acha que a mudança não foi ao ar.
 
 Nenhum número de catálogo é escrito à mão no HTML. Os `data-total` da página
 são preenchidos a partir de `BEBIDAS`, justamente para que os textos não possam
