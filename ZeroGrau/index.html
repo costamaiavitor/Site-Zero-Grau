@@ -150,9 +150,9 @@
   <nav class="app-abas" id="abas" role="tablist" aria-label="Seções do site">
     <button class="app-aba" role="tab" aria-selected="true"  aria-controls="v-inicio"   data-vista="inicio">Início</button>
     <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-catalogo" data-vista="catalogo">Catálogo</button>
-    <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-entrega"  data-vista="entrega">Entrega</button>
     <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-pedir"    data-vista="pedir">Como pedir</button>
     <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-cupom"    data-vista="cupom">Cupom</button>
+    <button class="app-aba" role="tab" aria-selected="false" aria-controls="v-entrega"  data-vista="entrega">Entrega</button>
   </nav>
 
   <div class="app-acoes">
@@ -252,6 +252,85 @@
     </div>
   </section>
 
+  <!-- ============ VISTA: COMO PEDIR ============ -->
+  <section class="vista" id="v-pedir" role="tabpanel" aria-label="Como pedir">
+    <div class="vista-rola">
+      <div class="doc-corpo">
+        <div>
+          <div class="srule">
+            <span class="srule-k">Do carrinho à porta</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Quatro passos · nenhum telefonema</span>
+          </div>
+    <ol class="steps">
+      <li class="step"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
+      <li class="step"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
+      <li class="step"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
+      <li class="step"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
+    </ol>
+        </div>
+
+    <div class="aviso">
+      <div class="m18" aria-hidden="true">18+</div>
+      <div>
+        <h3>Venda proibida para menores de 18 anos</h3>
+        <p>A idade é verificada no cadastro e conferida com documento com foto na entrega. Sem documento, a bebida alcoólica volta para a loja e o valor é estornado. Aprecie com moderação — se for dirigir, não beba.</p>
+      </div>
+    </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VISTA: CUPOM ============ -->
+  <section class="vista" id="v-cupom" role="tabpanel" aria-label="Cupom">
+    <div class="vista-rola">
+      <div class="doc-corpo">
+        <div>
+          <div class="srule">
+            <span class="srule-k">Cupom de estreia</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Válido até 31/12/2026</span>
+          </div>
+    <div class="cupom">
+      <div>
+        <p class="tag">Primeiro pedido</p>
+        <h2>15% off em todo o catálogo</h2>
+        <p class="lead">Sem teto de desconto e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
+        <ul class="cupom-list">
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ 60,00</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ 120,00</li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
+        </ul>
+      </div>
+      <div class="ticket">
+        <small>Código</small>
+        <button class="code" id="code" aria-describedby="codeHint">PRIMEIRAGELADA</button>
+        <small id="codeHint">Clique para copiar</small>
+      </div>
+    </div>
+        </div>
+
+        <div>
+          <div class="srule">
+            <span class="srule-k">A loja</span>
+            <span class="srule-line"></span>
+            <span class="srule-v">Seg a dom · 10h00 – 03h00</span>
+          </div>
+          <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
+          <div class="info-list">
+            <div class="info-row"><span>Telefone</span><b><a data-contato="tel"></a></b></div>
+            <div class="info-row"><span>E-mail</span><b><a data-contato="mailto"></a></b></div>
+            <div class="info-row"><span>Endereço</span><b><span data-contato="endereco"></span> · <span data-contato="bairro"></span></b></div>
+            <div class="info-row"><span>CNPJ</span><b class="num" data-contato="cnpj"></b></div>
+            <!-- ⚠ sem página própria ainda: por ora caem no WhatsApp, que responde de verdade -->
+            <div class="info-row"><span>Trocas e devoluções</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
+            <div class="info-row"><span>Política de casco</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ VISTA: ENTREGA ============ -->
   <section class="vista" id="v-entrega" role="tabpanel" aria-label="Entrega">
     <div class="vista-rola">
@@ -337,85 +416,6 @@
         <b>Vale-refeição</b><small>Alelo, Sodexo e Ticket, válidos para itens sem álcool.</small>
       </div>
     </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ VISTA: COMO PEDIR ============ -->
-  <section class="vista" id="v-pedir" role="tabpanel" aria-label="Como pedir">
-    <div class="vista-rola">
-      <div class="doc-corpo">
-        <div>
-          <div class="srule">
-            <span class="srule-k">Do carrinho à porta</span>
-            <span class="srule-line"></span>
-            <span class="srule-v">Quatro passos · nenhum telefonema</span>
-          </div>
-    <ol class="steps">
-      <li class="step"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
-      <li class="step"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
-      <li class="step"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
-      <li class="step"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
-    </ol>
-        </div>
-
-    <div class="aviso">
-      <div class="m18" aria-hidden="true">18+</div>
-      <div>
-        <h3>Venda proibida para menores de 18 anos</h3>
-        <p>A idade é verificada no cadastro e conferida com documento com foto na entrega. Sem documento, a bebida alcoólica volta para a loja e o valor é estornado. Aprecie com moderação — se for dirigir, não beba.</p>
-      </div>
-    </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ VISTA: CUPOM ============ -->
-  <section class="vista" id="v-cupom" role="tabpanel" aria-label="Cupom">
-    <div class="vista-rola">
-      <div class="doc-corpo">
-        <div>
-          <div class="srule">
-            <span class="srule-k">Cupom de estreia</span>
-            <span class="srule-line"></span>
-            <span class="srule-v">Válido até 31/12/2026</span>
-          </div>
-    <div class="cupom">
-      <div>
-        <p class="tag">Primeiro pedido</p>
-        <h2>15% off em todo o catálogo</h2>
-        <p class="lead">Sem teto de desconto e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
-        <ul class="cupom-list">
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ 60,00</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ 120,00</li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
-        </ul>
-      </div>
-      <div class="ticket">
-        <small>Código</small>
-        <button class="code" id="code" aria-describedby="codeHint">PRIMEIRAGELADA</button>
-        <small id="codeHint">Clique para copiar</small>
-      </div>
-    </div>
-        </div>
-
-        <div>
-          <div class="srule">
-            <span class="srule-k">A loja</span>
-            <span class="srule-line"></span>
-            <span class="srule-v">Seg a dom · 10h00 – 03h00</span>
-          </div>
-          <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
-          <div class="info-list">
-            <div class="info-row"><span>Telefone</span><b><a data-contato="tel"></a></b></div>
-            <div class="info-row"><span>E-mail</span><b><a data-contato="mailto"></a></b></div>
-            <div class="info-row"><span>Endereço</span><b><span data-contato="endereco"></span> · <span data-contato="bairro"></span></b></div>
-            <div class="info-row"><span>CNPJ</span><b class="num" data-contato="cnpj"></b></div>
-            <!-- ⚠ sem página própria ainda: por ora caem no WhatsApp, que responde de verdade -->
-            <div class="info-row"><span>Trocas e devoluções</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
-            <div class="info-row"><span>Política de casco</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
-          </div>
         </div>
       </div>
     </div>
