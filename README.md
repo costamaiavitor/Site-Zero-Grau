@@ -72,19 +72,27 @@ São servidas em WebP em dois tamanhos, escolhidos pelo navegador conforme a
 densidade da tela (`srcset` com descritores `x`, porque o card exibe a foto
 sempre na mesma altura).
 
-O recorte é gerado por `ferramentas/`, e dá para refazer:
+O recorte é feito pelo Adobe Photoshop, via o conector **Adobe for Creativity**
+(`image_remove_background`), que segmenta o produto em vez de separar por cor —
+distinção que importa, porque numa foto de fundo branco vidro transparente e
+rótulo branco têm a mesma cor.
+
+Para refazer o lote:
 
 ```bash
-pip install pillow numpy scipy
-python3 ferramentas/baixa-fotos.py      # frontais do Open Food Facts → /tmp/fonte2
-python3 ferramentas/processa-fotos.py   # recorta e normaliza → /tmp/novo
+pip install pillow
+python3 ferramentas/baixa-fotos.py        # frontais do Open Food Facts → /tmp/fonte2
+# subir cada foto ao Adobe e rodar image_remove_background → /tmp/adobe
+python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
 ```
 
-`processa-fotos.py` decide, por produto, entre recortar da foto de origem e
-corrigir o recorte que já existe — quando a origem é menor que o atual, trocar
-pioraria. Os quatro produtos que precisaram de ajuste próprio estão anotados lá,
-cada um com o motivo. Os PNG do primeiro lote ficam no histórico do git, no
-commit `c000790`, caso seja preciso reprocessar.
+O passo do meio é interativo: o conector Adobe exige que o arquivo esteja no
+armazenamento dele (não aceita URL de terceiros), então cada foto passa por
+`asset_initialize_file_upload` → PUT → `asset_finalize_file_upload` antes do
+recorte. Evian, Monster e o gelo não têm foto frontal no Open Food Facts; para
+esses, a entrada é o recorte anterior achatado sobre branco.
+
+Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.
 
 ## Publicar
 
