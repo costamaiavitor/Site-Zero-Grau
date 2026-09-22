@@ -9,10 +9,15 @@
       que vende por caixa fechada e com preço de revenda.
 
    ⚠ Isto é identificação, não autenticação. Não há senha, não há servidor e
-   não há consulta à Receita: o que se confere é o dígito verificador, que diz
-   se o número é bem formado, não se é seu. Num site estático não dá para ir
-   além disso, e fingir que dá seria pior. O cadastro de revenda de verdade
-   acontece depois, quando o pedido chega.
+   não há consulta à Receita. Num site estático não dá para ir além disso, e
+   fingir que dá seria pior. O cadastro de revenda de verdade acontece depois,
+   quando o pedido chega.
+
+   ⚠ A conferência do dígito verificador está DESLIGADA (CONFERE_DIGITO, logo
+   abaixo). Neste momento qualquer número passa, desde que tenha 11 dígitos
+   para CPF ou 14 para CNPJ — o que ainda decide a loja é a contagem. O
+   algoritmo continua aqui, testado, e volta a valer trocando a chave para
+   true.
 
    As duas caixas nascem fechadas no CSS e é o script que as abre. Sem
    JavaScript não há parede: o visitante cai na vitrine de varejo, que é a
@@ -20,6 +25,11 @@
    ========================================================================== */
 
 const PUBLICO = document.body.dataset.publico;          /* "varejo" | "atacado" */
+
+/* A chave do dígito verificador. Desligada por ora, a pedido: qualquer número
+   com a contagem certa entra. Ligar é trocar para true — nada mais muda, e os
+   dois algoritmos abaixo continuam cobertos por teste. */
+const CONFERE_DIGITO = false;
 
 const PERFIL = {
   ler(){
@@ -52,7 +62,9 @@ const DESTINO = {varejo: "index.html", atacado: "atacado.html"};
    Os dois algoritmos são o mesmo esqueleto: soma ponderada dos dígitos,
    resto por 11, e o dígito é 0 quando o resto dá menos que 2. Só mudam os
    pesos. Rejeitar os repetidos (111.111.111-11) é necessário porque eles
-   passam na conta — é o buraco clássico de quem implementa só a fórmula. */
+   passam na conta — é o buraco clássico de quem implementa só a fórmula.
+
+   Quem chama é `aceitaCPF` / `aceitaCNPJ`, que olham a chave antes. */
 function digitos(v){ return v.replace(/\D/g, "") }
 
 function cpfValido(v){
@@ -81,6 +93,10 @@ function cnpjValido(v){
   }
   return true;
 }
+
+/* o que a porta de fato exige hoje: contagem, e o dígito só se a chave mandar */
+const aceitaCPF  = v => !CONFERE_DIGITO || cpfValido(v);
+const aceitaCNPJ = v => !CONFERE_DIGITO || cnpjValido(v);
 
 function mascarar(v){
   const n = digitos(v).slice(0, 14);
@@ -135,8 +151,8 @@ const docBtn   = document.getElementById("docBtn");
 
 function tipoDe(v){
   const n = digitos(v);
-  if(n.length === 11) return cpfValido(v) ? "varejo" : null;
-  if(n.length === 14) return cnpjValido(v) ? "atacado" : null;
+  if(n.length === 11) return aceitaCPF(v)  ? "varejo"  : null;
+  if(n.length === 14) return aceitaCNPJ(v) ? "atacado" : null;
   return null;
 }
 
@@ -148,13 +164,13 @@ function dica(){
   if(!n.length){ docTipo.textContent = ""; return; }
   if(n.length < 11){ docTipo.textContent = "CPF tem 11 dígitos, CNPJ tem 14."; return; }
   if(n.length === 11){
-    const ok = cpfValido(n);
+    const ok = aceitaCPF(n);
     docTipo.classList.add(ok ? "ok" : "bad");
     docTipo.textContent = ok ? "CPF · você compra no varejo" : "CPF inválido — confira os dígitos.";
     return;
   }
   if(n.length < 14){ docTipo.textContent = "Faltam dígitos para um CNPJ."; return; }
-  const ok = cnpjValido(n);
+  const ok = aceitaCNPJ(n);
   docTipo.classList.add(ok ? "ok" : "bad");
   docTipo.textContent = ok ? "CNPJ · você compra no atacado, por caixa fechada"
                            : "CNPJ inválido — confira os dígitos.";
@@ -164,7 +180,7 @@ function entrar(){
   const destino = tipoDe(docInput.value);
   if(!destino){
     docMsg.className = "doc-msg bad";
-    docMsg.textContent = digitos(docInput.value).length < 11
+    docMsg.textContent = !CONFERE_DIGITO || digitos(docInput.value).length < 11
       ? "Digite um CPF (11 dígitos) ou um CNPJ (14)."
       : "Esse número não fecha no dígito verificador. Confira e tente de novo.";
     docInput.focus();

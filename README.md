@@ -13,9 +13,13 @@ São duas lojas sobre o mesmo estoque:
 
 Quem decide é a porta, em `js/porta.js`: depois do aviso de idade o site pede
 CPF ou CNPJ e manda para a loja correspondente. É identificação, não
-autenticação — não há senha, não há servidor e não há consulta à Receita. O que
-se confere é o dígito verificador, que diz se o número é bem formado, não se é
-seu. Num site estático não dá para ir além, e fingir que dá seria pior.
+autenticação — não há senha, não há servidor e não há consulta à Receita. Num
+site estático não dá para ir além, e fingir que dá seria pior.
+
+⚠ **A conferência do dígito verificador está desligada.** Hoje passa qualquer
+número com 11 dígitos (vai para o varejo) ou 14 (vai para o atacado). O
+algoritmo dos dois documentos continua em `js/porta.js` e coberto por teste;
+para religar, troque `CONFERE_DIGITO` para `true` e mais nada muda.
 
 Nenhuma das duas rola a página. O conteúdo que antes vinha empilhado em onze
 seções virou vistas que se revezam no mesmo espaço; rola só a lista de

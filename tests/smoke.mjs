@@ -27,6 +27,11 @@ const LARGURAS = [320, 390, 600, 900, 1024, 1280, 1440, 1600, 1920];
 const CPF  = '11144477735';
 const CNPJ = '11222333000181';
 
+/* Inventados, com a contagem certa e o dígito errado. Hoje a porta aceita os
+   dois, porque CONFERE_DIGITO está desligada em js/porta.js. */
+const CPF_QUALQUER  = '12345678900';
+const CNPJ_QUALQUER = '12345678000100';
+
 /* Os dois slogans que o sorteio pode trazer. O teste força os dois em vez de
    aceitar o da vez: medir só o sorteado escondia falha de layout em metade
    das rodadas — foi exatamente assim que uma passou na branch e falhou na
@@ -291,23 +296,52 @@ secao('A porta separa as duas lojas');
   ok('CPF entra na vitrine de varejo', new URL(p1.url()).pathname.endsWith('index.html') || new URL(p1.url()).pathname === '/');
   ok('e a vitrine tem cards', (await p1.$$('.card')).length > 0);
 
-  /* número mal formado é recusado antes de qualquer navegação */
+  /* Com a chave desligada, o que a porta exige é a contagem. Número curto
+     continua barrado antes de qualquer navegação. */
   const p2 = await ctx.newPage();
   await p2.goto(BASE, { waitUntil:'networkidle' });
   await p2.click('#gateYes');
   await p2.waitForTimeout(120);
-  await p2.fill('#docInput', '11144477736');      /* último dígito trocado */
+  await p2.fill('#docInput', '1114447773');        /* 10 dígitos */
   await p2.click('#docBtn');
   await p2.waitForTimeout(200);
-  ok('CPF com dígito errado é recusado', /dígito verificador/i.test(await p2.textContent('#docMsg')));
+  ok('número com dígitos a menos é recusado', /11 dígitos/.test(await p2.textContent('#docMsg')));
   ok('e a porta continua aberta', await p2.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
 
-  await p2.fill('#docInput', '11111111111');
+  await p2.fill('#docInput', '111444777351');      /* 12: nem CPF nem CNPJ */
   await p2.click('#docBtn');
   await p2.waitForTimeout(200);
-  ok('repetido (111...) não passa', await p2.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
+  ok('12 dígitos não é CPF nem CNPJ', await p2.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
 
-  /* CNPJ atravessa para o atacado */
+  await p2.fill('#docInput', CPF_QUALQUER);
+  await p2.click('#docBtn');
+  await p2.waitForTimeout(300);
+  ok('com a chave desligada, 11 dígitos quaisquer entram',
+     await p2.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+
+  /* A chave está desligada na porta, mas o algoritmo continua no arquivo e
+     volta a valer com uma linha. Testar aqui é o que impede de ele apodrecer
+     sem ninguém perceber. */
+  const digito = await p2.evaluate(() => ({
+    cpfBom:   cpfValido('11144477735'),
+    cpfRuim:  cpfValido('11144477736'),
+    cpfIgual: cpfValido('11111111111'),
+    cnpjBom:  cnpjValido('11222333000181'),
+    cnpjRuim: cnpjValido('11222333000182'),
+    chave:    CONFERE_DIGITO
+  }));
+  ok('a chave do dígito está desligada', digito.chave === false);
+  ok('o algoritmo do CPF continua correto',  digito.cpfBom && !digito.cpfRuim && !digito.cpfIgual);
+  ok('o algoritmo do CNPJ continua correto', digito.cnpjBom && !digito.cnpjRuim);
+
+  /* CNPJ atravessa para o atacado — inclusive um inventado, com a chave
+     desligada: o que decide a loja é a contagem de dígitos */
+  const p5 = await ctx.newPage();
+  await p5.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(p5, CNPJ_QUALQUER);
+  await p5.waitForTimeout(400);
+  ok('14 dígitos quaisquer vão para o atacado', new URL(p5.url()).pathname.endsWith('atacado.html'), p5.url());
+
   const p3 = await ctx.newPage();
   await p3.goto(BASE, { waitUntil:'networkidle' });
   await entrar(p3, CNPJ);
