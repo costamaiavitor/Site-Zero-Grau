@@ -34,6 +34,11 @@ As duas lojas têm o botão **Trocar conta** no topo: ele limpa o documento
 desta aba e reabre a porta. Num site que escolhe a vitrine pelo documento,
 errar o documento não pode ser sem saída.
 
+No celular a navegação desce para uma barra fixa no pé da tela, ao alcance do
+polegar, e a faixa de operação do rodapé sai — os mesmos números estão na
+abertura. Todo alvo de toque tem no mínimo 44 px de altura, e o teste de
+fumaça percorre as cinco vistas e as duas lojas medindo isso.
+
 ## Rodar
 
 ```bash

@@ -289,7 +289,7 @@ function pintarCarrinho(){
     aviso.classList.add("bad");
     aviso.textContent = `Faltam R$ ${brl(REGRAS.minimo - c.base)} para o pedido mínimo de R$ ${brl(REGRAS.minimo)}.`;
   }else if(entrega === null){
-    aviso.textContent = "Calcule o CEP no topo da página para ver a taxa de entrega.";
+    aviso.textContent = "Informe o CEP na aba Início para ver a taxa de entrega.";
   }else if(entrega.retirada){
     aviso.textContent = `Seu endereço fica a ${entrega.km.toFixed(1).replace(".", ",")} km, fora do raio de ${RAIO_MAX} km. O pedido fica separado para retirada no balcão, sem taxa.`;
   }else if(c.taxa === 0){

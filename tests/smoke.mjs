@@ -72,8 +72,12 @@ const secao = t => console.log(`\n${t}`);
 
 const navegador = await chromium.launch();
 
-async function contexto({ js = true, largura = 1280 } = {}){
-  const ctx = await navegador.newContext({ viewport:{ width:largura, height:900 }, javaScriptEnabled:js });
+async function contexto({ js = true, largura = 1280, altura = 900, celular = false } = {}){
+  const ctx = await navegador.newContext({
+    viewport:{ width:largura, height:altura },
+    javaScriptEnabled:js,
+    isMobile:celular, hasTouch:celular
+  });
   if(FONTES && existsSync(path.join(FONTES,'google.css'))){
     await ctx.route('**://fonts.googleapis.com/**', r =>
       r.fulfill({ contentType:'text/css', body:readFileSync(path.join(FONTES,'google.css'),'utf8') }));
@@ -483,6 +487,79 @@ for(const largura of LARGURAS){
   }));
   ok(`balcão ${largura}px: sem barra horizontal`, m.scroll <= m.client + 1, `${m.scroll} > ${m.client}`);
   ok(`balcão ${largura}px: a página não rola`, m.alto <= m.tela + 1, `${m.alto} > ${m.tela}`);
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Conforto no celular');
+for(const [largura, altura] of [[390, 844], [360, 740]]){
+  const ctx = await contexto({ largura, altura, celular:true });
+
+  /* ---- varejo ---- */
+  const p = await ctx.newPage();
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(p, CPF, null);
+  await p.waitForTimeout(250);
+
+  const tela = `${largura}×${altura}`;
+
+  /* A navegação fica no pé, ao alcance do polegar, e encostada na borda de
+     baixo — se ela sobra para fora da tela, metade das abas some. */
+  const barra = await p.evaluate(() => {
+    const b = document.querySelector('.app-abas').getBoundingClientRect();
+    return { base:Math.round(b.bottom), topo:Math.round(b.top), tela:innerHeight };
+  });
+  ok(`${tela}: a navegação encosta no pé da tela`,
+     Math.abs(barra.base - barra.tela) <= 1, `${barra.base} ≠ ${barra.tela}`);
+  ok(`${tela}: e não come a tela toda`, barra.topo > barra.tela * 0.85);
+  ok(`${tela}: a faixa do rodapé sai de cena`,
+     await p.$eval('.app-pe', e => getComputedStyle(e).display === 'none'));
+
+  /* Alvo de toque: abaixo de 44 px o dedo erra. Percorre as vistas, porque o
+     que encolhe costuma ser o botão que só existe numa delas. */
+  const pequenos = async () => p.evaluate(() => {
+    const out = [];
+    for(const el of document.querySelectorAll('button,a[href],input,[role="tab"]')){
+      const b = el.getBoundingClientRect();
+      if(b.width === 0 || b.height === 0) continue;
+      if(b.bottom < 0 || b.top > innerHeight) continue;
+      if(b.height < 43) out.push(`${String(el.className) || el.tagName}:${Math.round(b.width)}×${Math.round(b.height)}`);
+    }
+    return out;
+  });
+
+  for(const vista of ['inicio', 'catalogo', 'pedir', 'cupom', 'entrega']){
+    await p.click(`.app-aba[data-vista="${vista}"]`);
+    await p.waitForTimeout(220);
+    const ruins = await pequenos();
+    ok(`${tela} · ${vista}: todo alvo de toque tem 44 px`, ruins.length === 0, ruins.slice(0,3).join(', '));
+  }
+
+  /* o carrinho é onde se aperta mais: + , − e remover */
+  await p.click('.app-aba[data-vista="catalogo"]');
+  await p.waitForTimeout(200);
+  await p.evaluate(() => { for(let i = 0; i < 2; i++) document.querySelector('.card:not(.hide) .add').click(); });
+  await p.click('#cartBtn');
+  await p.waitForTimeout(400);
+  const ruinsCart = await pequenos();
+  ok(`${tela} · carrinho: todo alvo de toque tem 44 px`, ruinsCart.length === 0, ruinsCart.slice(0,3).join(', '));
+
+  /* ---- atacado ---- */
+  const pa = await ctx.newPage();
+  await pa.goto(BASE + '/atacado.html', { waitUntil:'networkidle' });
+  await entrar(pa, CNPJ, null);
+  await pa.waitForTimeout(250);
+  const ruinsBal = await pa.evaluate(() => {
+    const out = [];
+    for(const el of document.querySelectorAll('button,a[href],input')){
+      const b = el.getBoundingClientRect();
+      if(b.width === 0 || b.height === 0 || b.bottom < 0 || b.top > innerHeight) continue;
+      if(b.height < 43) out.push(`${String(el.className) || el.tagName}:${Math.round(b.width)}×${Math.round(b.height)}`);
+    }
+    return out;
+  });
+  ok(`${tela} · balcão: todo alvo de toque tem 44 px`, ruinsBal.length === 0, ruinsBal.slice(0,3).join(', '));
+
   await ctx.close();
 }
 

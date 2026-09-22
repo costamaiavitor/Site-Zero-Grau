@@ -1162,13 +1162,40 @@ h3{
 .app-aba:hover{color:var(--ink);background:var(--paper-2)}
 .app-aba[aria-selected="true"]{background:var(--ink);color:var(--paper)}
 
-/* Em tela estreita as abas descem para a própria linha: espremer seis rótulos
-   ao lado do logo dava três pixels por letra. */
+/* ---- a mesma navegação, no lugar onde o polegar alcança ----
+   No celular as abas descem para uma barra fixa no pé da tela. Três motivos,
+   nesta ordem: o polegar chega lá sem trocar a mão de posição; sai uma fileira
+   inteira do topo, que estava comendo um quinto da altura só de moldura; e
+   cada aba pode ter 56 px de altura em vez de 35, que é a diferença entre
+   acertar e tentar de novo.
+
+   A barra é fixa, e o espaço dela vem de um padding no body: com height:100dvh
+   e box-sizing:border-box, o conteúdo encolhe na medida exata e nada fica
+   escondido atrás dela. O env(safe-area-inset-bottom) é a faixa do indicador
+   de home do iPhone — sem ele a última aba fica debaixo da barrinha. */
 @media(max-width:900px){
-  .app-topo{flex-wrap:wrap;padding-block:10px;gap:10px}
-  .app-abas{order:3;width:100%;overflow-x:auto;scrollbar-width:none}
-  .app-abas::-webkit-scrollbar{display:none}
-  .app-aba{text-align:center}
+  .js body{padding-bottom:calc(56px + env(safe-area-inset-bottom,0px))}
+
+  .app-topo{min-height:54px;gap:12px}
+  .app-topo .logo-mark{width:30px;height:30px;font-size:.88rem}
+  .app-topo .logo-word{font-size:1.06rem}
+
+  .app-abas{
+    position:fixed;left:0;right:0;bottom:0;z-index:80;
+    width:auto;display:flex;
+    border:none;border-top:1px solid var(--rule);border-radius:0;
+    background:var(--paper);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .app-aba{
+    flex:1;min-width:0;height:56px;padding:0 4px;
+    display:flex;align-items:center;justify-content:center;
+    text-align:center;font-size:.6rem;letter-spacing:.04em;
+    border-right:1px solid var(--rule-2);
+  }
+  .app-aba:last-child{border-right:none}
+  .app-aba[aria-selected="true"]{background:var(--acc);color:var(--on-acc)}
+
 }
 
 /* Item de flex e de grid nasce com min-width:auto, que resolve para
@@ -1216,9 +1243,11 @@ h3{
 .vitrine-linha .cep-form{flex:1;margin:0}
 @media(max-width:820px){
   .vitrine-hero{grid-template-columns:1fr;gap:10px}
-  .vista-cab{gap:10px;padding-block:12px 10px}
+  .vista-cab{gap:8px;padding-block:10px 9px}
   /* uma fileira que rola, em vez de três empilhadas */
-  .filtro-linha{gap:10px}
+  .filtro-linha{gap:8px}
+  .filtro-linha .tab{height:44px;display:flex;align-items:center;padding-inline:15px}
+  .busca{padding-block:0;height:44px}
   .filtro-linha .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
   .filtro-linha .tabs::-webkit-scrollbar{display:none}
   .filtro-linha .tab{white-space:nowrap}
@@ -1240,6 +1269,12 @@ h3{
 .app-pe a:hover{color:var(--acc)}
 .app-pe .fim{margin-left:auto}
 @media(max-width:700px){.app-pe .some{display:none}}
+/* No celular a faixa do pé sai: os mesmos números estão na abertura, e duas
+   barras empilhadas no fim da tela viram parede. A regra mora aqui, depois da
+   declaração de .app-pe, e não junto com o resto do bloco de celular: lá em
+   cima ela vinha antes do display:flex acima e perdia para ele — mídia não
+   soma especificidade, só a ordem decide. */
+@media(max-width:900px){.app-pe{display:none}}
 
 /* corpo de documento dentro de uma vista (entrega, como pedir, cupom) */
 .doc-corpo{display:grid;gap:clamp(22px,3vw,34px)}
@@ -1470,4 +1505,56 @@ h3{
   .abertura .hstat b{font-size:1.3rem}
   .abertura .hstat span{font-size:.6rem;margin-top:5px;letter-spacing:.1em}
   .abertura-btns .btn{flex:1;justify-content:center}
+}
+
+.abertura-pe{
+  display:flex;gap:6px 22px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;
+  color:var(--ink-2);
+}
+.abertura-pe a{text-decoration:underline;text-underline-offset:4px}
+.abertura-pe a:hover{color:var(--acc)}
+
+/* Emblemas em fileira, e não em pilha: empilhados, três deles tomavam um terço
+   da altura da foto num card de celular, que já é pequeno. */
+@media(max-width:560px){
+  .badges{flex-direction:row;flex-wrap:wrap;gap:4px;top:6px;left:6px;right:6px}
+  .badge{font-size:.52rem;padding:3px 5px}
+  .abertura-pe a{padding-block:8px}
+}
+
+/* ---- alvo de toque ----
+   Abaixo de 44 px o dedo erra. Vale para o que se aperta muitas vezes numa
+   compra: o + de cada card, o carrinho, o botão de conta e o X do painel. */
+@media(max-width:900px){
+  .conta-btn{height:44px;min-width:44px;justify-content:center}
+  .cart-btn{height:44px;min-width:44px}
+  .cart-close{width:44px;height:44px}
+  .add{width:44px;height:44px}
+  .app-topo .logo{padding-block:7px}
+  .abertura-pe a{display:inline-block;padding-block:9px}
+  .qtd button{min-width:44px;height:44px}
+  .cart-item .tirar{width:44px;height:44px}
+  .pedido-item .tirar{width:44px;height:44px}
+  /* o balcão tem a mesma régua: aba de categoria, logo e link do pé */
+  .bal-filtros .tab{height:44px;display:flex;align-items:center}
+  .bal-topo .logo{padding-block:6px}
+  .bal-pe a{display:inline-flex;align-items:center;min-height:44px}
+  /* os links dentro da lista de informações da loja: telefone, e-mail e os
+     dois que caem no WhatsApp. Numa linha de tabela eles nascem com a altura
+     do texto, 17 px. */
+  .info-list a{display:inline-flex;align-items:center;min-height:44px}
+  .abertura-pe a{display:inline-flex;align-items:center;min-height:44px;padding-block:0}
+}
+
+/* Fileira de categorias que rola na horizontal não avisa que rola. A máscara
+   desbota os últimos pixels da direita: o rótulo cortado pela metade é o que
+   diz "tem mais para cá", sem precisar de seta nem de texto. */
+@media(max-width:820px){
+  .filtro-linha .tabs,.bal-filtros .tabs{
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);
+  }
+  .bal-topo{padding-block:7px;gap:7px 14px}
+  .bal-doc{font-size:.76rem}
 }
