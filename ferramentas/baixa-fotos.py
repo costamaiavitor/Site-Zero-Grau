@@ -11,10 +11,10 @@ CA = '/root/.ccr/ca-bundle.crt'
 MAP = {
  'absolut-1l':'7312040017201','absolut-mango-1l':'7312040350209','coca-cola-2l':'5449000009067',
  'coventry-fizz-750':'3596710187614','estrella-galicia-330':'8412598000010','evian-15l':'3068320120256',
- 'feldschlosschen-500':'76129810','goudale-blonde-750':'3261570000044','guinness-draught-500':'5000213101223',
+ 'feldschlosschen-500':'76129810','guinness-draught-500':'5000213101223',
  'ivanov-vodka-1l':'3596710445417','jack-daniels-1l':'3099873045864','martini-rosso-1l':'3011932000805',
  'monster-ultra-500':'5060337500401','no3-gin-700':'5010493025775','red-bull-250':'9002490205973',
- 'seagrams-gin-700':'5900685007910','smirnoff-ice-275':'5410316962094','spaten-fardo-350':'4072700005780',
+ 'seagrams-gin-700':'5900685007910','smirnoff-ice-275':'5410316962094',
  'tanqueray-750':'5000281005904','villageoise-branco-250':'3175520036338',
 }
 

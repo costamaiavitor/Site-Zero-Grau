@@ -4,7 +4,10 @@ As fotos de produto vêm do **Open Food Facts** (openfoodfacts.org), banco
 colaborativo de produtos alimentícios. As imagens são publicadas sob
 **CC BY-SA 3.0** — uso livre com atribuição e mesma licença.
 
-A foto do gelo vem do **Wikimedia Commons** (Alicia Fagerving, CC BY-SA 4.0).
+O gelo é montagem de embalagem, não foto de produto: é o único item de marca
+própria. O gelo dentro do saco vem do **Wikimedia Commons**
+([Cloudy ice cubes](https://commons.wikimedia.org/wiki/File:Cloudy_ice_cubes.jpg),
+liz west, CC BY 2.0); o saco é desenhado.
 
 | Arquivo | Código de barras | Ficha do produto |
 |---|---|---|
@@ -15,8 +18,7 @@ A foto do gelo vem do **Wikimedia Commons** (Alicia Fagerving, CC BY-SA 4.0).
 | `estrella-galicia-330-200.webp` · `estrella-galicia-330-400.webp` | `8412598000010` | [Open Food Facts](https://world.openfoodfacts.org/product/8412598000010) |
 | `evian-15l-200.webp` · `evian-15l-400.webp` | `3068320120256` | [Open Food Facts](https://world.openfoodfacts.org/product/3068320120256) |
 | `feldschlosschen-500-200.webp` · `feldschlosschen-500-400.webp` | `76129810` | [Open Food Facts](https://world.openfoodfacts.org/product/76129810) |
-| `gelo-cubos-5kg-200.webp` · `gelo-cubos-5kg-400.webp` | — | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ice_cube_bag_02.jpg) |
-| `goudale-blonde-750-200.webp` · `goudale-blonde-750-400.webp` | `3261570000044` | [Open Food Facts](https://world.openfoodfacts.org/product/3261570000044) |
+| `gelo-cubos-5kg-200.webp` · `gelo-cubos-5kg-400.webp` | — | montagem · gelo de [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Cloudy_ice_cubes.jpg) |
 | `guinness-draught-500-200.webp` · `guinness-draught-500-400.webp` | `5000213101223` | [Open Food Facts](https://world.openfoodfacts.org/product/5000213101223) |
 | `ivanov-vodka-1l-200.webp` · `ivanov-vodka-1l-400.webp` | `3596710445417` | [Open Food Facts](https://world.openfoodfacts.org/product/3596710445417) |
 | `jack-daniels-1l-200.webp` · `jack-daniels-1l-400.webp` | `3099873045864` | [Open Food Facts](https://world.openfoodfacts.org/product/3099873045864) |
@@ -26,7 +28,6 @@ A foto do gelo vem do **Wikimedia Commons** (Alicia Fagerving, CC BY-SA 4.0).
 | `red-bull-250-200.webp` · `red-bull-250-400.webp` | `9002490205973` | [Open Food Facts](https://world.openfoodfacts.org/product/9002490205973) |
 | `seagrams-gin-700-200.webp` · `seagrams-gin-700-400.webp` | `5900685007910` | [Open Food Facts](https://world.openfoodfacts.org/product/5900685007910) |
 | `smirnoff-ice-275-200.webp` · `smirnoff-ice-275-400.webp` | `5410316962094` | [Open Food Facts](https://world.openfoodfacts.org/product/5410316962094) |
-| `spaten-fardo-350-200.webp` · `spaten-fardo-350-400.webp` | `4072700005780` | [Open Food Facts](https://world.openfoodfacts.org/product/4072700005780) |
 | `tanqueray-750-200.webp` · `tanqueray-750-400.webp` | `5000281005904` | [Open Food Facts](https://world.openfoodfacts.org/product/5000281005904) |
 | `villageoise-branco-250-200.webp` · `villageoise-branco-250-400.webp` | `3175520036338` | [Open Food Facts](https://world.openfoodfacts.org/product/3175520036338) |
 
@@ -50,18 +51,16 @@ semitransparentes — nunca tocou no defeito que deveria corrigir.
 Origem de cada imagem:
 
 - a foto frontal do Open Food Facts, buscada por código de barras, quando existe;
-- o recorte anterior, para Evian, Monster e o gelo, que não têm foto frontal
-  disponível.
+- o recorte anterior, para Evian e Monster, que não têm foto frontal disponível;
+- para o gelo, a montagem de `ferramentas/saco-de-gelo.py`. Marca própria não
+  tem foto de produto para recortar: não existe saco escrito "Zero Grau" no
+  mundo. Então o gelo é fotografia e o saco é desenho — plástico, solda, brilho
+  e impressão são construídos por cima. Vale para a marca da casa e não valeria
+  para mais nada aqui: desenhar o rótulo de um Absolut seria inventar o produto
+  que o cliente acha que está comprando.
 
 Depois do recorte, `ferramentas/padroniza-fotos.py` apara a moldura
-transparente, iguala altura, base e folga entre as 21, e exporta em WebP de 400
+transparente, iguala altura, base e folga entre as 19, e exporta em WebP de 400
 e 200 px de altura, escolhidos pelo navegador conforme a densidade da tela.
-
-A lata do Spaten passa antes por `ferramentas/perspectiva.py`. Ela é a única
-foto do lote tirada com a câmera acima do produto: o corpo afunilava 4,42°,
-contra 0,14° da Estrella, que é outra lata, e destoava na prateleira. A
-retificação projetiva deixou o afunilamento em 0,55°. O aro superior continua
-visível, porque isso está na foto e nenhuma transformação 2D o remove sem
-inventar pixel de um produto real.
 
 Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.

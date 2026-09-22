@@ -63,10 +63,9 @@ que os textos não possam divergir do estoque.
 
 ## Imagens
 
-As fotos de produto vêm do Open Food Facts e do Wikimedia Commons, sob
-CC BY-SA. A atribuição exigida pela licença está em `ZeroGrau/creditos.html`,
-com link no rodapé do site, e o detalhamento técnico em
-`ZeroGrau/img/CREDITOS.md`.
+As fotos de produto vêm do Open Food Facts, sob CC BY-SA. A atribuição exigida
+pela licença está em `ZeroGrau/creditos.html`, com link no rodapé do site, e o
+detalhamento técnico em `ZeroGrau/img/CREDITOS.md`.
 
 São servidas em WebP em dois tamanhos, escolhidos pelo navegador conforme a
 densidade da tela (`srcset` com descritores `x`, porque o card exibe a foto
@@ -83,15 +82,23 @@ Para refazer o lote:
 pip install pillow
 python3 ferramentas/baixa-fotos.py        # frontais do Open Food Facts → /tmp/fonte2
 # subir cada foto ao Adobe e rodar image_remove_background → /tmp/adobe
-python3 ferramentas/perspectiva.py <in> <out>   # só quando a foto é de cima
+python3 ferramentas/saco-de-gelo.py       # a embalagem de marca própria → /tmp/adobe
 python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
 ```
 
 O passo do meio é interativo: o conector Adobe exige que o arquivo esteja no
 armazenamento dele (não aceita URL de terceiros), então cada foto passa por
 `asset_initialize_file_upload` → PUT → `asset_finalize_file_upload` antes do
-recorte. Evian, Monster e o gelo não têm foto frontal no Open Food Facts; para
-esses, a entrada é o recorte anterior achatado sobre branco.
+recorte. Evian e Monster não têm foto frontal no Open Food Facts; para esses, a
+entrada é o recorte anterior achatado sobre branco.
+
+O gelo não passa por aí. É o único item de marca própria, e marca própria não
+tem foto de produto para recortar: não existe saco escrito "Zero Grau" no mundo.
+`ferramentas/saco-de-gelo.py` monta a embalagem — o gelo é fotografia de licença
+livre, o saco, a solda, o brilho e a impressão são desenhados por cima. Vale
+para a marca da casa e não valeria para mais nada na prateleira: desenhar o
+rótulo de um Absolut seria inventar o produto que o cliente acha que está
+comprando.
 
 Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.
 
