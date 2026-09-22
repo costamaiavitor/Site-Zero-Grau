@@ -4,10 +4,8 @@ As fotos de produto vêm do **Open Food Facts** (openfoodfacts.org), banco
 colaborativo de produtos alimentícios. As imagens são publicadas sob
 **CC BY-SA 3.0** — uso livre com atribuição e mesma licença.
 
-O gelo é montagem de embalagem, não foto de produto: é o único item de marca
-própria. O gelo dentro do saco vem do **Wikimedia Commons**
-([Cloudy ice cubes](https://commons.wikimedia.org/wiki/File:Cloudy_ice_cubes.jpg),
-liz west, CC BY 2.0); o saco é desenhado.
+A foto do saco de gelo é da própria loja — é o único item de marca própria do
+catálogo, e a embalagem é dela.
 
 | Arquivo | Código de barras | Ficha do produto |
 |---|---|---|
@@ -18,7 +16,7 @@ liz west, CC BY 2.0); o saco é desenhado.
 | `estrella-galicia-330-200.webp` · `estrella-galicia-330-400.webp` | `8412598000010` | [Open Food Facts](https://world.openfoodfacts.org/product/8412598000010) |
 | `evian-15l-200.webp` · `evian-15l-400.webp` | `3068320120256` | [Open Food Facts](https://world.openfoodfacts.org/product/3068320120256) |
 | `feldschlosschen-500-200.webp` · `feldschlosschen-500-400.webp` | `76129810` | [Open Food Facts](https://world.openfoodfacts.org/product/76129810) |
-| `gelo-cubos-5kg-200.webp` · `gelo-cubos-5kg-400.webp` | — | montagem · gelo de [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Cloudy_ice_cubes.jpg) |
+| `gelo-cubos-5kg-200.webp` · `gelo-cubos-5kg-400.webp` | — | Zero Grau · marca própria |
 | `guinness-draught-500-200.webp` · `guinness-draught-500-400.webp` | `5000213101223` | [Open Food Facts](https://world.openfoodfacts.org/product/5000213101223) |
 | `ivanov-vodka-1l-200.webp` · `ivanov-vodka-1l-400.webp` | `3596710445417` | [Open Food Facts](https://world.openfoodfacts.org/product/3596710445417) |
 | `jack-daniels-1l-200.webp` · `jack-daniels-1l-400.webp` | `3099873045864` | [Open Food Facts](https://world.openfoodfacts.org/product/3099873045864) |
@@ -52,12 +50,9 @@ Origem de cada imagem:
 
 - a foto frontal do Open Food Facts, buscada por código de barras, quando existe;
 - o recorte anterior, para Evian e Monster, que não têm foto frontal disponível;
-- para o gelo, a montagem de `ferramentas/saco-de-gelo.py`. Marca própria não
-  tem foto de produto para recortar: não existe saco escrito "Zero Grau" no
-  mundo. Então o gelo é fotografia e o saco é desenho — plástico, solda, brilho
-  e impressão são construídos por cima. Vale para a marca da casa e não valeria
-  para mais nada aqui: desenhar o rótulo de um Absolut seria inventar o produto
-  que o cliente acha que está comprando.
+- para o gelo, a foto da loja, que já chega recortada. Dela sai só um fiapo de
+  plástico de 94 pixels que ficou solto do corpo no recorte — componente
+  desconectado, achado por rotulagem em vez de a olho.
 
 Depois do recorte, `ferramentas/padroniza-fotos.py` apara a moldura
 transparente, iguala altura, base e folga entre as 19, e exporta em WebP de 400

@@ -82,7 +82,6 @@ Para refazer o lote:
 pip install pillow
 python3 ferramentas/baixa-fotos.py        # frontais do Open Food Facts → /tmp/fonte2
 # subir cada foto ao Adobe e rodar image_remove_background → /tmp/adobe
-python3 ferramentas/saco-de-gelo.py       # a embalagem de marca própria → /tmp/adobe
 python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
 ```
 
@@ -92,13 +91,8 @@ armazenamento dele (não aceita URL de terceiros), então cada foto passa por
 recorte. Evian e Monster não têm foto frontal no Open Food Facts; para esses, a
 entrada é o recorte anterior achatado sobre branco.
 
-O gelo não passa por aí. É o único item de marca própria, e marca própria não
-tem foto de produto para recortar: não existe saco escrito "Zero Grau" no mundo.
-`ferramentas/saco-de-gelo.py` monta a embalagem — o gelo é fotografia de licença
-livre, o saco, a solda, o brilho e a impressão são desenhados por cima. Vale
-para a marca da casa e não valeria para mais nada na prateleira: desenhar o
-rótulo de um Absolut seria inventar o produto que o cliente acha que está
-comprando.
+O gelo não passa por aí. É o único item de marca própria, e a foto é da loja,
+já recortada — entra direto no `padroniza-fotos.py`.
 
 Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.
 
