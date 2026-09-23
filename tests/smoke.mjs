@@ -44,7 +44,8 @@ const SLOGANS = [
 const TIPOS = {
   '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8',
   '.js':'text/javascript; charset=utf-8', '.webp':'image/webp', '.svg':'image/svg+xml',
-  '.png':'image/png', '.jpg':'image/jpeg', '.md':'text/markdown; charset=utf-8'
+  '.png':'image/png', '.jpg':'image/jpeg', '.md':'text/markdown; charset=utf-8',
+  '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8'
 };
 
 /* ---------- servidor estático mínimo, sem dependência ---------- */
@@ -225,35 +226,85 @@ secao('Carrinho');
 /* ====================================================================== */
 secao('CEP e entrega');
 {
-  const ctx = await contexto();
-  const p = await ctx.newPage();
-  await p.goto(BASE, { waitUntil:'networkidle' });
-  /* o campo do CEP mora na vista de abertura, que é onde a porta deixa a
-     pessoa — por isso este teste fica lá em vez de ir ao catálogo */
-  await entrar(p, CPF, null);
-  /* acima do pedido mínimo de propósito: abaixo dele o aviso do carrinho fala
-     do mínimo, que é a informação certa a dar primeiro — e não da entrega */
-  await p.evaluate(() => { for(let i=0;i<6;i++) document.querySelector('.card:not(.hide) .add').click(); });
+  /* O CEP agora vai ao ViaCEP. Aqui a resposta é forjada: o teste é da regra
+     de distância e do que o site faz com ela, não da disponibilidade de um
+     serviço de terceiro — e um teste que depende de rede alheia falha no dia
+     em que ela pisca, sem nada de errado no código. */
+  const resposta = corpo => async rota =>
+    rota.fulfill({ contentType:'application/json', body:JSON.stringify(corpo) });
 
-  const calcular = async cep => {
+  const comCep = async (viacep, cep = '60150000') => {
+    const ctx = await contexto();
+    const p = await ctx.newPage();
+    await ctx.route('**://viacep.com.br/**', viacep);
+    await p.goto(BASE, { waitUntil:'networkidle' });
+    await entrar(p, CPF, null);
+    /* acima do pedido mínimo de propósito: abaixo dele o aviso do carrinho
+       fala do mínimo, que é a informação certa a dar primeiro */
+    await p.evaluate(() => { for(let i=0;i<6;i++) document.querySelector('.card:not(.hide) .add').click(); });
     await p.fill('#cepInput', cep);
     await p.click('#cepBtn');
-    await p.waitForTimeout(200);
-    return p.textContent('#rEntrega');
+    await p.waitForTimeout(500);
+    return { p, ctx };
   };
 
-  ok('CEP curto é recusado', /8 dígitos/.test(
-    await (async () => { await p.fill('#cepInput','123'); await p.click('#cepBtn'); return p.textContent('#cepMsg'); })()));
+  /* oito dígitos é o mínimo, e isso nem chega a consultar */
+  {
+    const { p, ctx } = await comCep(resposta({ erro:true }), '123');
+    ok('CEP curto é recusado', /8 dígitos/.test(await p.textContent('#cepMsg')));
+    await ctx.close();
+  }
 
-  const dentro = await calcular('60000030');   /* 030 → 3,0 km */
-  ok('dentro do raio cobra taxa', /^R\$/.test(dentro.trim()), dentro);
+  /* bairro conhecido, dentro do raio */
+  {
+    const { p, ctx } = await comCep(resposta({ cep:'60150-000', localidade:'Fortaleza', bairro:'Meireles', uf:'CE' }));
+    const msg = await p.textContent('#cepMsg');
+    ok('bairro dentro do raio cobra taxa', /Entregamos em Meireles/.test(msg), msg);
+    ok('e o resumo do carrinho mostra o bairro', /Meireles/.test(await p.textContent('#rCepInfo')));
+    ok('a entrega entra no resumo', /^R\$/.test((await p.textContent('#rEntrega')).trim()));
+    await ctx.close();
+  }
 
-  /* 128 → 12,8 km, além dos 12 km de raio: é retirada no balcão, não frete grátis */
-  const fora = await calcular('60000128');
-  ok('fora do raio NÃO diz "grátis"', !/grátis/i.test(fora), fora);
-  ok('fora do raio diz retirar no balcão', /balcão/i.test(fora), fora);
-  ok('o aviso do carrinho explica a retirada', /balcão/i.test(await p.textContent('#cartAviso')));
-  await ctx.close();
+  /* bairro que não está na tabela cai no padrão da cidade, e não em erro */
+  {
+    const { p, ctx } = await comCep(resposta({ cep:'60000-000', localidade:'Fortaleza', bairro:'Bairro Inventado', uf:'CE' }));
+    ok('bairro fora da tabela ainda entrega', /Entregamos em/.test(await p.textContent('#cepMsg')));
+    await ctx.close();
+  }
+
+  /* cidade da região metropolitana, além do raio: é retirada, não frete grátis */
+  {
+    const { p, ctx } = await comCep(resposta({ cep:'61700-000', localidade:'Aquiraz', bairro:'Centro', uf:'CE' }));
+    const fora = await p.textContent('#rEntrega');
+    ok('fora do raio NÃO diz "grátis"', !/grátis/i.test(fora), fora);
+    ok('fora do raio diz retirar no balcão', /balcão/i.test(fora), fora);
+    ok('o aviso do carrinho explica a retirada', /balcão/i.test(await p.textContent('#cartAviso')));
+    await ctx.close();
+  }
+
+  /* cidade que não atendemos */
+  {
+    const { p, ctx } = await comCep(resposta({ cep:'01001-000', localidade:'São Paulo', bairro:'Sé', uf:'SP' }));
+    ok('cidade fora da área vira retirada', /fora do raio/.test(await p.textContent('#cepMsg')));
+    await ctx.close();
+  }
+
+  /* CEP que não existe */
+  {
+    const { p, ctx } = await comCep(resposta({ erro:true }), '99999999');
+    ok('CEP inexistente é recusado', /não existe/.test(await p.textContent('#cepMsg')));
+    await ctx.close();
+  }
+
+  /* rede fora do ar: dizer que não deu, nunca voltar a chutar um número */
+  {
+    const { p, ctx } = await comCep(rota => rota.abort());
+    const msg = await p.textContent('#cepMsg');
+    ok('rede fora do ar avisa em vez de inventar', /Não deu para consultar/.test(msg), msg);
+    ok('e nenhuma entrega é gravada', (await p.textContent('#rEntrega')).trim() === '—');
+    ok('o botão volta a funcionar', !(await p.$eval('#cepBtn', e => e.disabled)));
+    await ctx.close();
+  }
 }
 
 /* ====================================================================== */
@@ -487,6 +538,60 @@ for(const largura of LARGURAS){
   }));
   ok(`balcão ${largura}px: sem barra horizontal`, m.scroll <= m.client + 1, `${m.scroll} > ${m.client}`);
   ok(`balcão ${largura}px: a página não rola`, m.alto <= m.tela + 1, `${m.alto} > ${m.tela}`);
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Estrutura do documento');
+{
+  const ctx = await contexto();
+  const p = await ctx.newPage();
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(p, CPF, null);
+
+  /* Um h1, e ele vem antes de qualquer outro título. Os dois diálogos ficavam
+     no começo do documento e colocavam dois h3 na frente do h1 — leitor de
+     tela e buscador leem isso como um documento que começa no meio. */
+  const titulos = await p.$$eval('h1,h2,h3,h4', hs => hs.map(h => +h.tagName[1]));
+  ok('existe exatamente um h1', titulos.filter(n => n === 1).length === 1);
+  ok('o h1 vem antes de todo o resto', titulos.indexOf(1) === 0, titulos.join(','));
+  ok('nenhum título pula nível', titulos.every((n, i) => i === 0 || n <= Math.max(...titulos.slice(0, i)) + 1),
+     titulos.join(','));
+
+  /* toda vista precisa de um título próprio, visível ou só para leitor */
+  const semTitulo = await p.$$eval('.vista', vs =>
+    vs.filter(v => !v.querySelector('h1,h2')).map(v => v.id));
+  ok('toda vista tem h1 ou h2', semTitulo.length === 0, semTitulo.join(','));
+
+  /* o mapa de zonas saiu */
+  ok('o diagrama de zonas não existe mais', (await p.$$('.zones')).length === 0);
+
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Arquivos de indexação');
+{
+  const ctx = await contexto();
+  const p = await ctx.newPage();
+
+  /* request.get em vez de goto: um .txt faz o Chromium baixar em vez de
+     navegar, e o teste morria antes de ler uma linha */
+  const robots = await p.request.get(BASE + '/robots.txt');
+  ok('robots.txt é servido', robots.status() === 200);
+  const txt = await robots.text();
+  ok('robots barra o atacado', /Disallow:\s*\/atacado\.html/.test(txt), txt.slice(0,80));
+  ok('robots aponta o sitemap', /Sitemap:/.test(txt));
+
+  const mapa = await p.request.get(BASE + '/sitemap.xml');
+  ok('sitemap.xml é servido', mapa.status() === 200);
+  const xml = await mapa.text();
+  ok('o sitemap não lista o atacado', !/atacado\.html/.test(xml));
+
+  /* a página órfã de estudo saiu do que vai ao ar */
+  const orfa = await p.request.get(BASE + '/identidade.html');
+  ok('identidade.html não vai mais ao ar', orfa.status() === 404, String(orfa.status()));
+
   await ctx.close();
 }
 

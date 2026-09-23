@@ -1,0 +1,7 @@
+# O varejo é para ser encontrado. O balcão de atacado não: ele já é noindex no
+# <meta> da própria página, e a regra abaixo evita o rastreio antes disso.
+User-agent: *
+Allow: /
+Disallow: /atacado.html
+
+Sitemap: https://costamaiavitor.github.io/Site-Zero-Grau/sitemap.xml

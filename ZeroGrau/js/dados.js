@@ -154,3 +154,43 @@ function faixaDe(caixas){
   for(const f of ATACADO.faixas) if(caixas >= f.cx) extra = f.extra;
   return extra;
 }
+
+/* ---------- ENTREGA ----------
+   O CEP é conferido no ViaCEP, que é a base dos Correios exposta de graça e
+   sem chave. É de lá que vêm cidade e bairro; a distância sai da tabela
+   abaixo. Antes disso a distância era derivada dos três últimos dígitos do
+   CEP — um número inventado com cara de cálculo, que mandaria alguém pagar
+   frete errado ou ouvir "fora do raio" morando a dois quarteirões.
+
+   ⚠ Os quilômetros são estimativas a partir do endereço da loja, que também é
+   exemplo. Quem for publicar mede os seus e troca só esta tabela: é o único
+   lugar do site que decide quanto custa chegar em cada bairro.
+
+   Bairro que não estiver na lista cai em `PADRAO_FORTALEZA`; cidade que não
+   estiver em `CIDADES` fica fora do raio, e aí é retirada no balcão. */
+const ENTREGA = {
+  loja: "Aldeota · Fortaleza / CE",
+
+  bairros: {
+    "aldeota": 0.8,        "meireles": 1.6,       "dionisio torres": 1.4,
+    "joaquim tavora": 2.0, "centro": 3.2,         "praia de iracema": 2.6,
+    "varjota": 2.2,        "papicu": 3.6,         "cocó": 3.4,
+    "de lourdes": 2.4,     "fatima": 3.0,         "benfica": 4.2,
+    "montese": 5.4,        "parquelandia": 5.8,   "messejana": 11.4,
+    "sapiranga": 10.2,     "edson queiroz": 7.8,  "parangaba": 6.6,
+    "barra do ceara": 9.4, "mucuripe": 3.0,       "cidade dos funcionarios": 8.2,
+    "passare": 9.6,        "conjunto ceara": 12.8, "pirambu": 6.4,
+    "jardim america": 4.6, "bairro de fatima": 3.0, "praia do futuro": 6.2
+  },
+  PADRAO_FORTALEZA: 7.5,
+
+  cidades: {
+    "fortaleza": null,     /* null = usa a tabela de bairros */
+    "eusebio": 14.0,       "caucaia": 17.5,       "maracanau": 16.8,
+    "aquiraz": 27.0,       "pacatuba": 24.0,      "maranguape": 28.5,
+    "itaitinga": 21.0
+  }
+};
+
+/* "Fátima" e "fatima" são o mesmo bairro; o ViaCEP devolve com acento. */
+const chaveLugar = s => semAcento(String(s || "")).trim();

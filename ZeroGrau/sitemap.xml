@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Duas páginas públicas: a vitrine e os créditos das imagens. O atacado fica
+     de fora de propósito (ver robots.txt). Trocar o domínio aqui junto com o
+     og:url do index.html. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://costamaiavitor.github.io/Site-Zero-Grau/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://costamaiavitor.github.io/Site-Zero-Grau/creditos.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

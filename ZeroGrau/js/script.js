@@ -277,7 +277,7 @@ function pintarCarrinho(){
                             : entrega.retirada        ? "retirar no balcão"
                             : c.taxa === 0            ? "grátis"
                             : "R$ " + brl(c.taxa);
-  $("rCepInfo").textContent = entrega ? `${entrega.km.toFixed(1).replace(".", ",")} km` : "informe o CEP";
+  $("rCepInfo").textContent = entrega ? (entrega.onde || `${entrega.km.toFixed(1).replace(".", ",")} km`) : "informe o CEP";
 
   /* avisos na ordem em que o cliente resolve: mínimo, endereço, retirada, frete */
   const aviso  = $("cartAviso");
@@ -291,7 +291,7 @@ function pintarCarrinho(){
   }else if(entrega === null){
     aviso.textContent = "Informe o CEP na aba Início para ver a taxa de entrega.";
   }else if(entrega.retirada){
-    aviso.textContent = `Seu endereço fica a ${entrega.km.toFixed(1).replace(".", ",")} km, fora do raio de ${RAIO_MAX} km. O pedido fica separado para retirada no balcão, sem taxa.`;
+    aviso.textContent = `${entrega.onde || "Seu endereço"} fica fora do raio de ${RAIO_MAX} km. O pedido fica separado para retirada no balcão, sem taxa.`;
   }else if(c.taxa === 0){
     aviso.classList.add("ok");
     aviso.textContent = "Frete grátis aplicado.";
@@ -405,8 +405,8 @@ $("finalizar").addEventListener("click", () => {
   const linhas = [...carrinho.values()].map(({item,qtd}) =>
     `• ${qtd}x ${item.marca} ${item.nome} — R$ ${brl(precoDe(item) * qtd)}`);
   const entregaTxt = !entrega          ? "Entrega: a combinar"
-                   : entrega.retirada  ? `Retirada no balcão (${entrega.km.toFixed(1).replace(".", ",")} km, fora do raio)`
-                   : `Entrega (${entrega.km.toFixed(1).replace(".", ",")} km): ${c.taxa === 0 ? "grátis" : "R$ " + brl(c.taxa)}`;
+                   : entrega.retirada  ? `Retirada no balcão (${entrega.onde || "fora do raio"})`
+                   : `Entrega (${entrega.onde || entrega.km.toFixed(1).replace(".", ",") + " km"}): ${c.taxa === 0 ? "grátis" : "R$ " + brl(c.taxa)}`;
   const texto = [
     "*Pedido Zero Grau*", "", ...linhas, "",
     `Subtotal: R$ ${brl(c.sub)}`,
@@ -440,49 +440,87 @@ function toast(msg){
   toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
 }
 
-/* ---------- 8. CEP E TAXA ---------- */
+/* ---------- 8. CEP E TAXA ----------
+   O CEP vai ao ViaCEP, que é a base dos Correios aberta e sem chave. De lá
+   vêm cidade e bairro de verdade; a distância sai da tabela ENTREGA, em
+   js/dados.js.
+
+   A versão anterior tirava a distância dos três últimos dígitos do CEP. Dava
+   um número plausível e sempre diferente, o que é pior do que não dar número
+   nenhum: quem publicasse aquilo cobraria frete errado de gente real, ou
+   mandaria retirar no balcão quem mora a dois quarteirões.
+
+   Rede é coisa que falha. Quando falha, a resposta é dizer que não deu para
+   conferir — nunca cair de volta num palpite. */
 const cepInput = $("cepInput");
 const cepMsg   = $("cepMsg");
+const cepBtn   = $("cepBtn");
 
 cepInput.addEventListener("input", e => {
   const v = e.target.value.replace(/\D/g, "").slice(0, 8);
   e.target.value = v.length > 5 ? `${v.slice(0,5)}-${v.slice(5)}` : v;
 });
+cepInput.addEventListener("keydown", e => { if(e.key === "Enter") cepBtn.click() });
 
-cepInput.addEventListener("keydown", e => {
-  if(e.key === "Enter") $("cepBtn").click();
-});
+const aviso = (classe, texto) => { cepMsg.className = "cep-msg " + classe; cepMsg.textContent = texto; };
 
-$("cepBtn").addEventListener("click", () => {
-  const digits = cepInput.value.replace(/\D/g, "");
+/* distância a partir do que o ViaCEP devolveu; null = não atendemos a cidade */
+function distanciaDe(lugar){
+  const cidade = chaveLugar(lugar.localidade);
+  if(!(cidade in ENTREGA.cidades)) return null;
+  const km = ENTREGA.cidades[cidade];
+  if(km !== null) return km;
+  return ENTREGA.bairros[chaveLugar(lugar.bairro)] ?? ENTREGA.PADRAO_FORTALEZA;
+}
 
-  if(digits.length !== 8){
-    cepMsg.className = "cep-msg bad";
-    cepMsg.textContent = "O CEP precisa ter 8 dígitos. Confira e calcule de novo.";
-    return;
-  }
-
-  /* simulação: a distância é derivada do CEP só para demonstrar o cálculo da taxa */
-  const km    = (parseInt(digits.slice(-3), 10) % 130) / 10;
-  const kmTxt = km.toFixed(1).replace(".", ",");
-
-  if(km > RAIO_MAX){
-    cepMsg.className = "cep-msg bad";
-    cepMsg.textContent = `${kmTxt} km da loja — fora do raio de ${RAIO_MAX} km. Você pode retirar no balcão sem taxa.`;
-    entrega = {km, taxa: 0, minutos: 0, retirada: true};
-    try{ localStorage.setItem("zg-entrega", JSON.stringify(entrega)) }catch{}
-    pintarCarrinho();
-    return;
-  }
-
-  const taxa = TAXA_BASE + km * TAXA_KM;
-  const min  = Math.round(18 + km * 2.6);
-  cepMsg.className = "cep-msg ok";
-  cepMsg.textContent = `Entregamos aí. ${kmTxt} km · taxa R$ ${brl(taxa)} · cerca de ${min} minutos.`;
-  /* o endereço calculado alimenta o resumo do carrinho */
-  entrega = {km, taxa, minutos: min, retirada: false};
-  try{ localStorage.setItem("zg-entrega", JSON.stringify(entrega)) }catch{}
+function guardarEntrega(e){
+  entrega = e;
+  try{ localStorage.setItem("zg-entrega", JSON.stringify(e)) }catch{ /* segue sem lembrar */ }
   pintarCarrinho();
+}
+
+cepBtn.addEventListener("click", async () => {
+  const digitos = cepInput.value.replace(/\D/g, "");
+  if(digitos.length !== 8){
+    aviso("bad", "O CEP precisa ter 8 dígitos. Confira e calcule de novo.");
+    return;
+  }
+
+  cepBtn.disabled = true;
+  aviso("", "Consultando o CEP…");
+
+  let lugar;
+  try{
+    const r = await fetch(`https://viacep.com.br/ws/${digitos}/json/`);
+    if(!r.ok) throw new Error(r.status);
+    lugar = await r.json();
+  }catch{
+    aviso("bad", "Não deu para consultar o CEP agora. Tente de novo em instantes ou fale com a loja pelo WhatsApp.");
+    cepBtn.disabled = false;
+    return;
+  }finally{
+    cepBtn.disabled = false;
+  }
+
+  if(lugar.erro){
+    aviso("bad", "Esse CEP não existe na base dos Correios. Confira os oito dígitos.");
+    return;
+  }
+
+  const onde = [lugar.bairro, lugar.localidade].filter(Boolean).join(", ") || lugar.localidade;
+  const km = distanciaDe(lugar);
+
+  if(km === null || km > RAIO_MAX){
+    aviso("bad", `${onde} fica fora do raio de ${RAIO_MAX} km. Você pode retirar no balcão, sem taxa.`);
+    guardarEntrega({km: km ?? 0, taxa: 0, minutos: 0, retirada: true, onde});
+    return;
+  }
+
+  const taxa   = TAXA_BASE + km * TAXA_KM;
+  const minuto = Math.round(18 + km * 2.6);
+  const kmTxt  = km.toFixed(1).replace(".", ",");
+  aviso("ok", `Entregamos em ${onde}. ${kmTxt} km · taxa R$ ${brl(taxa)} · cerca de ${minuto} minutos.`);
+  guardarEntrega({km, taxa, minutos: minuto, retirada: false, onde});
 });
 
 /* ---------- 9. CUPOM ---------- */

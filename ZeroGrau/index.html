@@ -34,8 +34,8 @@
      max-age=600, então uma mudança recém-publicada continua chegando velha
      no navegador de quem esteve aqui nos últimos dez minutos — e o site
      parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
-<link rel="stylesheet" href="css/style.css?v=4">
-<link rel="stylesheet" href="css/temas.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/temas.css?v=5">
 
 <!-- A casca de uma tela só existe com script. Marcar aqui, e não depois que o
      script.js roda, evita a página nascer rolando e encolher na cara de quem
@@ -98,47 +98,6 @@
 </svg>
 
 <a class="pular" href="#v-catalogo" data-vista="catalogo">Pular para o catálogo</a>
-
-<!-- ============ AVISO DE IDADE ============
-     Nasce fechado: quem abre é o script. Sem JavaScript não há diálogo
-     cobrindo a tela e o site continua navegável. Ver js/porta.js. -->
-<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
-  <div class="gate-card">
-    <div class="logo">
-      <div class="logo-mark" aria-hidden="true">0°</div>
-      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
-    </div>
-    <h3 id="gateTitle">Você tem 18 anos ou mais?</h3>
-    <p>A venda de bebida alcoólica é proibida para menores de 18 anos. O entregador confere um documento com foto na entrega.</p>
-    <div class="gate-btns">
-      <button class="btn btn-primary" id="gateYes">Tenho 18 ou mais</button>
-      <a class="btn btn-ghost" href="https://www.gov.br" rel="noopener">Sou menor</a>
-    </div>
-    <small class="gate-legal">Lei nº 13.106/2015 · Aprecie com moderação. Se for dirigir, não beba.</small>
-  </div>
-</div>
-
-<!-- ============ IDENTIFICAÇÃO ============ -->
-<div class="gate porta" id="porta" role="dialog" aria-modal="true" aria-labelledby="portaTitle" aria-hidden="true">
-  <div class="gate-card">
-    <div class="logo">
-      <div class="logo-mark" aria-hidden="true">0°</div>
-      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
-    </div>
-    <h3 id="portaTitle">CPF ou CNPJ</h3>
-    <p>É o que separa as duas lojas: com CPF você entra aqui, na vitrine de varejo; com CNPJ, no balcão de atacado, que vende por caixa fechada e com preço de revenda.</p>
-    <label class="doc-campo">
-      <span class="tag">Documento</span>
-      <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
-    </label>
-    <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
-    <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
-    <div class="gate-btns">
-      <button class="btn btn-primary" id="docBtn">Entrar</button>
-    </div>
-    <small class="gate-legal">O número não sai desta aba: fica só no navegador, para escolher a loja. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
-  </div>
-</div>
 
 <!-- ============ TOPO ============ -->
 <header class="app-topo">
@@ -242,6 +201,7 @@
   <!-- ============ VISTA: CATÁLOGO ============ -->
   <section class="vista" id="v-catalogo" role="tabpanel" aria-label="Catálogo">
     <div class="vista-cab">
+      <h2 class="so-leitor">Catálogo</h2>
       <div class="filtro-linha">
         <!-- uma aba por categoria real; o script preenche a partir de CATEGORIAS -->
         <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
@@ -270,6 +230,7 @@
             <span class="srule-line"></span>
             <span class="srule-v">Quatro passos · nenhum telefonema</span>
           </div>
+          <h2>Como pedir</h2>
     <ol class="steps">
       <li class="step"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
       <li class="step"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
@@ -324,6 +285,7 @@
             <span class="srule-line"></span>
             <span class="srule-v">Seg a dom · 10h00 – 03h00</span>
           </div>
+          <h2>A loja</h2>
           <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
           <div class="info-list">
             <div class="info-row"><span>Telefone</span><b><a data-contato="tel"></a></b></div>
@@ -353,50 +315,18 @@
             <div>
               <h2>Entregamos num raio de 12 km da loja</h2>
               <p class="lead lead--spaced">Loja física na Av. Santos Dumont, com câmara fria própria e frota de entregadores parceiros. Fora do raio, você retira no balcão sem pagar taxa.</p>
-        <div class="info-list">
-          <div class="info-row"><span>Funcionamento</span><b>Seg a dom · 10h00 – 03h00</b></div>
-          <div class="info-row"><span>Raio de entrega</span><b>12 km</b></div>
-          <div class="info-row"><span>Taxa base</span><b>R$ 4,90 <i>+ R$ 1,20/km</i></b></div>
-          <div class="info-row"><span>Pedido mínimo</span><b>R$ 30,00</b></div>
-          <div class="info-row"><span>Frete grátis</span><b class="hl">Acima de R$ 120,00</b></div>
-          <div class="info-row"><span>Tempo médio</span><b class="hl">38 minutos</b></div>
-        </div>
+              <p class="lead">A taxa é de R$ 4,90 mais R$ 1,20 por quilômetro, e some de vez acima de R$ 120,00 em produtos. Informe o CEP na aba Início para ver quanto fica no seu endereço.</p>
             </div>
 
-      <!-- diagrama de zonas: cada anel mostra a taxa real daquele raio -->
-      <div class="zones">
-        <!-- as cores vêm dos tokens do tema: o diagrama acompanha a identidade -->
-        <svg viewBox="0 0 400 362" role="img" aria-label="Diagrama das zonas de entrega: 4 km custa R$ 9,70, 8 km custa R$ 14,50 e 12 km custa R$ 19,30.">
-          <g fill="none" stroke="var(--rule)" stroke-width="1">
-            <circle cx="200" cy="192" r="144" stroke-dasharray="4 4"/>
-            <circle cx="200" cy="192" r="96" stroke-dasharray="4 4"/>
-            <circle cx="200" cy="192" r="48"/>
-          </g>
-          <circle cx="200" cy="192" r="48" fill="var(--acc)" opacity=".12"/>
-          <g stroke="var(--rule)" stroke-width="1">
-            <path d="M200 336V48M56 192h288" stroke-dasharray="2 5" opacity=".8"/>
-          </g>
-
-          <rect x="184" y="176" width="32" height="32" fill="var(--acc)"/>
-          <text x="200" y="196" text-anchor="middle" fill="var(--on-acc)" font-family="var(--mono)" font-size="11" font-weight="600" letter-spacing="1">0°</text>
-          <text x="200" y="228" text-anchor="middle" fill="var(--ink-2)" font-family="var(--mono)" font-size="9.5" letter-spacing="1.6">LOJA</text>
-
-          <g font-family="var(--mono)" font-size="10.5" letter-spacing=".6">
-            <rect x="139" y="136" width="122" height="18" fill="var(--card)"/>
-            <text x="200" y="149" text-anchor="middle" fill="var(--ink)">4 km · R$ 9,70</text>
-
-            <rect x="135" y="88" width="130" height="18" fill="var(--card)"/>
-            <text x="200" y="101" text-anchor="middle" fill="var(--ink)">8 km · R$ 14,50</text>
-
-            <rect x="133" y="40" width="134" height="18" fill="var(--card)"/>
-            <text x="200" y="53" text-anchor="middle" fill="var(--acc)" font-weight="600">12 km · R$ 19,30</text>
-          </g>
-        </svg>
-        <div class="zones-cap">
-          <span>Taxa = R$ 4,90 + R$ 1,20/km</span>
-          <span>Acima de 12 km: retirada no balcão</span>
-        </div>
-      </div>
+            <div class="info-list">
+              <div class="info-row"><span>Funcionamento</span><b>Seg a dom · 10h00 – 03h00</b></div>
+              <div class="info-row"><span>Raio de entrega</span><b>12 km</b></div>
+              <div class="info-row"><span>Taxa base</span><b>R$ 4,90 <i>+ R$ 1,20/km</i></b></div>
+              <div class="info-row"><span>Pedido mínimo</span><b>R$ 30,00</b></div>
+              <div class="info-row"><span>Frete grátis</span><b class="hl">Acima de R$ 120,00</b></div>
+              <div class="info-row"><span>Tempo médio</span><b class="hl">38 minutos</b></div>
+              <div class="info-row"><span>Fora do raio</span><b>Retirada no balcão, sem taxa</b></div>
+            </div>
           </div>
         </div>
 
@@ -406,6 +336,7 @@
             <span class="srule-line"></span>
             <span class="srule-v">4 formas aceitas</span>
           </div>
+          <h2>Pague do jeito que der</h2>
     <div class="pay-grid">
       <div class="pay">
         <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 4 4-4 4-4-4z"/><path d="m12 14 4 4-4 4-4-4z"/><path d="m6 8 4 4-4 4-4-4z"/><path d="m18 8 4 4-4 4-4-4z"/></svg></span>
@@ -442,6 +373,47 @@
   <span class="fim"><a href="atacado.html" data-loja="atacado">Compro para revender</a></span>
   <span><a href="creditos.html">Créditos</a></span>
 </footer>
+
+<!-- ============ AVISO DE IDADE ============
+     Nasce fechado: quem abre é o script. Sem JavaScript não há diálogo
+     cobrindo a tela e o site continua navegável. Ver js/porta.js. -->
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+    </div>
+    <h2 id="gateTitle">Você tem 18 anos ou mais?</h2>
+    <p>A venda de bebida alcoólica é proibida para menores de 18 anos. O entregador confere um documento com foto na entrega.</p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" id="gateYes">Tenho 18 ou mais</button>
+      <a class="btn btn-ghost" href="https://www.gov.br" rel="noopener">Sou menor</a>
+    </div>
+    <small class="gate-legal">Lei nº 13.106/2015 · Aprecie com moderação. Se for dirigir, não beba.</small>
+  </div>
+</div>
+
+<!-- ============ IDENTIFICAÇÃO ============ -->
+<div class="gate porta" id="porta" role="dialog" aria-modal="true" aria-labelledby="portaTitle" aria-hidden="true">
+  <div class="gate-card">
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">0°</div>
+      <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
+    </div>
+    <h2 id="portaTitle">CPF ou CNPJ</h2>
+    <p>É o que separa as duas lojas: com CPF você entra aqui, na vitrine de varejo; com CNPJ, no balcão de atacado, que vende por caixa fechada e com preço de revenda.</p>
+    <label class="doc-campo">
+      <span class="tag">Documento</span>
+      <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
+    </label>
+    <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
+    <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
+    <div class="gate-btns">
+      <button class="btn btn-primary" id="docBtn">Entrar</button>
+    </div>
+    <small class="gate-legal">O número não sai desta aba: fica só no navegador, para escolher a loja. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
+  </div>
+</div>
 
 <!-- ============ CARRINHO ============ -->
 <div class="cart-overlay" id="cartOverlay" hidden></div>
@@ -490,8 +462,8 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/dados.js?v=4"></script>
-<script src="js/porta.js?v=4"></script>
-<script src="js/script.js?v=4"></script>
+<script src="js/dados.js?v=5"></script>
+<script src="js/porta.js?v=5"></script>
+<script src="js/script.js?v=5"></script>
 </body>
 </html>

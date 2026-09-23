@@ -76,7 +76,6 @@ ZeroGrau/
   index.html        varejo: vitrine em quatro vistas
   atacado.html      atacado: tabela por caixa fechada
   creditos.html     atribuição das fotos (exigida pelas licenças CC BY-SA)
-  identidade.html   estudo das quatro identidades visuais consideradas
   css/style.css     estrutura e componentes; o :root guarda todos os tokens
   css/temas.css     as duas peles: "Madrugada" no varejo, "Balcão" no atacado
   js/dados.js       catálogo, contato e regras de venda — fonte única das duas
@@ -84,6 +83,8 @@ ZeroGrau/
   js/script.js      varejo: vistas, busca, carrinho, CEP, cupom
   js/atacado.js     atacado: tabela, pedido por caixa, faixas de desconto
   img/              fotos de produto em WebP, 200 e 400 px de altura
+  robots.txt        libera o varejo, barra o atacado
+  sitemap.xml       as duas páginas públicas
 ```
 
 ### Onde mexer
@@ -94,6 +95,7 @@ ZeroGrau/
 | categorias e abas | `CATEGORIAS`, logo abaixo |
 | telefone, WhatsApp, CNPJ, endereço | `CONTATO`, logo abaixo |
 | taxa, raio, pedido mínimo, cupom | `TAXA_BASE`, `RAIO_MAX` e `REGRAS` |
+| distância até cada bairro | `ENTREGA`, no fim de `js/dados.js` |
 | desconto de revenda, pedido mínimo do atacado | `ATACADO` |
 | quantas unidades tem cada caixa | `CAIXA_PADRAO` e `CAIXA_EXCECAO` |
 | cor, tipografia, forma | os tokens em `css/temas.css` |
@@ -177,5 +179,10 @@ caso, troque o `og:url` e o `og:image` pelo domínio novo.
 - [ ] Apontar `og:url` e `og:image` em `index.html` para o domínio final.
 - [ ] Escrever as páginas de "Trocas e devoluções" e "Política de casco" —
       hoje esses links caem no WhatsApp.
-- [ ] O cálculo de distância do CEP é uma simulação a partir dos dígitos.
-      Trocar por geocodificação de verdade antes de cobrar frete de alguém.
+- [ ] Medir a distância real da loja até cada bairro e trocar a tabela
+      `ENTREGA` em `js/dados.js` — os quilômetros de hoje são estimativa, e o
+      endereço da loja também é exemplo. O CEP em si já é conferido de verdade,
+      no ViaCEP.
+- [ ] Trocar as fotos de produto por fotos da própria loja. As de hoje são de
+      produto importado, do Open Food Facts; o banco brasileiro de lá é quase
+      todo foto de celular com a mão na garrafa (ver "Imagens").

@@ -656,7 +656,7 @@ h3{
 
 .card-body{padding:16px;display:flex;flex-direction:column;flex:1}
 .card .marca{
-  font-family:var(--mono);font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-2);font-weight:600;
 }
 .card .nome{
@@ -667,14 +667,14 @@ h3{
   margin:6px 0 10px;
 }
 .card .spec{
-  font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;
+  font-family:var(--mono);font-size:.75rem;letter-spacing:.03em;
   color:var(--ink-2);
   display:flex;flex-wrap:wrap;gap:6px;
   padding-top:9px;border-top:1px solid var(--rule-2);
 }
 .card .spec i{font-style:normal;color:var(--rule)}
 .casco{
-  font-family:var(--mono);font-size:.66rem;line-height:1.45;
+  font-family:var(--mono);font-size:.72rem;line-height:1.45;
   color:var(--ok);
   margin-top:10px;padding:7px 9px;
   border:1px dashed rgba(28,122,78,.4);
@@ -796,15 +796,6 @@ h3{
 .info-row b.hl{color:var(--acc)}
 .info-row b i{font-style:normal;color:var(--ink-2);font-weight:400}
 
-/* diagrama de zonas: cada anel carrega a taxa real daquele raio */
-.zones{border:1px solid var(--rule);background:var(--card);padding:clamp(16px,2.6vw,26px)}
-.zones svg{width:100%;height:auto}
-.zones-cap{
-  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
-  margin-top:16px;padding-top:14px;border-top:1px solid var(--rule-2);
-  font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);
-}
-
 /* ============ 14. PAGAMENTO ============ */
 .pay-grid{
   display:grid;grid-template-columns:repeat(4,1fr);
@@ -911,7 +902,7 @@ h3{
 .gate-btns .btn{flex:1}
 .gate-legal{
   display:block;margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);
-  font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;line-height:1.65;color:var(--ink-2);
+  font-family:var(--mono);font-size:.71rem;letter-spacing:.05em;line-height:1.65;color:var(--ink-2);
 }
 
 /* ============ 19. TOAST ============ */
@@ -936,7 +927,7 @@ h3{
 /* ============ 20. FORMA DOS BLOCOS MAIORES ============ */
 /* Agrupado no fim de propósito: é a última palavra sobre o raio, e é o que
    permite a um tema arredondar o site inteiro mudando um único token. */
-.cupom,.ticket,.zones,.aviso,.gate-card,.toast,.info-list{border-radius:var(--r-card)}
+.cupom,.ticket,.aviso,.gate-card,.toast,.info-list{border-radius:var(--r-card)}
 .cat,.pay,.card-art{border-radius:0}
 
 /* ============ 21. CARRINHO ============ */
@@ -990,11 +981,11 @@ h3{
 .cart-art .silhueta{display:none;width:30px;height:56px;color:var(--ink-2);stroke-width:var(--art-sw)}
 .cart-art.sem-foto .silhueta{display:block}
 .cart-item .marca{
-  font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;
   color:var(--ink-2);font-weight:600;
 }
 .cart-item .nome{font-size:.86rem;line-height:1.3;margin:2px 0 6px}
-.cart-item .un{font-family:var(--mono);font-size:.68rem;color:var(--ink-2)}
+.cart-item .un{font-family:var(--mono);font-size:.74rem;color:var(--ink-2)}
 .cart-item .linha-fim{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .cart-item .acoes{display:flex;align-items:center;gap:6px}
 .cart-item .sub{font-family:var(--mono);font-size:.82rem;font-weight:600;white-space:nowrap}
@@ -1342,14 +1333,14 @@ h3{
 
 .prod{font-weight:400}
 .prod-marca{
-  display:block;font-family:var(--mono);font-size:.63rem;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);
+  display:block;font-family:var(--mono);font-size:.70rem;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2);
 }
 .prod-nome{display:block;font-size:.9rem;line-height:1.3}
-.prod-nota{display:block;font-family:var(--mono);font-size:.63rem;color:var(--ok);margin-top:3px}
+.prod-nota{display:block;font-family:var(--mono);font-size:.70rem;color:var(--ok);margin-top:3px}
 /* em tela larga a embalagem e o estoque têm coluna própria; no celular as
    colunas somem e a informação desce para dentro da linha do produto */
-.prod-emb{display:none;font-family:var(--mono);font-size:.63rem;color:var(--ink-2);margin-top:3px}
+.prod-emb{display:none;font-family:var(--mono);font-size:.70rem;color:var(--ink-2);margin-top:3px}
 .tabela-atacado .n{white-space:nowrap}
 
 /* Em tela larga o resumo é coluna fixa e está sempre à vista, que é o que um
@@ -1367,9 +1358,9 @@ h3{
   display:grid;grid-template-columns:1fr auto;gap:12px;
   padding:10px 0;border-bottom:1px solid var(--rule-2);
 }
-.pedido-item .marca{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.pedido-item .marca{font-family:var(--mono);font-size:.69rem;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2)}
 .pedido-item .nome{font-size:.84rem;line-height:1.3}
-.pedido-item .un{font-family:var(--mono);font-size:.66rem;color:var(--ink-2);margin-top:3px}
+.pedido-item .un{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);margin-top:3px}
 .pedido-item .linha-fim{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .pedido-item .sub{font-family:var(--mono);font-size:.8rem;font-weight:600;white-space:nowrap}
 .pedido-vazio{font-family:var(--mono);font-size:.74rem;color:var(--ink-2);padding:18px 0}
@@ -1445,7 +1436,7 @@ h3{
   .card-art{height:140px;padding-bottom:9px}
   .card-body{padding:11px}
   .card .nome{font-size:.86rem;margin:4px 0 8px}
-  .card .spec{font-size:.62rem;gap:4px;padding-top:7px}
+  .card .spec{font-size:.70rem;gap:4px;padding-top:7px}
   .card .spec i{display:none}
   .price b{font-size:1.16rem}
   .badges{top:7px;left:7px;gap:4px}
@@ -1558,3 +1549,17 @@ h3{
   .bal-topo{padding-block:7px;gap:7px 14px}
   .bal-doc{font-size:.76rem}
 }
+
+/* Título que existe para a estrutura do documento e não para a tela. A vista
+   do catálogo não precisa da palavra "Catálogo" escrita — a aba já diz —, mas
+   precisa de um h2, senão a grade de produtos fica pendurada sem seção para
+   quem navega por títulos. Recortar em vez de display:none: o que some com
+   display:none some também do leitor de tela. */
+.so-leitor{
+  position:absolute;width:1px;height:1px;
+  margin:-1px;padding:0;border:0;
+  clip-path:inset(50%);overflow:hidden;white-space:nowrap;
+}
+
+/* Os h2 das vistas seguem o corpo de documento, não o de cartaz */
+.doc-corpo > div > h2{margin-bottom:clamp(16px,2.2vw,24px)}
