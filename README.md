@@ -141,8 +141,8 @@ python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
 O passo do meio é interativo: o conector Adobe exige que o arquivo esteja no
 armazenamento dele (não aceita URL de terceiros), então cada foto passa por
 `asset_initialize_file_upload` → PUT → `asset_finalize_file_upload` antes do
-recorte. Evian e Monster não têm foto frontal no Open Food Facts; para esses, a
-entrada é o recorte anterior achatado sobre branco.
+recorte. O Evian não tem foto frontal no Open Food Facts; para ele, a entrada é o
+recorte anterior achatado sobre branco.
 
 O gelo não passa por aí. É o único item de marca própria, e a foto é da loja,
 já recortada — entra direto no `padroniza-fotos.py`.

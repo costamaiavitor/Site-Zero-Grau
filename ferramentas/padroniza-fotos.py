@@ -7,7 +7,7 @@ distância de cor, e numa foto de estúdio branco isso confunde vidro transparen
 com rótulo branco. A Adobe acerta porque decide pelo que é o produto, não pela
 cor do pixel.
 
-Este script cuida do resto, que é o que deixa as 19 iguais entre si:
+Este script cuida do resto, que é o que deixa as 20 iguais entre si:
 apara a moldura transparente, iguala a altura, a base e a folga, e exporta em
 dois tamanhos.
 
