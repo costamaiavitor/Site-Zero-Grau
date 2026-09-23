@@ -10,14 +10,13 @@ from PIL import Image
 CA = '/root/.ccr/ca-bundle.crt'
 MAP = {
  'absolut-1l':'7312040017201','absolut-mango-1l':'7312040350209','coca-cola-2l':'5449000009067',
- 'coventry-fizz-750':'3596710187614','estrella-galicia-330':'8412598000010','evian-15l':'3068320120256',
+ 'coventry-fizz-750':'3596710187614','estrella-galicia-330':'8412598000010',
  'feldschlosschen-500':'76129810','guinness-draught-500':'5000213101223',
  'jack-daniels-1l':'3099873045864','martini-rosso-1l':'3011932000805',
- 'monster-ultra-473':'0070847033929','no3-gin-700':'5010493025775','red-bull-250':'9002490205973',
+ 'no3-gin-700':'5010493025775','red-bull-250':'9002490205973',
  'seagrams-gin-700':'5900685007910','smirnoff-ice-275':'5410316962094',
  'tanqueray-750':'5000281005904',
- 'baly-melancia-2l':'7898080664389','campo-largo-750':'7896931611377',
- 'velho-barreiro-910':'7896050200124',
+ 'baly-melancia-2l':'7898080664389',
 }
 
 def get(u, t=25):

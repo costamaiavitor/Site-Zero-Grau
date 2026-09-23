@@ -136,16 +136,19 @@ pip install pillow
 python3 ferramentas/baixa-fotos.py        # frontais do Open Food Facts → /tmp/fonte2
 # subir cada foto ao Adobe e rodar image_remove_background → /tmp/adobe
 python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
+python3 ferramentas/confere-fotos.py      # confere o padrão
 ```
 
 O passo do meio é interativo: o conector Adobe exige que o arquivo esteja no
 armazenamento dele (não aceita URL de terceiros), então cada foto passa por
 `asset_initialize_file_upload` → PUT → `asset_finalize_file_upload` antes do
-recorte. O Evian não tem foto frontal no Open Food Facts; para ele, a entrada é o
-recorte anterior achatado sobre branco.
+recorte.
 
-O gelo não passa por aí. É o único item de marca própria, e a foto é da loja,
-já recortada — entra direto no `padroniza-fotos.py`.
+Toda foto nova passa por `python3 ferramentas/confere-fotos.py` antes de subir.
+Ele mede o que dá para medir do padrão (altura, folga, contorno sem mordida,
+produto em pé, lata sem trapézio) e sai com erro se algo falhar. O resto é
+olho: foto de estúdio, produto inteiro e lacrado, e rótulo batendo com o
+catálogo. O padrão completo e o que saiu por ele estão em `img/CREDITOS.md`.
 
 Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.
 
