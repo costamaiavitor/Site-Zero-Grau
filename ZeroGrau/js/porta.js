@@ -4,14 +4,21 @@
    Duas perguntas antes do catálogo, nesta ordem:
 
    1. Idade. Exigência da Lei nº 13.106/2015 para bebida alcoólica.
-   2. CPF ou CNPJ. É o que decide para qual das duas lojas a pessoa vai:
-      CPF vai para a vitrine de varejo, CNPJ vai para o balcão de atacado,
-      que vende por caixa fechada e com preço de revenda.
+   2. Login: e-mail, senha e CPF ou CNPJ. O documento é o que decide para
+      qual das duas lojas a pessoa vai: CPF vai para a vitrine de varejo,
+      CNPJ vai para o balcão de atacado, que vende por caixa fechada e com
+      preço de revenda.
 
-   ⚠ Isto é identificação, não autenticação. Não há senha, não há servidor e
-   não há consulta à Receita. Num site estático não dá para ir além disso, e
-   fingir que dá seria pior. O cadastro de revenda de verdade acontece depois,
-   quando o pedido chega.
+   ⚠ O login ainda não tem servidor. A tela está pronta, mas nada aqui confere
+   se a senha é a certa: o script só olha o formato (e-mail com @ e domínio,
+   senha com 6 caracteres ou mais, documento com a contagem certa). Por isso
+   a senha não é guardada em lugar nenhum — nem sessionStorage, nem
+   localStorage — e o campo é esvaziado logo depois de entrar. Guardar senha
+   no navegador sem um servidor para conferi-la seria só um risco a mais.
+
+   Para ligar o servidor, o ponto é `autenticar()`, logo abaixo: hoje ele
+   aceita tudo que passou na conferência de formato; é ali que entra a
+   chamada ao backend, e o resto da porta não precisa mudar.
 
    ⚠ A conferência do dígito verificador está DESLIGADA (CONFERE_DIGITO, logo
    abaixo). Neste momento qualquer número passa, desde que tenha 11 dígitos
@@ -141,13 +148,16 @@ const gate = document.getElementById("gate");
 const focoGate = prenderFoco(gate);
 const idadeOk = () => { try{ return sessionStorage.getItem("zg-idade") === "ok" }catch{ return false } };
 
-/* ---------- 2. documento ---------- */
+/* ---------- 2. login ---------- */
 const porta    = document.getElementById("porta");
 const focoPorta = prenderFoco(porta);
+const loginForm  = document.getElementById("loginForm");
+const emailInput = document.getElementById("emailInput");
+const senhaInput = document.getElementById("senhaInput");
+const senhaVer   = document.getElementById("senhaVer");
 const docInput = document.getElementById("docInput");
 const docMsg   = document.getElementById("docMsg");
 const docTipo  = document.getElementById("docTipo");
-const docBtn   = document.getElementById("docBtn");
 
 function tipoDe(v){
   const n = digitos(v);
@@ -176,17 +186,49 @@ function dica(){
                            : "CNPJ inválido — confira os dígitos.";
 }
 
-function entrar(){
+const SENHA_MIN = 6;
+/* Formato, não existência: algo@algo.algo, sem espaço. Conferir se a caixa de
+   e-mail existe é trabalho de servidor. */
+const emailValido = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+
+/* Um erro de cada vez, na ordem em que os campos aparecem: a mensagem diz o
+   que falta e o foco vai para o campo, que ganha aria-invalid para o leitor
+   de tela anunciar junto. */
+function recusar(campo, texto){
+  for(const c of [emailInput, senhaInput, docInput]) c.removeAttribute("aria-invalid");
+  campo.setAttribute("aria-invalid", "true");
+  docMsg.className = "doc-msg bad";
+  docMsg.textContent = texto;
+  campo.focus();
+}
+
+/* O ponto onde o servidor entra. Hoje não há: quem passou na conferência de
+   formato está dentro. Quando houver, é aqui que se manda e-mail, senha e
+   documento, e uma recusa volta pela mesma `recusar()`. */
+function autenticar(dados){
+  return Promise.resolve(true);
+}
+
+async function entrar(){
+  const email = emailInput.value.trim();
+  if(!email)              return recusar(emailInput, "Digite seu e-mail.");
+  if(!emailValido(email)) return recusar(emailInput, "Esse e-mail não parece completo — confira o @ e o domínio.");
+  if(!senhaInput.value)   return recusar(senhaInput, "Digite sua senha.");
+  if(senhaInput.value.length < SENHA_MIN)
+    return recusar(senhaInput, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
+
   const destino = tipoDe(docInput.value);
   if(!destino){
-    docMsg.className = "doc-msg bad";
-    docMsg.textContent = !CONFERE_DIGITO || digitos(docInput.value).length < 11
+    return recusar(docInput, !CONFERE_DIGITO || digitos(docInput.value).length < 11
       ? "Digite um CPF (11 dígitos) ou um CNPJ (14)."
-      : "Esse número não fecha no dígito verificador. Confira e tente de novo.";
-    docInput.focus();
-    return;
+      : "Esse número não fecha no dígito verificador. Confira e tente de novo.");
   }
-  PERFIL.gravar({tipo: destino === "varejo" ? "cpf" : "cnpj", doc: mascarar(docInput.value)});
+
+  const ok = await autenticar({email, senha: senhaInput.value, doc: digitos(docInput.value)});
+  senhaInput.value = "";                      /* a senha não fica nem no campo */
+  if(!ok) return recusar(senhaInput, "E-mail ou senha não conferem.");
+
+  PERFIL.gravar({tipo: destino === "varejo" ? "cpf" : "cnpj", doc: mascarar(docInput.value), email});
   LOJA.gravar(destino);
   if(destino === PUBLICO) fecharPorta();
   else location.href = DESTINO[destino];
@@ -197,13 +239,18 @@ function fecharPorta(){
   document.dispatchEvent(new CustomEvent("zg:entrou", {detail: PERFIL.ler()}));
 }
 
-function abrirPorta(nota){
+/* `email` vem preenchido quando a pessoa já entrou e só o documento não
+   serve nesta loja: pedir o e-mail de novo seria castigo. */
+function abrirPorta(nota, email = ""){
   abrirCaixa(porta, true, focoPorta);
-  docInput.value = "";
+  loginForm.reset();
+  mostrarSenha(false);
+  emailInput.value = email;
+  for(const c of [emailInput, senhaInput, docInput]) c.removeAttribute("aria-invalid");
   docTipo.textContent = "";
   docMsg.textContent = nota || "";
   docMsg.className = nota ? "doc-msg bad" : "doc-msg";
-  docInput.focus();
+  (email ? senhaInput : emailInput).focus();
 }
 
 function fecharGate(){
@@ -225,20 +272,41 @@ function seguir(){
      revenda e nota, então aqui o documento tem de ser CNPJ. O caminho de
      volta é o mesmo campo — digitar um CPF manda para o varejo. */
   if(PUBLICO === "atacado" && p.tipo !== "cnpj"){
-    abrirPorta("O balcão de atacado precisa de um CNPJ.");
+    abrirPorta("O balcão de atacado precisa de um CNPJ.", p.email || "");
     return;
   }
   document.dispatchEvent(new CustomEvent("zg:entrou", {detail: p}));
 }
 
-docInput.addEventListener("input", () => {
-  docInput.value = mascarar(docInput.value);
+/* Mostrar a senha: no celular, digitar às cegas é onde mais se erra. O botão
+   troca o tipo do campo e diz o próprio estado com aria-pressed. */
+function mostrarSenha(ver){
+  senhaInput.type = ver ? "text" : "password";
+  senhaVer.setAttribute("aria-pressed", String(ver));
+  senhaVer.textContent = ver ? "Ocultar" : "Mostrar";
+}
+senhaVer.addEventListener("click", () => {
+  mostrarSenha(senhaInput.type === "password");
+  senhaInput.focus();
+});
+
+/* Corrigir o campo apaga a queixa sobre ele. */
+function limparQueixa(campo){
+  if(campo.getAttribute("aria-invalid") !== "true") return;
+  campo.removeAttribute("aria-invalid");
   docMsg.textContent = "";
   docMsg.className = "doc-msg";
+}
+emailInput.addEventListener("input", () => limparQueixa(emailInput));
+senhaInput.addEventListener("input", () => limparQueixa(senhaInput));
+docInput.addEventListener("input", () => {
+  docInput.value = mascarar(docInput.value);
+  limparQueixa(docInput);
   dica();
 });
-docInput.addEventListener("keydown", e => { if(e.key === "Enter") entrar() });
-docBtn.addEventListener("click", entrar);
+/* O formulário cuida do Enter em qualquer campo e deixa o gerenciador de
+   senhas do navegador reconhecer o login. */
+loginForm.addEventListener("submit", e => { e.preventDefault(); entrar(); });
 document.getElementById("gateYes").addEventListener("click", fecharGate);
 
 /* trocar de documento: volta à pergunta sem perder o aviso de idade */
@@ -256,9 +324,12 @@ for(const el of document.querySelectorAll("[data-loja]")){
   el.addEventListener("click", () => LOJA.gravar(el.dataset.loja));
 }
 
-/* escreve o documento identificado onde a página pedir */
+/* escreve o documento identificado onde a página pedir, e o e-mail da conta
+   na dica do botão de trocar */
 document.addEventListener("zg:entrou", e => {
   for(const el of document.querySelectorAll("[data-doc]")) el.textContent = e.detail?.doc || "";
+  for(const el of document.querySelectorAll("[data-trocar]"))
+    el.title = e.detail?.email ? `Conectado como ${e.detail.email} · trocar de conta` : "Trocar de conta";
 });
 
 if(!idadeOk()){

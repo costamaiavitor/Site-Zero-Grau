@@ -32,6 +32,10 @@ const CNPJ = '11222333000181';
 const CPF_QUALQUER  = '12345678900';
 const CNPJ_QUALQUER = '12345678000100';
 
+/* Conta de teste para o login. Não há servidor: a porta só confere o formato. */
+const EMAIL = 'cliente@exemplo.com';
+const SENHA = 'gelada123';
+
 /* Os dois slogans que o sorteio pode trazer. O teste força os dois em vez de
    aceitar o da vez: medir só o sorteado escondia falha de layout em metade
    das rodadas — foi exatamente assim que uma passou na branch e falhou na
@@ -98,10 +102,18 @@ const externo = t => /fonts\.(googleapis|gstatic)\.com|ERR_CERT_AUTHORITY_INVALI
    Depois da porta o varejo abre na vista de abertura, não no catálogo, e a
    grade fica escondida — por isso o padrão é seguir para o catálogo. Quem
    quiser testar a abertura passa `vista: null`. */
+/* O login pede e-mail e senha além do documento; quem só quer passar pela
+   porta usa estes, que estão no formato certo. */
+async function preencherLogin(p, doc, email = EMAIL, senha = SENHA){
+  await p.fill('#emailInput', email);
+  await p.fill('#senhaInput', senha);
+  await p.fill('#docInput', doc);
+}
+
 async function entrar(p, doc = CPF, vista = 'catalogo'){
   await p.click('#gateYes');
   await p.waitForTimeout(120);
-  await p.fill('#docInput', doc);
+  await preencherLogin(p, doc);
   await p.click('#docBtn');
   await p.waitForTimeout(250);
   if(vista){
@@ -319,7 +331,7 @@ secao('Aviso de idade');
   ok('e some ao confirmar', await p.$eval('#gate', e => getComputedStyle(e).display === 'none'));
   ok('a porta assume em seguida', await p.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
 
-  await p.fill('#docInput', CPF);
+  await preencherLogin(p, CPF);
   await p.click('#docBtn');
   await p.waitForTimeout(250);
   ok('a porta fecha com CPF válido', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
@@ -368,7 +380,7 @@ secao('A porta separa as duas lojas');
   await p2.goto(BASE, { waitUntil:'networkidle' });
   await p2.click('#gateYes');
   await p2.waitForTimeout(120);
-  await p2.fill('#docInput', '1114447773');        /* 10 dígitos */
+  await preencherLogin(p2, '1114447773');          /* 10 dígitos */
   await p2.click('#docBtn');
   await p2.waitForTimeout(200);
   ok('número com dígitos a menos é recusado', /11 dígitos/.test(await p2.textContent('#docMsg')));
@@ -460,6 +472,92 @@ secao('A porta separa as duas lojas');
     ok(`${nome}: e o campo volta vazio`, (await pt.inputValue('#docInput')) === '');
   }
   await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Login');
+{
+  const ctx = await contexto();
+  const p = await ctx.newPage();
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  await p.click('#gateYes');
+  await p.waitForTimeout(120);
+
+  ok('a porta pede e-mail, senha e documento',
+     !!(await p.$('#emailInput')) && !!(await p.$('#senhaInput')) && !!(await p.$('#docInput')));
+  ok('a senha nasce escondida', (await p.getAttribute('#senhaInput', 'type')) === 'password');
+  ok('o foco começa no e-mail', await p.evaluate(() => document.activeElement?.id === 'emailInput'));
+
+  const tentar = async (email, senha, doc) => {
+    await p.fill('#emailInput', email); await p.fill('#senhaInput', senha); await p.fill('#docInput', doc);
+    await p.click('#docBtn'); await p.waitForTimeout(150);
+    return { msg: await p.textContent('#docMsg'),
+             foco: await p.evaluate(() => document.activeElement?.id),
+             aberta: await p.$eval('#porta', e => getComputedStyle(e).display !== 'none') };
+  };
+
+  let r = await tentar('', SENHA, CPF);
+  ok('sem e-mail não entra', r.aberta && /e-mail/i.test(r.msg), r.msg);
+  ok('e o foco vai para o e-mail', r.foco === 'emailInput', r.foco);
+  ok('que fica marcado como inválido', (await p.getAttribute('#emailInput', 'aria-invalid')) === 'true');
+
+  r = await tentar('cliente@exemplo', SENHA, CPF);
+  ok('e-mail sem domínio completo é recusado', r.aberta && /domínio/.test(r.msg), r.msg);
+
+  r = await tentar(EMAIL, '', CPF);
+  ok('sem senha não entra', r.aberta && /senha/i.test(r.msg) && r.foco === 'senhaInput', r.msg);
+  ok('e o e-mail deixa de estar marcado', (await p.getAttribute('#emailInput', 'aria-invalid')) === null);
+
+  r = await tentar(EMAIL, '12345', CPF);
+  ok('senha com menos de 6 caracteres é recusada', r.aberta && /6 caracteres/.test(r.msg), r.msg);
+
+  await p.fill('#senhaInput', '1234567');
+  ok('corrigir o campo apaga a queixa', (await p.textContent('#docMsg')) === '');
+
+  r = await tentar(EMAIL, SENHA, '123');
+  ok('documento curto continua recusado', r.aberta && /11 dígitos/.test(r.msg) && r.foco === 'docInput', r.msg);
+
+  await p.click('#senhaVer');
+  ok('"Mostrar" revela a senha', (await p.getAttribute('#senhaInput', 'type')) === 'text'
+     && (await p.getAttribute('#senhaVer', 'aria-pressed')) === 'true');
+  await p.click('#senhaVer');
+  ok('e "Ocultar" esconde de novo', (await p.getAttribute('#senhaInput', 'type')) === 'password');
+
+  /* Enter em qualquer campo envia, como em todo formulário de login */
+  await p.fill('#emailInput', EMAIL); await p.fill('#senhaInput', SENHA); await p.fill('#docInput', CPF);
+  await p.press('#docInput', 'Enter');
+  await p.waitForTimeout(250);
+  ok('Enter entra', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+
+  const guardado = await p.evaluate(() => JSON.stringify({...sessionStorage, ...localStorage}));
+  ok('a conta guarda o e-mail', JSON.parse(await p.evaluate(() => sessionStorage.getItem('zg-perfil'))).email === EMAIL);
+  ok('a senha não é guardada em lugar nenhum', !guardado.includes(SENHA));
+  ok('nem fica no campo', (await p.inputValue('#senhaInput')) === '');
+  ok('o botão de conta diz quem está conectado',
+     (await p.getAttribute('.conta-btn', 'title')).includes(EMAIL));
+
+  /* com CPF no atacado a porta volta, mas já sabe o e-mail */
+  await p.click('.app-pe a[data-loja="atacado"]');
+  await p.waitForTimeout(600);
+  ok('CPF no atacado reabre a porta com o e-mail preenchido',
+     (await p.inputValue('#emailInput')) === EMAIL, await p.inputValue('#emailInput'));
+  ok('e o foco já vai para a senha', await p.evaluate(() => document.activeElement?.id === 'senhaInput'));
+  await ctx.close();
+
+  /* celular pequeno: o cartão cresceu, e tem de dar para chegar ao botão */
+  const cel = await contexto({ largura:360, altura:640, celular:true });
+  const pc = await cel.newPage();
+  await pc.goto(BASE, { waitUntil:'networkidle' });
+  await pc.click('#gateYes');
+  await pc.waitForTimeout(150);
+  ok('360×640: o topo do cartão de login não fica cortado',
+     await pc.$eval('#porta .gate-card', e => e.getBoundingClientRect().top >= 0));
+  await preencherLogin(pc, CPF);
+  await pc.click('#docBtn');
+  await pc.waitForTimeout(250);
+  ok('360×640: e o botão Entrar é alcançável',
+     await pc.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+  await cel.close();
 }
 
 /* ====================================================================== */

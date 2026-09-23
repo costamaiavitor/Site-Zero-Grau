@@ -884,11 +884,15 @@ h3{
   position:fixed;inset:0;z-index:200;
   background:color-mix(in srgb,var(--deep) 94%,transparent);
   backdrop-filter:blur(6px);
-  display:none;place-items:center;padding:24px;
+  display:none;padding:24px;overflow-y:auto;
 }
-.gate.aberto{display:grid}
+/* flex com margin:auto, e não grid com place-items:center: centralizado, o
+   cartão mais alto que a tela vaza para cima e o topo fica fora de alcance.
+   Com margin:auto ele centraliza quando cabe e rola a partir do topo quando
+   não cabe — o caso do login num celular pequeno com o teclado aberto. */
+.gate.aberto{display:flex}
 .gate-card{
-  width:100%;max-width:440px;
+  width:100%;max-width:440px;margin:auto;
   background:var(--paper);
   border:1px solid var(--ink);
   padding:clamp(26px,4.5vw,38px);
@@ -896,7 +900,7 @@ h3{
 }
 @keyframes gate-in{from{opacity:0;transform:translateY(10px)}}
 .gate-card .logo{margin-bottom:24px}
-.gate-card h3{font-size:1.35rem;margin-bottom:12px;font-stretch:86%;font-weight:var(--h-wght)}
+.gate-card h2,.gate-card h3{font-size:1.35rem;margin-bottom:12px;font-stretch:86%;font-weight:var(--h-wght)}
 .gate-card p{color:var(--ink-2);font-size:.9rem;margin-bottom:24px;line-height:1.6}
 .gate-btns{display:flex;gap:10px;flex-wrap:wrap}
 .gate-btns .btn{flex:1}
@@ -1118,6 +1122,28 @@ h3{
 .doc-tipo.bad,.doc-msg.bad{color:var(--hot)}
 .doc-msg{margin-bottom:14px}
 .doc-msg:empty{margin-bottom:0;min-height:0}
+
+/* login: três campos em vez de um, então tudo um degrau mais junto */
+.porta .gate-card .logo{margin-bottom:18px}
+.porta .gate-card > p{margin-bottom:18px}
+.login .doc-campo{margin-bottom:12px}
+.login .doc-campo .tag{margin-bottom:6px}
+.login .doc-campo input{padding:12px 14px;font-size:1rem}
+.login #emailInput,.login #senhaInput{letter-spacing:0;font-variant-numeric:normal}
+.login .doc-tipo{margin:-4px 0 10px}
+.login .doc-tipo:empty{margin:0}
+.login input[aria-invalid="true"]{border-color:var(--hot)}
+.senha-caixa{position:relative;display:block}
+.login #senhaInput{padding-right:92px}
+.senha-ver{
+  position:absolute;right:2px;top:50%;transform:translateY(-50%);
+  min-height:44px;padding:0 14px;
+  font-family:var(--mono);font-size:.72rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--acc);
+  background:none;border:0;cursor:pointer;
+}
+.senha-ver:hover{color:var(--ink)}
+.senha-ver:focus-visible{outline:2px solid var(--acc);outline-offset:-4px}
 
 /* ============ 25. VITRINE EM UMA TELA ============
    A página não rola: rola só a lista de produtos. As seções que antes vinham

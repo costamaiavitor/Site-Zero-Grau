@@ -11,10 +11,17 @@ São duas lojas sobre o mesmo estoque:
 | **Varejo** `index.html` | CPF | vitrine, foto grande, slogan | unidade |
 | **Atacado** `atacado.html` | CNPJ | tabela sóbria, sem slogan | caixa fechada |
 
-Quem decide é a porta, em `js/porta.js`: depois do aviso de idade o site pede
-CPF ou CNPJ e manda para a loja correspondente. É identificação, não
-autenticação — não há senha, não há servidor e não há consulta à Receita. Num
-site estático não dá para ir além, e fingir que dá seria pior.
+Quem decide é a porta, em `js/porta.js`: depois do aviso de idade vem o
+login — e-mail, senha e CPF ou CNPJ — e o documento manda para a loja
+correspondente.
+
+⚠ **O login ainda não tem servidor.** A tela está pronta, mas só confere o
+formato: e-mail com `@` e domínio, senha com 6 caracteres ou mais, documento
+com a contagem certa. Qualquer senha nesse formato entra. Por isso ela não é
+guardada em lugar nenhum (o e-mail e o documento ficam no `sessionStorage` da
+aba). Para ligar o backend, o ponto é a função `autenticar()` em
+`js/porta.js`: é ela que recebe e-mail, senha e documento e devolve se
+conferem; o resto da porta não muda.
 
 ⚠ **A conferência do dígito verificador está desligada.** Hoje passa qualquer
 número com 11 dígitos (vai para o varejo) ou 14 (vai para o atacado). O
@@ -79,7 +86,7 @@ ZeroGrau/
   css/style.css     estrutura e componentes; o :root guarda todos os tokens
   css/temas.css     as duas peles: "Madrugada" no varejo, "Balcão" no atacado
   js/dados.js       catálogo, contato e regras de venda — fonte única das duas
-  js/porta.js       aviso de idade e identificação por CPF/CNPJ
+  js/porta.js       aviso de idade e login (e-mail, senha, CPF/CNPJ)
   js/script.js      varejo: vistas, busca, carrinho, CEP, cupom
   js/atacado.js     atacado: tabela, pedido por caixa, faixas de desconto
   img/              fotos de produto em WebP, 200 e 400 px de altura
@@ -100,6 +107,8 @@ ZeroGrau/
 | quantas unidades tem cada caixa | `CAIXA_PADRAO` e `CAIXA_EXCECAO` |
 | cor, tipografia, forma | os tokens em `css/temas.css` |
 | conferir o dígito verificador na porta | `CONFERE_DIGITO`, em `js/porta.js` |
+| ligar o login a um servidor | `autenticar()`, em `js/porta.js` |
+| tamanho mínimo da senha | `SENHA_MIN`, em `js/porta.js` |
 
 Ao mexer em `css/` ou `js/`, suba o `?v=` dos `<link>` e `<script>` das três
 páginas. O GitHub Pages serve esses arquivos com `max-age=600`: sem o selo de
@@ -177,6 +186,9 @@ caso, troque o `og:url` e o `og:image` pelo domínio novo.
 
 ## Antes de ir ao ar
 
+- [ ] Ligar o login a um servidor (`autenticar()` em `js/porta.js`). Hoje
+      qualquer senha com 6 caracteres entra; faltam também "criar conta" e
+      "esqueci a senha", que dependem do mesmo servidor.
 - [ ] Trocar o bloco `CONTATO` em `js/script.js` pelos dados reais da loja
       (hoje são valores de exemplo: WhatsApp, telefone, e-mail e CNPJ).
 - [ ] Apontar `og:url` e `og:image` em `index.html` para o domínio final.
