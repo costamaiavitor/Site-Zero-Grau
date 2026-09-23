@@ -1129,12 +1129,14 @@ h3{
 .login .doc-campo{margin-bottom:12px}
 .login .doc-campo .tag{margin-bottom:6px}
 .login .doc-campo input{padding:12px 14px;font-size:1rem}
-.login #emailInput,.login #senhaInput{letter-spacing:0;font-variant-numeric:normal}
+/* o espaçamento largo e os números tabulares são do campo de documento;
+   nome, e-mail e senha são texto comum */
+.login input:not([inputmode="numeric"]){letter-spacing:0;font-variant-numeric:normal}
 .login .doc-tipo{margin:-4px 0 10px}
-.login .doc-tipo:empty{margin:0}
+.login .doc-tipo:empty{margin:0;min-height:0}
 .login input[aria-invalid="true"]{border-color:var(--hot)}
 .senha-caixa{position:relative;display:block}
-.login #senhaInput{padding-right:92px}
+.login .senha-caixa input{padding-right:112px}
 .senha-ver{
   position:absolute;right:2px;top:50%;transform:translateY(-50%);
   min-height:44px;padding:0 14px;
@@ -1144,6 +1146,14 @@ h3{
 }
 .senha-ver:hover{color:var(--ink)}
 .senha-ver:focus-visible{outline:2px solid var(--acc);outline-offset:-4px}
+/* a troca entre entrar e criar conta: frase comum com o link no fim, e o
+   link com altura de dedo mesmo sendo texto */
+.porta-troca{margin:14px 0 0;font-size:.85rem;color:var(--ink-2);text-align:center}
+.gate-card .porta-troca{margin-bottom:0}
+.porta-troca .link{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 4px;
+  background:none;border:0;cursor:pointer;font-weight:700;
+}
 
 /* ============ 25. VITRINE EM UMA TELA ============
    A página não rola: rola só a lista de produtos. As seções que antes vinham

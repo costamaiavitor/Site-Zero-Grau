@@ -141,6 +141,21 @@ secao('Carga limpa');
   const cards = await p.$$eval('.card', e => e.length);
   ok(`as ${cards} fotos de produto carregam`, fotos === cards, `${fotos}/${cards}`);
   await ctx.close();
+
+  /* As outras páginas também, logo aqui no começo. Os scripts são clássicos
+     e dividem o escopo global: um nome repetido entre porta.js e atacado.js
+     derruba a página inteira com "has already been declared", e sem esta
+     checagem isso só aparecia lá na frente, como uma espera estourada. */
+  for(const pag of ['atacado.html', 'creditos.html']){
+    const c2 = await contexto();
+    const p2 = await c2.newPage();
+    const e2 = [];
+    p2.on('console', m => { if(m.type() === 'error' && !externo(m.text())) e2.push(m.text()); });
+    p2.on('pageerror', e => e2.push('pageerror: ' + e.message));
+    await p2.goto(`${BASE}/${pag}`, { waitUntil:'networkidle' });
+    ok(`${pag}: sem erro de console`, e2.length === 0, e2[0]);
+    await c2.close();
+  }
 }
 
 /* ====================================================================== */
@@ -558,6 +573,117 @@ secao('Login');
   ok('360×640: e o botão Entrar é alcançável',
      await pc.$eval('#porta', e => getComputedStyle(e).display === 'none'));
   await cel.close();
+}
+
+/* ====================================================================== */
+secao('Criar conta');
+{
+  const ctx = await contexto();
+  const p = await ctx.newPage();
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  await p.click('#gateYes');
+  await p.waitForTimeout(120);
+  const visivel = sel => p.$eval(sel, e => !e.hidden && getComputedStyle(e).display !== 'none');
+
+  ok('a porta abre no painel de entrar', await visivel('#painelEntrar') && !(await visivel('#painelCriar')));
+  await p.fill('#emailInput', EMAIL);
+  await p.click('#painelEntrar [data-painel="criar"]');
+  await p.waitForTimeout(100);
+  ok('"Criar conta" troca de painel', await visivel('#painelCriar') && !(await visivel('#painelEntrar')));
+  ok('o diálogo passa a se chamar "Criar conta"',
+     (await p.getAttribute('#porta', 'aria-labelledby')) === 'criarTitle');
+  ok('o e-mail digitado no login vem junto', (await p.inputValue('#cEmailInput')) === EMAIL);
+  ok('e o foco vai para o primeiro campo vazio',
+     await p.evaluate(() => document.activeElement?.id === 'cDocInput'));
+
+  await p.fill('#cDocInput', CNPJ);
+  ok('com CNPJ o nome vira "Razão social"', (await p.textContent('#nomeTag')) === 'Razão social');
+  await p.fill('#cDocInput', CPF);
+  ok('com CPF volta a "Nome completo"', (await p.textContent('#nomeTag')) === 'Nome completo');
+
+  const criar = async ({ doc = CPF, nome = 'Maria da Silva', email = EMAIL, senha = SENHA, conf = senha } = {}) => {
+    await p.fill('#cDocInput', doc); await p.fill('#nomeInput', nome); await p.fill('#cEmailInput', email);
+    await p.fill('#cSenhaInput', senha); await p.fill('#cConfInput', conf);
+    await p.click('#criarBtn'); await p.waitForTimeout(150);
+    return { msg: await p.textContent('#criarMsg'), foco: await p.evaluate(() => document.activeElement?.id),
+             aberta: await p.$eval('#porta', e => getComputedStyle(e).display !== 'none') };
+  };
+
+  let r = await criar({ doc: '123' });
+  ok('documento curto é recusado', r.aberta && /11 dígitos/.test(r.msg) && r.foco === 'cDocInput', r.msg);
+  r = await criar({ nome: '' });
+  ok('sem nome não cria', r.aberta && /seu nome/.test(r.msg) && r.foco === 'nomeInput', r.msg);
+  r = await criar({ doc: CNPJ, nome: 'AB' });
+  ok('razão social curta pede "completa"', /razão social completa/.test(r.msg), r.msg);
+  r = await criar({ email: 'maria@' });
+  ok('e-mail incompleto é recusado', r.aberta && /domínio/.test(r.msg) && r.foco === 'cEmailInput', r.msg);
+  r = await criar({ senha: '123', conf: '123' });
+  ok('senha curta é recusada', r.aberta && /6 caracteres/.test(r.msg) && r.foco === 'cSenhaInput', r.msg);
+  r = await criar({ conf: '' });
+  ok('sem confirmação não cria', r.aberta && /Repita/.test(r.msg) && r.foco === 'cConfInput', r.msg);
+  r = await criar({ conf: SENHA + 'x' });
+  ok('senhas diferentes são recusadas', r.aberta && /não são iguais/.test(r.msg) && r.foco === 'cConfInput', r.msg);
+  ok('o erro fica só no cadastro', (await p.textContent('#docMsg')) === '');
+
+  await p.click('#cSenhaVer');
+  ok('"Mostrar" revela as duas senhas',
+     (await p.getAttribute('#cSenhaInput', 'type')) === 'text' && (await p.getAttribute('#cConfInput', 'type')) === 'text');
+  await p.click('#cSenhaVer');
+
+  await p.click('#painelCriar [data-painel="entrar"]');
+  await p.waitForTimeout(100);
+  ok('"Entrar" volta ao login', await visivel('#painelEntrar') && !(await visivel('#painelCriar')));
+  ok('e o diálogo volta a se chamar "Entrar"', (await p.getAttribute('#porta', 'aria-labelledby')) === 'portaTitle');
+  await p.click('#painelEntrar [data-painel="criar"]');
+  await p.waitForTimeout(100);
+
+  r = await criar({ nome: '  Maria   da Silva ' });
+  ok('conta criada com CPF entra no varejo', !r.aberta);
+  ok('ainda no varejo', !new URL(p.url()).pathname.endsWith('atacado.html'));
+  const perfil = JSON.parse(await p.evaluate(() => sessionStorage.getItem('zg-perfil')));
+  ok('o perfil guarda nome e e-mail', perfil.nome === 'Maria da Silva' && perfil.email === EMAIL, JSON.stringify(perfil));
+  ok('a senha nova não é guardada', !(await p.evaluate(() => JSON.stringify({...sessionStorage, ...localStorage}))).includes(SENHA));
+  ok('o botão de conta diz o nome', (await p.getAttribute('.conta-btn', 'title')).includes('Maria da Silva'));
+
+  /* trocar conta volta sempre para o login, não para o cadastro */
+  await p.click('.conta-btn[data-trocar]');
+  await p.waitForTimeout(200);
+  ok('trocar conta reabre no painel de entrar', await visivel('#painelEntrar') && !(await visivel('#painelCriar')));
+  ok('com o cadastro limpo', (await p.inputValue('#nomeInput')) === '' && (await p.inputValue('#cSenhaInput')) === '');
+
+  /* conta com CNPJ criada no varejo vai para o atacado e entra direto */
+  await p.click('#painelEntrar [data-painel="criar"]');
+  await criar({ doc: CNPJ, nome: 'Mercadinho Boa Esquina Ltda', email: 'compras@boaesquina.com.br' });
+  await p.waitForTimeout(600);
+  ok('conta criada com CNPJ vai para o atacado', new URL(p.url()).pathname.endsWith('atacado.html'), p.url());
+  ok('e o balcão abre sem pedir login de novo', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+  await ctx.close();
+
+  /* celular pequeno: o cadastro é o cartão mais alto do site */
+  const cel = await contexto({ largura:360, altura:640, celular:true });
+  const pc = await cel.newPage();
+  await pc.goto(BASE, { waitUntil:'networkidle' });
+  await pc.click('#gateYes');
+  await pc.waitForTimeout(150);
+  await pc.click('#painelEntrar [data-painel="criar"]');
+  await pc.waitForTimeout(100);
+  ok('360×640: o topo do cadastro não fica cortado',
+     await pc.$eval('#porta .gate-card', e => e.getBoundingClientRect().top >= 0));
+  const alvo = await pc.$eval('#painelEntrar [data-painel="criar"]', e => e.getBoundingClientRect().height).catch(() => 0);
+  await pc.fill('#cDocInput', CPF); await pc.fill('#nomeInput', 'Maria da Silva'); await pc.fill('#cEmailInput', EMAIL);
+  await pc.fill('#cSenhaInput', SENHA); await pc.fill('#cConfInput', SENHA);
+  await pc.click('#criarBtn');
+  await pc.waitForTimeout(250);
+  ok('360×640: e o botão Criar conta é alcançável', await pc.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+  await cel.close();
+
+  const cel2 = await contexto({ largura:360, altura:640, celular:true });
+  const pd = await cel2.newPage();
+  await pd.goto(BASE, { waitUntil:'networkidle' });
+  await pd.click('#gateYes'); await pd.waitForTimeout(150);
+  const h = await pd.$eval('#painelEntrar [data-painel="criar"]', e => e.getBoundingClientRect().height);
+  ok('o link "Criar conta" tem altura de dedo', h >= 44, `${h}px`);
+  await cel2.close();
 }
 
 /* ====================================================================== */

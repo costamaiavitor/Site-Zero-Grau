@@ -16,8 +16,8 @@
      max-age=600, então uma mudança recém-publicada continua chegando velha
      no navegador de quem esteve aqui nos últimos dez minutos — e o site
      parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
-<link rel="stylesheet" href="css/style.css?v=8">
-<link rel="stylesheet" href="css/temas.css?v=8">
+<link rel="stylesheet" href="css/style.css?v=9">
+<link rel="stylesheet" href="css/temas.css?v=9">
 <script>document.documentElement.classList.add("js")</script>
 </head>
 <body data-publico="atacado">
@@ -73,32 +73,75 @@
       <div class="logo-mark" aria-hidden="true">0°</div>
       <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
     </div>
-    <h2 id="portaTitle">Entrar</h2>
-    <p>Com CPF você compra na vitrine de varejo; com CNPJ, no balcão de atacado, por caixa fechada e com preço de revenda.</p>
-    <!-- novalidate: a conferência é do script, que diz o que falta em português
-         e num lugar só, em vez do balão de cada navegador -->
-    <form class="login" id="loginForm" novalidate>
-      <label class="doc-campo">
-        <span class="tag">E-mail</span>
-        <input id="emailInput" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com" spellcheck="false" aria-describedby="docMsg">
-      </label>
-      <label class="doc-campo">
-        <span class="tag">Senha</span>
-        <span class="senha-caixa">
-          <input id="senhaInput" type="password" autocomplete="current-password" placeholder="mínimo de 6 caracteres" aria-describedby="docMsg">
-          <button type="button" class="senha-ver" id="senhaVer" aria-controls="senhaInput" aria-pressed="false">Mostrar</button>
-        </span>
-      </label>
-      <label class="doc-campo">
-        <span class="tag">CPF ou CNPJ</span>
-        <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
-      </label>
-      <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
-      <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
-      <div class="gate-btns">
-        <button type="submit" class="btn btn-primary" id="docBtn">Entrar</button>
-      </div>
-    </form>
+
+    <!-- dois painéis na mesma caixa: o script mostra um e esconde o outro, e
+         aponta o aria-labelledby do diálogo para o título que está à vista -->
+    <section class="porta-painel" id="painelEntrar">
+      <h2 id="portaTitle">Entrar</h2>
+      <p>Com CPF você compra na vitrine de varejo; com CNPJ, no balcão de atacado, por caixa fechada e com preço de revenda.</p>
+      <!-- novalidate: a conferência é do script, que diz o que falta em português
+           e num lugar só, em vez do balão de cada navegador -->
+      <form class="login" id="loginForm" novalidate>
+        <label class="doc-campo">
+          <span class="tag">E-mail</span>
+          <input id="emailInput" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com" spellcheck="false" aria-describedby="docMsg">
+        </label>
+        <label class="doc-campo">
+          <span class="tag">Senha</span>
+          <span class="senha-caixa">
+            <input id="senhaInput" type="password" autocomplete="current-password" placeholder="mín. 6 caracteres" aria-describedby="docMsg">
+            <button type="button" class="senha-ver" id="senhaVer" aria-controls="senhaInput" aria-pressed="false">Mostrar</button>
+          </span>
+        </label>
+        <label class="doc-campo">
+          <span class="tag">CPF ou CNPJ</span>
+          <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
+        </label>
+        <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
+        <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
+        <div class="gate-btns">
+          <button type="submit" class="btn btn-primary" id="docBtn">Entrar</button>
+        </div>
+      </form>
+      <p class="porta-troca">Ainda não tem conta? <button type="button" class="link" data-painel="criar">Criar conta</button></p>
+    </section>
+
+    <section class="porta-painel" id="painelCriar" hidden>
+      <h2 id="criarTitle">Criar conta</h2>
+      <p>O documento decide a loja: com CPF você compra no varejo; com CNPJ, no atacado, e o cadastro de revenda é aprovado no primeiro pedido.</p>
+      <form class="login" id="criarForm" novalidate>
+        <label class="doc-campo">
+          <span class="tag">CPF ou CNPJ</span>
+          <input id="cDocInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="cDocTipo criarMsg">
+        </label>
+        <p class="doc-tipo" id="cDocTipo" role="status" aria-live="polite"></p>
+        <label class="doc-campo">
+          <span class="tag" id="nomeTag">Nome completo</span>
+          <input id="nomeInput" type="text" autocomplete="name" placeholder="como está no documento" aria-describedby="criarMsg">
+        </label>
+        <label class="doc-campo">
+          <span class="tag">E-mail</span>
+          <input id="cEmailInput" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com" spellcheck="false" aria-describedby="criarMsg">
+        </label>
+        <label class="doc-campo">
+          <span class="tag">Senha</span>
+          <span class="senha-caixa">
+            <input id="cSenhaInput" type="password" autocomplete="new-password" placeholder="mín. 6 caracteres" aria-describedby="criarMsg">
+            <button type="button" class="senha-ver" id="cSenhaVer" aria-controls="cSenhaInput cConfInput" aria-pressed="false">Mostrar</button>
+          </span>
+        </label>
+        <label class="doc-campo">
+          <span class="tag">Confirme a senha</span>
+          <input id="cConfInput" type="password" autocomplete="new-password" placeholder="a mesma de cima" aria-describedby="criarMsg">
+        </label>
+        <p class="doc-msg" id="criarMsg" role="status" aria-live="polite"></p>
+        <div class="gate-btns">
+          <button type="submit" class="btn btn-primary" id="criarBtn">Criar conta</button>
+        </div>
+      </form>
+      <p class="porta-troca">Já tem conta? <button type="button" class="link" data-painel="entrar">Entrar</button></p>
+    </section>
+
     <small class="gate-legal">Os dados ficam só neste navegador, e a senha não é guardada em lugar nenhum. O cadastro de revenda é aprovado depois, quando o pedido chega.</small>
   </div>
 </div>
@@ -211,8 +254,8 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/dados.js?v=8"></script>
-<script src="js/porta.js?v=8"></script>
-<script src="js/atacado.js?v=8"></script>
+<script src="js/dados.js?v=9"></script>
+<script src="js/porta.js?v=9"></script>
+<script src="js/atacado.js?v=9"></script>
 </body>
 </html>
