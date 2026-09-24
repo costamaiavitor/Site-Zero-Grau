@@ -860,8 +860,21 @@ secao('Painel de administração');
   ok('e também avisa a prévia', !!(await bal.$('.previa')));
 
   /* publicar baixa o arquivo; servido no lugar do ajustes.js, vale para todos */
-  const [baixa] = await Promise.all([adm.waitForEvent('download'), adm.click('#publicar')]);
-  ok('Publicar baixa ajustes.js', baixa.suggestedFilename() === 'ajustes.js');
+  let baixouSozinho = false;
+  const ouvir = () => { baixouSozinho = true; };
+  adm.on('download', ouvir);
+  await adm.click('#publicar');
+  await adm.waitForTimeout(300);
+  adm.off('download', ouvir);
+  ok('sem chave, Publicar não baixa nada sozinho', !baixouSozinho);
+  ok('e avisa que falta conectar o GitHub', await adm.$eval('#dlgSemChave', e => e.open));
+  await adm.click('#irConectar');
+  ok('"Conectar o GitHub" leva à aba Publicação',
+     await adm.$eval('#a-publicacao', e => !e.hidden) && await adm.evaluate(() => document.activeElement?.id === 'ghChave'));
+  await adm.click('#t-produtos');
+  await adm.click('#publicar');
+  const [baixa] = await Promise.all([adm.waitForEvent('download'), adm.click('#baixarMesmo')]);
+  ok('"Baixar o arquivo" baixa ajustes.js', baixa.suggestedFilename() === 'ajustes.js');
   const arquivo = readFileSync(await baixa.path(), 'utf8');
   ok('o arquivo define AJUSTES_PUBLICADOS', /const AJUSTES_PUBLICADOS = \{/.test(arquivo));
   ok('e mostra como subir', await adm.$eval('#dlgPublicar', e => e.open));
@@ -1017,8 +1030,10 @@ secao('Painel de administração');
   await adm.click('#t-publicacao');
   await adm.click('#ghEsquecer');
   ok('esquecer apaga a chave', !(await adm.evaluate(() => localStorage.getItem('zg-admin-github'))));
-  const [d] = await Promise.all([adm.waitForEvent('download'), adm.click('#publicar')]);
-  ok('e Publicar volta a baixar o arquivo', d.suggestedFilename() === 'ajustes.js');
+  await adm.click('#publicar');
+  ok('e Publicar volta a pedir a chave', await adm.$eval('#dlgSemChave', e => e.open));
+  const [d] = await Promise.all([adm.waitForEvent('download'), adm.click('#baixarMesmo')]);
+  ok('com a opção de baixar', d.suggestedFilename() === 'ajustes.js');
   await ctx.close();
 }
 

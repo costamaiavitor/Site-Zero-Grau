@@ -1764,3 +1764,10 @@ h3{
 .adm-passos li{margin-bottom:8px}
 .adm-passos b{color:var(--ink)}
 .adm-passos a{color:var(--acc);text-decoration:underline}
+
+.adm-dialogo-botoes{display:flex;flex-direction:column;gap:10px;margin:18px 0 8px}
+.adm-dialogo-botoes .btn{min-height:48px}
+.adm-cancelar{
+  display:block;margin:0 auto;min-height:44px;padding:0 12px;
+  background:none;border:0;color:var(--ink-2);font:inherit;font-size:.85rem;text-decoration:underline;cursor:pointer;
+}

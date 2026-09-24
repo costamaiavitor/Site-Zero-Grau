@@ -540,11 +540,7 @@ async function gravarNoGitHub(texto, alteracoes){
 let publicando = false;
 async function publicar(){
   const texto = arquivoAjustes();
-  if(!CHAVE_GH.ler()){
-    baixar(texto);
-    $("dlgPublicar").showModal();
-    return;
-  }
+  if(!CHAVE_GH.ler()){ $("dlgSemChave").showModal(); return; }
   const n = diferencas();
   if(!confirm(`Publicar ${n} ${n === 1 ? "alteração" : "alterações"} no site, para todos os clientes?`)) return;
 
@@ -571,6 +567,17 @@ async function publicar(){
   mudou();
 }
 $("publicar").addEventListener("click", publicar);
+
+$("irConectar").addEventListener("click", () => {
+  $("dlgSemChave").close();
+  mostrarAba($("t-publicacao"));
+  $("ghChave").focus();
+});
+$("baixarMesmo").addEventListener("click", () => {
+  $("dlgSemChave").close();
+  baixar(arquivoAjustes());
+  $("dlgPublicar").showModal();
+});
 $("baixar").addEventListener("click", () => baixar(arquivoAjustes()));
 
 /* ---------- conectar a chave ----------
