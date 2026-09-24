@@ -1748,3 +1748,19 @@ h3{
   .adm-acoes .btn{flex:1 1 calc(50% - 8px)}
   .adm-estado{width:100%}
 }
+
+/* painel · publicação direta no GitHub */
+.adm-estado.ok{color:var(--ok);border-color:var(--ok);background:#E6F3EF}
+.adm-gh{
+  font-size:.85rem;font-weight:600;line-height:1.5;margin-bottom:14px;
+  padding:10px 12px;border-radius:3px;background:var(--paper-2);color:var(--ink-2);
+}
+.adm-gh.ok{background:#E6F3EF;color:var(--ok)}
+.adm-gh-msg{font-size:.8rem;line-height:1.45;color:var(--ink-2);margin:-4px 0 12px;min-height:0}
+.adm-gh-msg:empty{display:none}
+.adm-gh-msg.bad{color:var(--hot)}
+.adm-gh-nota{margin:14px 0 0}
+.adm-passos{margin:0 0 0 18px;font-size:.85rem;line-height:1.6;color:var(--ink-2)}
+.adm-passos li{margin-bottom:8px}
+.adm-passos b{color:var(--ink)}
+.adm-passos a{color:var(--acc);text-decoration:underline}

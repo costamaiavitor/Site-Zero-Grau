@@ -921,6 +921,107 @@ secao('Painel de administração');
   await cel.close();
 }
 
+/* Publicação direta no GitHub, com a API simulada: o teste nunca grava no
+   repositório de verdade. */
+{
+  const ctx = await contexto({ largura:1366, altura:900 });
+  const pedidos = [];
+  let respostaPut = [201];                         /* fila de status para os PUT */
+  let statusRepo = 200;
+  await ctx.route('https://api.github.com/**', async r => {
+    const req = r.request();
+    pedidos.push({ metodo: req.method(), url: req.url(), auth: req.headers()['authorization'],
+                   corpo: req.postData() ? JSON.parse(req.postData()) : null });
+    const url = new URL(req.url());
+    if(url.pathname === '/repos/costamaiavitor/Site-Zero-Grau')
+      return r.fulfill({ status: statusRepo, contentType:'application/json', body:'{}' });
+    if(req.method() === 'GET')
+      return r.fulfill({ status:200, contentType:'application/json',
+                         body: JSON.stringify({ sha: 'sha-' + pedidos.filter(p => p.metodo === 'GET').length }) });
+    const st = respostaPut.shift() ?? 201;
+    return r.fulfill({ status: st, contentType:'application/json',
+                       body: st < 300 ? JSON.stringify({ commit:{ sha:'novo' } }) : '{}' });
+  });
+  const adm = await ctx.newPage();
+  adm.on('dialog', d => d.accept());
+  await adm.goto(`${BASE}/admin.html`, { waitUntil:'networkidle' });
+  await adm.click('#t-publicacao');
+  ok('a aba Publicação começa desconectada', /Não conectado/.test(await adm.textContent('#ghEstado')));
+
+  await adm.fill('#ghChave', 'isto-nao-e-chave');
+  await adm.click('#ghConectar');
+  ok('texto que não é chave é recusado sem ir ao GitHub',
+     /github_pat_/.test(await adm.textContent('#ghMsg')) && pedidos.length === 0);
+
+  statusRepo = 401;
+  await adm.fill('#ghChave', 'github_pat_CHAVEVENCIDA1234');
+  await adm.click('#ghConectar');
+  await adm.waitForTimeout(200);
+  ok('chave recusada pelo GitHub não é guardada',
+     /recusou/.test(await adm.textContent('#ghMsg')) && !(await adm.evaluate(() => localStorage.getItem('zg-admin-github'))));
+
+  statusRepo = 200;
+  await adm.fill('#ghChave', 'github_pat_CHAVEDETESTE9876');
+  await adm.click('#ghConectar');
+  await adm.waitForTimeout(200);
+  ok('chave aceita conecta', /Conectado.*…9876/.test(await adm.textContent('#ghEstado')), await adm.textContent('#ghEstado'));
+  ok('e mostra só o fim dela', !(await adm.textContent('#a-publicacao')).includes('CHAVEDETESTE'));
+
+  /* publica: lê o sha, grava com ele, sem baixar nada */
+  await adm.click('#t-produtos');
+  await adm.fill('tr[data-sku="red-bull-250"] [data-campo="preco"]', '10,50');
+  await adm.waitForTimeout(400);
+  let baixou = false;
+  adm.on('download', () => { baixou = true; });
+  pedidos.length = 0;
+  await adm.click('#publicar');
+  await adm.waitForTimeout(500);
+  const put = pedidos.find(p => p.metodo === 'PUT');
+  ok('Publicar grava no GitHub em vez de baixar', !!put && !baixou);
+  ok('com a chave no cabeçalho', put?.auth === 'Bearer github_pat_CHAVEDETESTE9876');
+  ok('no arquivo certo, na main', /\/contents\/ZeroGrau\/js\/ajustes\.js$/.test(new URL(put.url).pathname) && put.corpo.branch === 'main');
+  ok('usando o sha lido antes, que protege o trabalho alheio', put.corpo.sha === 'sha-1');
+  const conteudo = Buffer.from(put.corpo.content, 'base64').toString('utf8');
+  ok('o conteúdo é o ajustes.js com o preço novo',
+     /const AJUSTES_PUBLICADOS = /.test(conteudo) && /"sku": "red-bull-250"[\s\S]*?"preco": 10\.5/.test(conteudo));
+  ok('e acentos chegam inteiros', conteudo.includes('Feldschlösschen'));
+  ok('a mensagem do commit diz o que é', /^Painel: publica 1 alteração/.test(put.corpo.message), put.corpo.message);
+  ok('o topo avisa que foi publicado', /Publicado às/.test(await adm.textContent('#estado')));
+  ok('e Publicar desliga até haver mudança nova', await adm.$eval('#publicar', e => e.disabled));
+
+  /* alguém gravou no meio: a segunda volta relê o sha */
+  await adm.fill('tr[data-sku="red-bull-250"] [data-campo="preco"]', '10,90');
+  await adm.waitForTimeout(400);
+  pedidos.length = 0;
+  respostaPut = [409, 201];
+  await adm.click('#publicar');
+  await adm.waitForTimeout(600);
+  const puts = pedidos.filter(p => p.metodo === 'PUT');
+  ok('conflito: tenta de novo com o sha novo', puts.length === 2 && puts[1].corpo.sha !== puts[0].corpo.sha,
+     puts.map(p => p.corpo.sha).join(','));
+  ok('e publica', /Publicado às/.test(await adm.textContent('#estado')));
+
+  /* sem permissão: não publica, diz o porquê, e o rascunho fica */
+  await adm.fill('tr[data-sku="red-bull-250"] [data-campo="preco"]', '11,90');
+  await adm.waitForTimeout(400);
+  respostaPut = [403];
+  await adm.click('#publicar');
+  await adm.waitForTimeout(500);
+  ok('sem permissão, o topo explica', /Não publicou.*Contents: Read and write/.test(await adm.textContent('#estado')),
+     await adm.textContent('#estado'));
+  ok('e Publicar volta a valer, para tentar de novo', !(await adm.$eval('#publicar', e => e.disabled)));
+  ok('e o rascunho continua salvo',
+     await adm.evaluate(() => JSON.parse(localStorage.getItem('zg-admin-rascunho')).bebidas.find(b => b.sku === 'red-bull-250').preco === 11.9));
+
+  /* esquecer a chave volta ao download */
+  await adm.click('#t-publicacao');
+  await adm.click('#ghEsquecer');
+  ok('esquecer apaga a chave', !(await adm.evaluate(() => localStorage.getItem('zg-admin-github'))));
+  const [d] = await Promise.all([adm.waitForEvent('download'), adm.click('#publicar')]);
+  ok('e Publicar volta a baixar o arquivo', d.suggestedFilename() === 'ajustes.js');
+  await ctx.close();
+}
+
 /* ====================================================================== */
 secao('Estrutura do documento');
 {

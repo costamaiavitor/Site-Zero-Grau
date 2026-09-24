@@ -6,15 +6,18 @@
 
    - cada mudança válida vai para o rascunho (localStorage, via RASCUNHO de
      dados.js), e as lojas abertas NESTE navegador já o aplicam, com aviso;
-   - "Publicar" baixa um js/ajustes.js com o retrato inteiro, e é subindo esse
-     arquivo no repositório que a mudança chega aos clientes.
+   - "Publicar" gera um js/ajustes.js com o retrato inteiro. Com a chave do
+     GitHub conectada (aba Publicação), grava esse arquivo direto no
+     repositório pela API, e o GitHub Pages publica sozinho. Sem a chave,
+     baixa o arquivo para subir à mão.
 
-   Quando houver servidor, o ponto de troca é `publicar()`: em vez de baixar o
-   arquivo, manda `estado` para ele. O resto do painel não muda.
+   Quando houver servidor, o ponto de troca é `publicar()`: em vez do GitHub,
+   manda `estado` para ele. O resto do painel não muda.
 
-   ⚠ Sem servidor também não há senha. Qualquer um que abra admin.html mexe
-   só no próprio navegador, então hoje isso não expõe nada — mas o painel tem
-   de ganhar login no mesmo dia em que ganhar um servidor.
+   ⚠ O painel em si não tem senha; quem guarda a porta é a chave. Sem ela,
+   quem abrir admin.html mexe só no próprio navegador. Com ela, publica — por
+   isso a chave fica só no navegador de quem a colou, e há um botão para
+   esquecê-la.
    ========================================================================== */
 
 /* O que está no ar agora (base + ajustes publicados). O rascunho é medido
@@ -372,21 +375,27 @@ function diferencas(){
   return n;
 }
 
+function avisoEstado(tipo, texto){
+  $("estado").className = "adm-estado" + (tipo ? " " + tipo : "");
+  $("estado").textContent = texto;
+}
+
 let salvarTimer;
 function mudou(){
   const n = diferencas();
-  const e = $("estado");
+  const enviado = ENVIADO.ler();
+  const jaFoi = !!n && !erros.size && enviado?.retrato === canonico(retrato(estado));
   if(erros.size){
-    e.className = "adm-estado bad";
-    e.textContent = `${erros.size} ${erros.size === 1 ? "campo com erro" : "campos com erro"} · rascunho não salvo até corrigir`;
+    avisoEstado("bad", `${erros.size} ${erros.size === 1 ? "campo com erro" : "campos com erro"} · rascunho não salvo até corrigir`);
+  }else if(jaFoi){
+    const hora = new Date(enviado.em).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"});
+    avisoEstado("ok", `Publicado às ${hora} · o site se atualiza em um ou dois minutos`);
   }else if(n){
-    e.className = "adm-estado mudou";
-    e.textContent = `Rascunho · ${n} ${n === 1 ? "alteração" : "alterações"} · só neste navegador`;
+    avisoEstado("mudou", `Rascunho · ${n} ${n === 1 ? "alteração" : "alterações"} · só neste navegador`);
   }else{
-    e.className = "adm-estado";
-    e.textContent = "Sem alterações · igual ao que está no ar";
+    avisoEstado("", "Sem alterações · igual ao que está no ar");
   }
-  $("publicar").disabled = !!erros.size || !n;
+  $("publicar").disabled = publicando || !!erros.size || !n || jaFoi;
   $("descartar").disabled = !n && !erros.size;
 
   clearTimeout(salvarTimer);
@@ -410,26 +419,39 @@ $("descartar").addEventListener("click", () => {
   toast("Rascunho descartado");
 });
 
+/* O retrato que vai para o ar: produtos passados pelo mesmo filtro que as
+   lojas usam e faixas em ordem, para que "o que foi enviado" e "o que está no
+   ar" possam ser comparados sem depender de ordem de chave. */
+function retrato(e){
+  return {...structuredClone(e),
+          bebidas: e.bebidas.map(produtoDe).filter(Boolean),
+          atacado: {...structuredClone(e.atacado), faixas: [...e.atacado.faixas].sort((x, y) => x.cx - y.cx)}};
+}
+/* JSON com chaves em ordem: dois retratos iguais dão o mesmo texto */
+function canonico(v){
+  if(Array.isArray(v)) return `[${v.map(canonico).join(",")}]`;
+  if(v && typeof v === "object")
+    return `{${Object.keys(v).sort().filter(k => v[k] !== undefined).map(k => `${JSON.stringify(k)}:${canonico(v[k])}`).join(",")}}`;
+  return JSON.stringify(v);
+}
+
 function arquivoAjustes(){
   const quando = new Date().toLocaleString("pt-BR", {dateStyle: "short", timeStyle: "short"});
-  const dados = {...structuredClone(estado), atacado: {...estado.atacado,
-                 faixas: [...estado.atacado.faixas].sort((x, y) => x.cx - y.cx)}};
   return `/* ==========================================================================
    ZERO GRAU · ajustes publicados
 
-   Gerado pelo painel (admin.html) em ${quando}. Não edite à mão: troque este
-   arquivo pelo que o painel baixar e suba no repositório.
+   Gerado pelo painel (admin.html) em ${quando}. Não edite à mão: publique
+   pelo painel, ou troque este arquivo pelo que ele baixar.
 
    É o retrato inteiro do que o painel edita — produtos, regras do varejo e
    do atacado — e substitui esses trechos de js/dados.js.
    ========================================================================== */
-const AJUSTES_PUBLICADOS = ${JSON.stringify(dados, null, 2)};
+const AJUSTES_PUBLICADOS = ${JSON.stringify(retrato(estado), null, 2)};
 `;
 }
 
-/* O ponto de troca para quando houver servidor: hoje baixa o arquivo. */
-function publicar(){
-  const blob = new Blob([arquivoAjustes()], {type: "text/javascript"});
+function baixar(texto){
+  const blob = new Blob([texto], {type: "text/javascript"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "ajustes.js";
@@ -437,9 +459,166 @@ function publicar(){
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  $("dlgPublicar").showModal();
+}
+
+/* ---------- publicação direta no GitHub ----------
+   A API de conteúdo do GitHub aceita chamada do navegador (CORS liberado) e
+   grava um arquivo com um PUT: conteúdo em base64 e o `sha` da versão que
+   está lá, que é a trava contra sobrescrever o trabalho de outra pessoa. O
+   commit na main dispara o workflow do Pages, e o site se atualiza sozinho. */
+const GITHUB = {dono: "costamaiavitor", repo: "Site-Zero-Grau", ramo: "main", caminho: "ZeroGrau/js/ajustes.js"};
+const API_GH = `https://api.github.com/repos/${GITHUB.dono}/${GITHUB.repo}`;
+
+const CHAVE_GH = {
+  ler(){ try{ return localStorage.getItem("zg-admin-github") || "" }catch{ return "" } },
+  gravar(v){ try{ localStorage.setItem("zg-admin-github", v); return true }catch{ return false } },
+  limpar(){ try{ localStorage.removeItem("zg-admin-github") }catch{} }
+};
+
+/* O que foi enviado e ainda não apareceu no ar. Serve para o painel dizer
+   "enviado, aguardando o site" em vez de continuar contando alterações que
+   já saíram. Some sozinho quando o publicado alcança o envio. */
+const ENVIADO = {
+  ler(){ try{ return JSON.parse(localStorage.getItem("zg-admin-enviado") || "null") }catch{ return null } },
+  gravar(v){ try{ localStorage.setItem("zg-admin-enviado", JSON.stringify(v)) }catch{} },
+  limpar(){ try{ localStorage.removeItem("zg-admin-enviado") }catch{} }
+};
+if(ENVIADO.ler()?.retrato === canonico(retrato(PUBLICADO))) ENVIADO.limpar();
+
+function gh(caminho, {metodo = "GET", corpo, chave = CHAVE_GH.ler()} = {}){
+  return fetch(API_GH + caminho, {
+    method: metodo,
+    headers: {
+      "Accept": "application/vnd.github+json",
+      "Authorization": `Bearer ${chave}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      ...(corpo ? {"Content-Type": "application/json"} : {})
+    },
+    body: corpo ? JSON.stringify(corpo) : undefined,
+    cache: "no-store"
+  });
+}
+
+/* O que cada recusa quer dizer, em português de quem vai resolver. O GitHub
+   responde 404 (e não 403) a quem não tem acesso a repositório privado, então
+   os dois viram a mesma explicação. */
+function explicarGH(status){
+  if(status === 401) return "O GitHub recusou a chave: confira se foi colada inteira, ou se venceu.";
+  if(status === 403 || status === 404)
+    return `A chave não tem permissão para gravar em ${GITHUB.repo}. Confira o repositório escolhido e "Contents: Read and write".`;
+  if(status === 409 || status === 422) return "O arquivo mudou no GitHub enquanto você publicava. Tente de novo.";
+  return `O GitHub respondeu com erro ${status}. Tente de novo em instantes.`;
+}
+
+function base64(texto){
+  const bytes = new TextEncoder().encode(texto);
+  let bin = "";
+  for(let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+async function gravarNoGitHub(texto, alteracoes){
+  const url = `/contents/${GITHUB.caminho}`;
+  /* Duas voltas: se alguém gravou o arquivo entre a leitura do sha e o PUT,
+     o GitHub recusa com 409, e a segunda volta relê o sha e tenta de novo. */
+  for(let volta = 0; volta < 2; volta++){
+    const atual = await gh(`${url}?ref=${GITHUB.ramo}`);
+    if(!atual.ok && atual.status !== 404) throw new Error(explicarGH(atual.status));
+    const sha = atual.ok ? (await atual.json()).sha : undefined;
+    const r = await gh(url, {metodo: "PUT", corpo: {
+      message: `Painel: publica ${alteracoes} ${alteracoes === 1 ? "alteração" : "alterações"} no catálogo`,
+      content: base64(texto),
+      branch: GITHUB.ramo,
+      ...(sha ? {sha} : {})
+    }});
+    if(r.ok) return (await r.json()).commit;
+    if((r.status === 409 || r.status === 422) && volta === 0) continue;
+    throw new Error(explicarGH(r.status));
+  }
+}
+
+let publicando = false;
+async function publicar(){
+  const texto = arquivoAjustes();
+  if(!CHAVE_GH.ler()){
+    baixar(texto);
+    $("dlgPublicar").showModal();
+    return;
+  }
+  const n = diferencas();
+  if(!confirm(`Publicar ${n} ${n === 1 ? "alteração" : "alterações"} no site, para todos os clientes?`)) return;
+
+  publicando = true;
+  $("publicar").disabled = true;
+  $("publicar").textContent = "Publicando…";
+  try{
+    await gravarNoGitHub(texto, n);
+    ENVIADO.gravar({em: Date.now(), retrato: canonico(retrato(estado))});
+    toast("Publicado. O site se atualiza em um ou dois minutos.");
+  }catch(e){
+    const msg = e instanceof TypeError ? "Sem conexão com o GitHub. Confira a internet e tente de novo." : e.message;
+    avisoEstado("bad", `Não publicou: ${msg}`);
+    toast("Não publicou — veja o aviso no topo");
+    publicando = false;
+    $("publicar").textContent = "Publicar";
+    /* o botão volta a valer, para tentar de novo sem precisar editar nada; o
+       aviso do erro fica no topo até a próxima mudança */
+    $("publicar").disabled = !!erros.size;
+    return;
+  }
+  publicando = false;
+  $("publicar").textContent = "Publicar";
+  mudou();
 }
 $("publicar").addEventListener("click", publicar);
+$("baixar").addEventListener("click", () => baixar(arquivoAjustes()));
+
+/* ---------- conectar a chave ----------
+   Conectar lê o repositório com a chave: prova que ela existe e enxerga o
+   repositório certo. A permissão de gravar só se prova gravando, então ela é
+   conferida na primeira publicação — e o erro, se vier, diz o que marcar. */
+function desenharGH(){
+  const chave = CHAVE_GH.ler();
+  $("ghEstado").className = "adm-gh" + (chave ? " ok" : "");
+  $("ghEstado").textContent = chave
+    ? `Conectado ao GitHub (chave terminada em …${chave.slice(-4)}). Publicar grava direto no site.`
+    : "Não conectado. Publicar baixa o arquivo para você subir à mão.";
+  $("ghForm").hidden = !!chave;
+  $("ghEsquecer").hidden = !chave;
+  $("publicar").title = chave ? "Grava no site, para todos os clientes" : "Baixa o ajustes.js para subir no GitHub";
+}
+
+$("ghForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const campo = $("ghChave"), msg = $("ghMsg");
+  const chave = campo.value.trim();
+  const falha = texto => { msg.className = "adm-gh-msg bad"; msg.textContent = texto; campo.setAttribute("aria-invalid", "true"); campo.focus(); };
+  if(!chave) return falha("Cole a chave gerada no GitHub.");
+  if(!/^(github_pat_|ghp_)\w{10,}$/.test(chave)) return falha("Isso não parece uma chave do GitHub: ela começa com github_pat_.");
+  campo.removeAttribute("aria-invalid");
+  msg.className = "adm-gh-msg"; msg.textContent = "Conferindo com o GitHub…";
+  $("ghConectar").disabled = true;
+  try{
+    const r = await gh("", {chave});
+    if(!r.ok) return falha(explicarGH(r.status));
+    if(!CHAVE_GH.gravar(chave)) return falha("O navegador não deixou guardar a chave.");
+    campo.value = "";
+    msg.textContent = "";
+    desenharGH();
+    toast("Chave conectada");
+  }catch{
+    falha("Sem conexão com o GitHub. Confira a internet e tente de novo.");
+  }finally{
+    $("ghConectar").disabled = false;
+  }
+});
+
+$("ghEsquecer").addEventListener("click", () => {
+  if(!confirm("Esquecer a chave neste navegador? Para publicar direto de novo, será preciso colá-la outra vez.")) return;
+  CHAVE_GH.limpar();
+  desenharGH();
+  toast("Chave esquecida neste navegador");
+});
 
 /* ---------- abas ---------- */
 const abas = [...document.querySelectorAll(".adm-aba")];
@@ -472,6 +651,7 @@ function toast(msg){
 function desenharTudo(){
   desenharProdutos();
   desenharRegras();
+  desenharGH();
   mudou();
 }
 desenharTudo();

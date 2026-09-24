@@ -152,19 +152,35 @@ Não há servidor, então o painel trabalha em três camadas, aplicadas por
    nesse navegador já o aplicam, com um aviso amarelo de "prévia"; os
    clientes continuam vendo o publicado.
 
-Para publicar: **Publicar** baixa o `ajustes.js`; no GitHub, abra
-`ZeroGrau/js/`, **Add file → Upload files**, solte o arquivo e confirme na
-`main`. Quando o arquivo estiver no ar, o painel percebe que o rascunho ficou
-igual ao publicado e o apaga sozinho.
+Para publicar, há dois caminhos:
+
+- **Direto (recomendado).** Na aba **Publicação** do painel, cole uma chave
+  de acesso do GitHub — *fine-grained token*, só para o repositório
+  `Site-Zero-Grau`, com **Contents: Read and write** e mais nada; o passo a
+  passo está na própria aba. Daí em diante **Publicar** grava o
+  `ajustes.js` direto na `main` pela API do GitHub (conferindo o `sha`, para
+  não sobrescrever o trabalho de outra pessoa), e o workflow do Pages põe no
+  ar em um ou dois minutos. A chave fica só no `localStorage` daquele
+  navegador; há um botão para esquecê-la.
+- **À mão.** Sem chave, **Publicar** baixa o `ajustes.js`; no GitHub, abra
+  `ZeroGrau/js/`, **Add file → Upload files**, solte o arquivo e confirme na
+  `main`.
+
+Quando o arquivo estiver no ar, o painel percebe que o rascunho ficou igual
+ao publicado e o apaga sozinho.
 
 Os textos do varejo que citam regra (frete grátis, taxa, pedido mínimo, raio,
 cupom) são escritos pelo script a partir dos atributos `data-regra` do HTML,
 para não prometerem um valor que o painel já trocou.
 
-⚠ **O painel não tem senha.** Sem servidor, ele só mexe no navegador de quem
-o abre, então hoje isso não expõe nada — ele fica fora do buscador pelo
-`robots.txt` e pelo `noindex`. No dia em que ganhar um servidor, ganha login
-junto: o ponto de troca é `publicar()`, em `js/admin.js`.
+⚠ **O painel não tem senha; quem guarda a porta é a chave.** Sem ela,
+qualquer um que abra `admin.html` mexe só no próprio navegador. Com ela,
+publica — por isso a chave mora só no navegador de quem a colou, deve ser
+esquecida em computador compartilhado e deve ter só a permissão de conteúdo
+deste repositório (se vazar, basta revogá-la no GitHub). O painel fica fora
+do buscador pelo `robots.txt` e pelo `noindex`. No dia em que ganhar um
+servidor, ganha login junto: o ponto de troca é `publicar()`, em
+`js/admin.js`.
 
 ## Imagens
 
