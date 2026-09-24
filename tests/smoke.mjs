@@ -140,6 +140,9 @@ secao('Carga limpa');
   const fotos = await p.$$eval('.card-art.com-foto', e => e.length);
   const cards = await p.$$eval('.card', e => e.length);
   ok(`as ${cards} fotos de produto carregam`, fotos === cards, `${fotos}/${cards}`);
+  const zaps = await p.$$eval('a[data-contato="whatsapp"]', es => es.map(e => e.href));
+  ok(`os ${zaps.length} links de WhatsApp vão para (85) 98149-4445`,
+     zaps.length > 0 && zaps.every(h => h === 'https://wa.me/5585981494445'), zaps.join(' '));
   await ctx.close();
 
   /* As outras páginas também, logo aqui no começo. Os scripts são clássicos

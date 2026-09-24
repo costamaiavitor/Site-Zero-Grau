@@ -54,12 +54,13 @@ const CATEGORIAS = [
 ];
 
 /* ---------- CONTATO ----------
-   ⚠ VALORES DE EXEMPLO — trocar pelos reais antes de publicar.
+   O WhatsApp é o real da loja: (85) 98149-4445. ⚠ O resto ainda é VALOR DE
+   EXEMPLO — trocar pelos reais antes de publicar.
    Tudo o que identifica a loja mora aqui e é escrito na página pelo script,
    para que trocar o número não vire uma caça a string espalhada pelo HTML.
    O mesmo vale para o CNPJ e o endereço no rodapé. */
 const CONTATO = {
-  whatsapp:  "https://wa.me/5585999999999",
+  whatsapp:  "https://wa.me/5585981494445",   /* (85) 98149-4445: 55 + DDD + número, sem símbolos */
   telefone:  "(85) 3000-0000",
   email:     "oi@zerograu.com.br",
   cnpj:      "00.000.000/0001-00",

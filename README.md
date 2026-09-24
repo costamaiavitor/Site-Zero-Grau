@@ -234,8 +234,9 @@ caso, troque o `og:url` e o `og:image` pelo domínio novo.
       em `js/porta.js`). Hoje qualquer senha com 6 caracteres entra e toda
       conta nova é aceita; falta também "esqueci a senha", que depende do
       mesmo servidor.
-- [ ] Trocar o bloco `CONTATO` em `js/script.js` pelos dados reais da loja
-      (hoje são valores de exemplo: WhatsApp, telefone, e-mail e CNPJ).
+- [ ] Trocar o resto do bloco `CONTATO` em `js/dados.js` pelos dados reais da
+      loja. O WhatsApp já é o real, (85) 98149-4445; telefone, e-mail, CNPJ,
+      endereço e redes sociais ainda são valores de exemplo.
 - [ ] Apontar `og:url` e `og:image` em `index.html` para o domínio final.
 - [ ] Escrever as páginas de "Trocas e devoluções" e "Política de casco" —
       hoje esses links caem no WhatsApp.
