@@ -1,4 +1,4 @@
-# Zero Grau · Distribuidora de Bebidas
+# Zero Grau · Distribuidora de Bebidas!
 
 Site estático de uma distribuidora que atende as duas pontas: quem vai beber e
 quem vai revender. Sem framework e sem build — HTML, CSS e alguns arquivos de
@@ -49,7 +49,7 @@ polegar, e a faixa de operação do rodapé sai — os mesmos números estão na
 abertura. Todo alvo de toque tem no mínimo 44 px de altura, e o teste de
 fumaça percorre as cinco vistas e as duas lojas medindo isso.
 
-## Rodar
+## Rodar!
 
 ```bash
 npm run dev     # sobe em http://localhost:8080
@@ -58,7 +58,7 @@ npm run dev     # sobe em http://localhost:8080
 Qualquer servidor estático serve. Abrir o `index.html` direto pelo `file://`
 funciona em quase tudo, menos no `localStorage` de alguns navegadores.
 
-## Testar
+## Testar!
 
 ```bash
 npm install
@@ -79,7 +79,7 @@ Em rede sem saída para o Google Fonts, aponte as fontes para um espelho local:
 FONTES_DIR=/caminho/para/fontes npm test
 ```
 
-## Como está organizado
+## Como está organizado!
 
 ```
 ZeroGrau/
@@ -97,7 +97,7 @@ ZeroGrau/
   sitemap.xml       as duas páginas públicas
 ```
 
-### Onde mexer
+### Onde mexer!
 
 | Para mudar | Vá em |
 |---|---|
@@ -164,7 +164,7 @@ catálogo. O padrão completo e o que saiu por ele estão em `img/CREDITOS.md`.
 
 Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.
 
-## Publicar
+## Publicar!
 
 `.github/workflows/pages.yml` publica a pasta `ZeroGrau/` no GitHub Pages a
 cada push na `main`. O conteúdo dessa pasta vira a raiz do site, então o
@@ -187,7 +187,7 @@ Para hospedar sem tornar o repositório público, Netlify, Cloudflare Pages e
 Vercel publicam pasta estática de repositório privado no plano gratuito. Nesse
 caso, troque o `og:url` e o `og:image` pelo domínio novo.
 
-## Antes de ir ao ar
+## Antes de ir ao ar!
 
 - [ ] Ligar login e cadastro a um servidor (`autenticar()` e `cadastrar()`
       em `js/porta.js`). Hoje qualquer senha com 6 caracteres entra e toda
