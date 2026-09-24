@@ -85,6 +85,29 @@ for(const el of document.querySelectorAll("[data-total]")){
   }[el.dataset.total];
 }
 
+/* As regras de venda escritas na página. O HTML traz os valores de hoje, que
+   é o que aparece sem JavaScript; aqui eles são trocados pelos de REGRAS e da
+   taxa de entrega — que o painel de administração pode ter mudado. Sem isto,
+   mudar o frete grátis no painel mudaria a conta do carrinho e deixaria a
+   página prometendo o valor antigo. */
+const REGRA_VALOR = {
+  taxaBase: () => TAXA_BASE,           taxaKm: () => TAXA_KM,
+  minimo: () => REGRAS.minimo,         freteGratis: () => REGRAS.freteGratis,
+  cupomDesconto: () => REGRAS.cupom.desconto, cupomMinimo: () => REGRAS.cupom.minimo,
+  cupomCodigo: () => REGRAS.cupom.codigo,     raio: () => RAIO_MAX
+};
+const REGRA_FORMATO = {
+  brl:   v => brl(v),
+  curto: v => Number.isInteger(v) ? String(v) : brl(v),     /* "R$ 30", mas "R$ 32,50" */
+  pct:   v => String(Math.round(v * 1000) / 10).replace(".", ","),
+  km:    v => String(v).replace(".", ","),
+  texto: v => v
+};
+for(const el of document.querySelectorAll("[data-regra]")){
+  const valor = REGRA_VALOR[el.dataset.regra], fmt = REGRA_FORMATO[el.dataset.fmt];
+  if(valor && fmt) el.textContent = fmt(valor());
+}
+
 /* Contato escrito na página a partir de um lugar só. Trocar o número da loja
    é editar CONTATO e mais nada. */
 for(const el of document.querySelectorAll("[data-contato]")){
@@ -393,7 +416,7 @@ $("cupomBtn").addEventListener("click", () => {
   }
   cupomAtivo = true;
   msg.classList.add("ok");
-  msg.textContent = `Cupom aplicado: ${REGRAS.cupom.desconto * 100}% de desconto.`;
+  msg.textContent = `Cupom aplicado: ${REGRA_FORMATO.pct(REGRAS.cupom.desconto)}% de desconto.`;
   campo.value = REGRAS.cupom.codigo;
   pintarCarrinho();
 });

@@ -85,15 +85,18 @@ FONTES_DIR=/caminho/para/fontes npm test
 ZeroGrau/
   index.html        varejo: vitrine em quatro vistas
   atacado.html      atacado: tabela por caixa fechada
+  admin.html        painel: produtos e regras das duas lojas
   creditos.html     atribuição das fotos (exigida pelas licenças CC BY-SA)
   css/style.css     estrutura e componentes; o :root guarda todos os tokens
   css/temas.css     as duas peles: "Madrugada" no varejo, "Balcão" no atacado
+  js/ajustes.js     o que o painel publicou (gerado; não edite à mão)
   js/dados.js       catálogo, contato e regras de venda — fonte única das duas
+  js/admin.js       o painel
   js/porta.js       aviso de idade, login e criar conta
   js/script.js      varejo: vistas, busca, carrinho, CEP, cupom
   js/atacado.js     atacado: tabela, pedido por caixa, faixas de desconto
   img/              fotos de produto em WebP, 200 e 400 px de altura
-  robots.txt        libera o varejo, barra o atacado
+  robots.txt        libera o varejo, barra o atacado e o painel
   sitemap.xml       as duas páginas públicas
 ```
 
@@ -111,6 +114,8 @@ ZeroGrau/
 | cor, tipografia, forma | os tokens em `css/temas.css` |
 | conferir o dígito verificador na porta | `CONFERE_DIGITO`, em `js/porta.js` |
 | ligar o login e o cadastro a um servidor | `autenticar()` e `cadastrar()`, em `js/porta.js` |
+| preço, estoque e regras, sem mexer em código | `admin.html` (ver "Painel de administração") |
+| publicar o painel direto num servidor | `publicar()`, em `js/admin.js` |
 | tamanho mínimo da senha | `SENHA_MIN`, em `js/porta.js` |
 
 Ao mexer em `css/` ou `js/`, suba o `?v=` dos `<link>` e `<script>` das três
@@ -125,6 +130,41 @@ discordariam primeiro.
 
 O preço de atacado sai do preço cheio de varejo, não da promoção: promoção de
 fim de semana é isca, e não tem por que valer para quem leva vinte caixas.
+
+## Painel de administração
+
+`admin.html` edita o que as duas lojas leem: produtos (preço, promoção,
+estoque, categoria, embalagem, foto, unidades por caixa, casco), as regras do
+varejo (pedido mínimo, frete grátis, taxa e raio de entrega, cupom) e as do
+atacado (desconto de revenda, mínimo, frete, prazo, faixas de volume,
+unidades por caixa de cada embalagem). A coluna "Atacado" da tabela mostra o
+preço que o revendedor paga, já com o desconto do rascunho.
+
+Não há servidor, então o painel trabalha em três camadas, aplicadas por
+`aplicarAjustes()` no fim de `js/dados.js`:
+
+1. **Base** — o que está escrito em `js/dados.js`.
+2. **Publicado** — `js/ajustes.js`, gerado pelo botão **Publicar**. Subido no
+   repositório, vale para todo mundo. É um retrato inteiro do que o painel
+   edita e substitui esses trechos da base; enquanto ele existir, mudar preço
+   direto em `dados.js` não tem efeito — mude pelo painel.
+3. **Rascunho** — no `localStorage` de quem está editando. As lojas abertas
+   nesse navegador já o aplicam, com um aviso amarelo de "prévia"; os
+   clientes continuam vendo o publicado.
+
+Para publicar: **Publicar** baixa o `ajustes.js`; no GitHub, abra
+`ZeroGrau/js/`, **Add file → Upload files**, solte o arquivo e confirme na
+`main`. Quando o arquivo estiver no ar, o painel percebe que o rascunho ficou
+igual ao publicado e o apaga sozinho.
+
+Os textos do varejo que citam regra (frete grátis, taxa, pedido mínimo, raio,
+cupom) são escritos pelo script a partir dos atributos `data-regra` do HTML,
+para não prometerem um valor que o painel já trocou.
+
+⚠ **O painel não tem senha.** Sem servidor, ele só mexe no navegador de quem
+o abre, então hoje isso não expõe nada — ele fica fora do buscador pelo
+`robots.txt` e pelo `noindex`. No dia em que ganhar um servidor, ganha login
+junto: o ponto de troca é `publicar()`, em `js/admin.js`.
 
 ## Imagens
 
@@ -189,6 +229,7 @@ caso, troque o `og:url` e o `og:image` pelo domínio novo.
 
 ## Antes de ir ao ar
 
+- [ ] Dar login ao painel `admin.html` antes de ligá-lo a qualquer servidor.
 - [ ] Ligar login e cadastro a um servidor (`autenticar()` e `cadastrar()`
       em `js/porta.js`). Hoje qualquer senha com 6 caracteres entra e toda
       conta nova é aceita; falta também "esqueci a senha", que depende do

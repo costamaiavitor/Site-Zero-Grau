@@ -69,10 +69,11 @@ const CONTATO = {
   facebook:  "#"
 };
 
-/* taxa de entrega — mesma regra usada no diagrama de zonas */
-const TAXA_BASE = 4.90;
-const TAXA_KM   = 1.20;
-const RAIO_MAX  = 12;
+/* taxa de entrega. `let` e não `const` porque o painel de administração
+   pode mudá-las (ver AJUSTES, no fim do arquivo). */
+let TAXA_BASE = 4.90;
+let TAXA_KM   = 1.20;
+let RAIO_MAX  = 12;
 
 const brl = v => v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
 const $   = id => document.getElementById(id);
@@ -186,3 +187,135 @@ const ENTREGA = {
 
 /* "Fátima" e "fatima" são o mesmo bairro; o ViaCEP devolve com acento. */
 const chaveLugar = s => semAcento(String(s || "")).trim();
+
+
+/* ==========================================================================
+   AJUSTES DO PAINEL (admin.html)
+
+   Três camadas, nesta ordem, e só esta função as aplica:
+
+   1. O que está escrito acima neste arquivo — a base.
+   2. AJUSTES_PUBLICADOS, de js/ajustes.js, que é o arquivo que o botão
+      "Publicar" do painel gera. Subido no repositório, vale para todo mundo.
+   3. O rascunho do painel, no localStorage. Vale só no navegador de quem
+      está editando, e a loja mostra um aviso de prévia enquanto ele existir.
+      O painel em si não aplica o rascunho: ele precisa ver o publicado para
+      saber o que mudou.
+
+   Os ajustes são um retrato inteiro do que o painel edita, não uma lista de
+   diferenças: o que chega substitui o que havia. Tudo é conferido na entrada
+   — número tem de ser número, fração tem de estar entre 0 e 1 —, porque o
+   rascunho mora num lugar que qualquer um edita pelo console, e um valor
+   torto aqui derrubaria a loja inteira.
+   ========================================================================== */
+const AJUSTE_VERSAO  = 1;
+const RASCUNHO_CHAVE = "zg-admin-rascunho";
+const FORMAS = ["can", "bottle", "tall", "pet", "saco"];
+
+const numOk  = (v, min = 0, max = Infinity) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
+const textoOk = v => typeof v === "string" && v.trim().length > 0;
+
+/* Um produto vindo de fora só entra se tiver o que o card precisa para ser
+   desenhado; o resto dos campos cai no padrão. */
+function produtoDe(b){
+  if(!b || !textoOk(b.sku) || !textoOk(b.marca) || !textoOk(b.nome)) return null;
+  if(!CATEGORIAS.some(c => c.id === b.cat) || !FORMAS.includes(b.forma)) return null;
+  if(!numOk(b.preco, 0.01) || !numOk(b.estoque) || !Number.isInteger(b.estoque)) return null;
+  const promo = numOk(b.promo, 0.01) && b.promo < b.preco ? b.promo : null;
+  const casco = b.retornavel && numOk(b.casco, 0.01) ? b.casco : null;
+  return {
+    sku: b.sku.trim(), marca: b.marca.trim(), nome: b.nome.trim(), cat: b.cat,
+    foto: textoOk(b.foto) ? b.foto.trim() : "", forma: b.forma,
+    vol: textoOk(b.vol) ? b.vol.trim() : "—", teor: textoOk(b.teor) ? b.teor.trim() : "—",
+    preco: b.preco, promo, gelada: !!b.gelada,
+    retornavel: casco !== null, ...(casco !== null ? {casco} : {}),
+    alcoolica: !!b.alcoolica, estoque: b.estoque
+  };
+}
+
+/* O retrato do que o painel edita, no estado em que está agora. */
+function estadoAtual(){
+  return {
+    versao: AJUSTE_VERSAO,
+    bebidas: BEBIDAS.map(b => ({...b})),
+    varejo: {
+      minimo: REGRAS.minimo, freteGratis: REGRAS.freteGratis,
+      cupom: {...REGRAS.cupom},
+      taxaBase: TAXA_BASE, taxaKm: TAXA_KM, raioMax: RAIO_MAX
+    },
+    atacado: {
+      desconto: ATACADO.desconto, minimo: ATACADO.minimo, freteGratis: ATACADO.freteGratis,
+      prazo: ATACADO.prazo, faixas: ATACADO.faixas.map(f => ({...f}))
+    },
+    caixaPadrao: {...CAIXA_PADRAO},
+    caixaExcecao: {...CAIXA_EXCECAO}
+  };
+}
+
+function aplicarAjustes(a){
+  if(!a || a.versao !== AJUSTE_VERSAO) return false;
+
+  if(Array.isArray(a.bebidas)){
+    const lista = a.bebidas.map(produtoDe).filter(Boolean);
+    const skus = new Set(lista.map(b => b.sku));
+    if(lista.length && skus.size === lista.length) BEBIDAS.splice(0, BEBIDAS.length, ...lista);
+  }
+
+  const v = a.varejo || {};
+  if(numOk(v.minimo))          REGRAS.minimo = v.minimo;
+  if(numOk(v.freteGratis))     REGRAS.freteGratis = v.freteGratis;
+  if(v.cupom){
+    if(textoOk(v.cupom.codigo))            REGRAS.cupom.codigo = v.cupom.codigo.trim().toUpperCase();
+    if(numOk(v.cupom.desconto, 0.01, 0.9)) REGRAS.cupom.desconto = v.cupom.desconto;
+    if(numOk(v.cupom.minimo))              REGRAS.cupom.minimo = v.cupom.minimo;
+  }
+  if(numOk(v.taxaBase))        TAXA_BASE = v.taxaBase;
+  if(numOk(v.taxaKm))          TAXA_KM = v.taxaKm;
+  if(numOk(v.raioMax, 0.5))    RAIO_MAX = v.raioMax;
+
+  const at = a.atacado || {};
+  if(numOk(at.desconto, 0, 0.9)) ATACADO.desconto = at.desconto;
+  if(numOk(at.minimo))           ATACADO.minimo = at.minimo;
+  if(numOk(at.freteGratis))      ATACADO.freteGratis = at.freteGratis;
+  if(textoOk(at.prazo))          ATACADO.prazo = at.prazo.trim();
+  if(Array.isArray(at.faixas)){
+    const faixas = at.faixas
+      .filter(f => f && Number.isInteger(f.cx) && f.cx > 0 && numOk(f.extra, 0, 0.5))
+      .sort((x, y) => x.cx - y.cx);
+    ATACADO.faixas.splice(0, ATACADO.faixas.length, ...faixas);
+  }
+
+  for(const f of FORMAS){
+    const n = a.caixaPadrao?.[f];
+    if(Number.isInteger(n) && n > 0) CAIXA_PADRAO[f] = n;
+  }
+  if(a.caixaExcecao && typeof a.caixaExcecao === "object"){
+    for(const k of Object.keys(CAIXA_EXCECAO)) delete CAIXA_EXCECAO[k];
+    for(const [sku, n] of Object.entries(a.caixaExcecao))
+      if(Number.isInteger(n) && n > 0) CAIXA_EXCECAO[sku] = n;
+  }
+  return true;
+}
+
+const RASCUNHO = {
+  ler(){ try{ return JSON.parse(localStorage.getItem(RASCUNHO_CHAVE) || "null") }catch{ return null } },
+  gravar(r){ try{ localStorage.setItem(RASCUNHO_CHAVE, JSON.stringify(r)); return true }catch{ return false } },
+  limpar(){ try{ localStorage.removeItem(RASCUNHO_CHAVE) }catch{} }
+};
+
+/* camada 2: o publicado */
+if(typeof AJUSTES_PUBLICADOS !== "undefined") aplicarAjustes(AJUSTES_PUBLICADOS);
+
+/* camada 3: o rascunho, só nas lojas */
+const EM_PREVIA = document.body?.dataset.publico !== "admin" && aplicarAjustes(RASCUNHO.ler());
+
+/* Quem está vendo o rascunho precisa saber disso: sem o aviso, o dono abre a
+   loja, vê o preço novo e acha que já está no ar para todo mundo. */
+if(EM_PREVIA){
+  document.body.insertAdjacentHTML("beforeend", `
+    <div class="previa" role="status">
+      <b>Prévia do rascunho</b>
+      <span>só neste navegador</span>
+      <a href="admin.html">Voltar ao painel</a>
+    </div>`);
+}

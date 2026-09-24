@@ -1599,3 +1599,152 @@ h3{
 
 /* Os h2 das vistas seguem o corpo de documento, não o de cartaz */
 .doc-corpo > div > h2{margin-bottom:clamp(16px,2.2vw,24px)}
+
+/* ============ 29. PRÉVIA DO RASCUNHO ============
+   O aviso que as lojas mostram quando o painel de administração tem um
+   rascunho neste navegador. Fica no canto e por cima de tudo, fora do fluxo:
+   a loja em prévia tem de ter o mesmo layout da loja publicada. */
+.previa{
+  position:fixed;left:16px;bottom:16px;z-index:250;
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;
+  max-width:min(520px,calc(100vw - 32px));
+  padding:2px 6px 2px 14px;border:2px solid #F5B800;border-radius:4px;
+  background:#1A1400;color:#FFE9A8;
+  font-family:var(--body);font-size:.76rem;line-height:1.3;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+}
+.previa b{color:#F5B800;text-transform:uppercase;letter-spacing:.06em;font-size:.72rem}
+.previa a{color:#FFE9A8;text-decoration:underline;font-weight:700;min-height:44px;display:inline-flex;align-items:center;padding:0 8px}
+@media(max-width:900px){
+  .previa{bottom:calc(56px + env(safe-area-inset-bottom,0px) + 10px)}
+}
+
+/* ============ 30. PAINEL DE ADMINISTRAÇÃO (admin.html) ============
+   Ferramenta de trabalho, na pele do Balcão: papel claro, tinta escura, número
+   tabular. A página rola como documento — não é a casca de tela única das
+   lojas —, e a tabela de produtos rola para os lados dentro da própria caixa,
+   com a coluna do nome presa à esquerda. */
+.adm{background:var(--paper);color:var(--ink);font-family:var(--body);min-height:100vh}
+.adm button:disabled{opacity:.45;cursor:not-allowed}
+.adm-topo{
+  position:sticky;top:0;z-index:20;
+  display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;
+  padding:14px clamp(16px,3vw,32px);
+  background:var(--paper-blur);border-bottom:1px solid var(--rule);
+  backdrop-filter:blur(8px);
+}
+.adm-topo .logo{margin-right:auto}
+.adm-estado{
+  font-family:var(--mono);font-size:.78rem;font-weight:600;color:var(--ink-2);
+  padding:8px 12px;border:1px solid var(--rule);border-radius:var(--r-badge);background:var(--card);
+}
+.adm-estado.mudou{color:#7A5200;border-color:#E3B341;background:#FFF6DC}
+.adm-estado.bad{color:var(--hot);border-color:var(--hot);background:#FCEBEB}
+.adm-acoes{display:flex;flex-wrap:wrap;gap:8px}
+.adm-acoes .btn{padding:12px 16px;font-size:.72rem;min-height:44px}
+
+.adm-corpo{padding:clamp(16px,3vw,32px);max-width:1500px;margin:0 auto}
+.adm-nota{
+  font-size:.85rem;line-height:1.6;color:var(--ink-2);
+  padding:14px 16px;border-left:3px solid var(--acc);background:var(--card);
+  margin-bottom:22px;max-width:880px;
+}
+.adm-nota b{color:var(--ink)}
+.adm code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;background:var(--paper-2);padding:1px 5px;border-radius:3px}
+
+.adm-abas{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:22px;overflow-x:auto}
+.adm-aba{
+  min-height:44px;padding:0 20px;background:none;border:0;border-bottom:3px solid transparent;
+  font-family:var(--mono);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);cursor:pointer;margin-bottom:-1px;
+}
+.adm-aba[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--acc)}
+.adm-aba:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+
+.adm-h{font-family:var(--display);font-weight:var(--h-wght);font-size:1.35rem;letter-spacing:var(--h-ls);margin-bottom:14px}
+.adm-conta{color:var(--ink-2);font-weight:600}
+.adm-barra{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:10px}
+.adm-barra .adm-h{margin:0 auto 0 0}
+.adm-busca input{
+  min-height:44px;width:min(320px,100%);padding:0 14px;
+  border:1px solid var(--rule);border-radius:var(--r-btn);background:var(--card);font:inherit;
+}
+.adm-barra .btn{padding:12px 18px;font-size:.72rem;min-height:44px}
+.adm-dica{font-size:.8rem;color:var(--ink-2);line-height:1.55;margin-bottom:14px;max-width:880px}
+
+/* tabela */
+.adm-rolo{overflow-x:auto;border:1px solid var(--rule);border-radius:var(--r-card);background:var(--card)}
+.adm-rolo:focus-visible{outline:2px solid var(--acc)}
+.adm-tabela{border-collapse:separate;border-spacing:0;min-width:1380px;width:100%;font-size:.82rem}
+.adm-tabela th{
+  position:sticky;top:0;text-align:left;white-space:nowrap;
+  font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);background:var(--paper-2);padding:10px 8px;border-bottom:1px solid var(--rule);
+}
+.adm-tabela td{padding:6px 8px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+.adm-tabela tr:last-child td{border-bottom:0}
+.adm-tabela .n{text-align:right}
+.adm-tabela .c{text-align:center;vertical-align:middle}
+.adm-tabela .fixa{position:sticky;left:0;z-index:1;background:var(--card);min-width:230px;box-shadow:1px 0 0 var(--rule-2)}
+.adm-tabela th.fixa{z-index:2;background:var(--paper-2)}
+.adm-tabela tr.nova td{background:#F2F8F5}
+.adm-tabela tr.nova td.fixa{background:#F2F8F5}
+.adm-tabela input:not([type=checkbox]),.adm-tabela select{
+  width:100%;min-width:0;min-height:36px;padding:6px 8px;
+  border:1px solid var(--rule);border-radius:3px;background:#fff;font:inherit;color:var(--ink);
+}
+.adm-tabela input.n{text-align:right;font-variant-numeric:tabular-nums;width:92px}
+.adm-tabela input.curto{width:84px}
+.adm-tabela .fixa input + input{margin-top:4px}
+.adm-tabela input.marca{font-weight:700}
+.adm-tabela select{width:auto;max-width:170px}
+.adm-tabela input[type=checkbox]{width:20px;height:20px;accent-color:var(--acc)}
+.adm-tabela .calc{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;vertical-align:middle}
+.adm-tabela .calc small{display:block;font-weight:500;color:var(--ink-2);font-size:.72rem}
+
+/* campo alterado e campo com erro */
+.adm .mudou{border-color:#E3B341 !important;background:#FFF6DC !important}
+.adm [aria-invalid="true"]{border-color:var(--hot) !important;background:#FCEBEB !important}
+.adm-erro{display:block;color:var(--hot);font-size:.7rem;line-height:1.3;margin-top:3px;white-space:normal;max-width:180px}
+.adm input:focus-visible,.adm select:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+
+.adm-tirar{
+  min-height:36px;padding:0 10px;background:none;border:1px solid transparent;border-radius:3px;
+  color:var(--hot);font:inherit;font-size:.75rem;font-weight:700;cursor:pointer;
+}
+.adm-tirar:hover{border-color:var(--hot)}
+
+/* formulários de regras */
+.adm-grupos{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;align-items:start}
+.adm-grupo{border:1px solid var(--rule);border-radius:var(--r-card);background:var(--card);padding:18px;min-width:0}
+.adm-grupo legend{
+  font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-2);padding:0 6px;
+}
+.adm-campo{display:block;margin-bottom:12px}
+.adm-campo > span:first-child{display:block;font-size:.8rem;font-weight:600;margin-bottom:5px}
+.adm-campo input{
+  width:100%;min-height:44px;padding:0 12px;
+  border:1px solid var(--rule);border-radius:3px;background:#fff;font:inherit;color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.adm-faixa{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:4px}
+.adm-faixa .adm-tirar{min-height:44px;margin-bottom:12px}
+.adm-mini{padding:10px 14px;font-size:.7rem;min-height:44px}
+
+.adm-dialogo{
+  max-width:520px;width:calc(100% - 32px);border:1px solid var(--ink);border-radius:var(--r-card);
+  padding:26px;background:var(--paper);color:var(--ink);
+}
+.adm-dialogo::backdrop{background:rgba(16,20,24,.55)}
+.adm-dialogo h2{font-family:var(--display);font-size:1.3rem;margin-bottom:10px}
+.adm-dialogo p,.adm-dialogo li{font-size:.9rem;line-height:1.6;color:var(--ink-2)}
+.adm-dialogo ol{margin:10px 0 20px 20px}
+.adm-dialogo li{margin-bottom:6px}
+
+@media(max-width:700px){
+  .adm-topo{position:static}
+  .adm-acoes{width:100%}
+  .adm-acoes .btn{flex:1 1 calc(50% - 8px)}
+  .adm-estado{width:100%}
+}

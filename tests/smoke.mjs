@@ -146,7 +146,7 @@ secao('Carga limpa');
      e dividem o escopo global: um nome repetido entre porta.js e atacado.js
      derruba a página inteira com "has already been declared", e sem esta
      checagem isso só aparecia lá na frente, como uma espera estourada. */
-  for(const pag of ['atacado.html', 'creditos.html']){
+  for(const pag of ['atacado.html', 'creditos.html', 'admin.html']){
     const c2 = await contexto();
     const p2 = await c2.newPage();
     const e2 = [];
@@ -766,6 +766,159 @@ for(const largura of LARGURAS){
 }
 
 /* ====================================================================== */
+secao('Painel de administração');
+{
+  const ctx = await contexto({ largura:1366, altura:900 });
+  const adm = await ctx.newPage();
+  adm.on('dialog', d => d.accept());
+  await adm.goto(`${BASE}/admin.html`, { waitUntil:'networkidle' });
+
+  const rascunho = () => adm.evaluate(() => JSON.parse(localStorage.getItem('zg-admin-rascunho') || 'null'));
+  const estadoTxt = () => adm.textContent('#estado');
+  const esperar = () => adm.waitForTimeout(400);          /* o rascunho salva com 250 ms de folga */
+  const linha = sku => `#linhasProdutos tr[data-sku="${sku}"]`;
+
+  const total = await adm.evaluate(() => BEBIDAS.length);
+  ok('o painel lista todos os produtos', (await adm.$$('#linhasProdutos tr')).length === total, String(total));
+  ok('abre sem alterações', /Sem alterações/.test(await estadoTxt()));
+  ok('e com Publicar desligado', await adm.$eval('#publicar', e => e.disabled));
+  ok('sem rascunho guardado', (await rascunho()) === null);
+
+  /* preço: vira rascunho e a célula fica marcada */
+  await adm.fill(`${linha('estrella-galicia-330')} [data-campo="preco"]`, '9,90');
+  await esperar();
+  ok('mudar o preço conta uma alteração', /1 alteração/.test(await estadoTxt()), await estadoTxt());
+  ok('e marca a célula', await adm.$eval(`${linha('estrella-galicia-330')} [data-campo="preco"]`, e => e.classList.contains('mudou')));
+  ok('e salva o rascunho', (await rascunho())?.bebidas.find(b => b.sku === 'estrella-galicia-330').preco === 9.9);
+  ok('a coluna Atacado acompanha', /7,13/.test(await adm.textContent(`${linha('estrella-galicia-330')} [data-calc]`)),
+     await adm.textContent(`${linha('estrella-galicia-330')} [data-calc]`));
+
+  /* erro: promoção acima do preço não chega ao rascunho */
+  await adm.fill(`${linha('estrella-galicia-330')} [data-campo="promo"]`, '12');
+  await esperar();
+  ok('promoção maior que o preço é recusada', /Menor que o preço/.test(await adm.textContent(linha('estrella-galicia-330'))));
+  ok('o topo avisa o erro', /campo com erro/.test(await estadoTxt()));
+  ok('e Publicar desliga', await adm.$eval('#publicar', e => e.disabled));
+  ok('o rascunho guarda o último valor válido', (await rascunho()).bebidas.find(b => b.sku === 'estrella-galicia-330').promo === 6.9);
+  await adm.fill(`${linha('estrella-galicia-330')} [data-campo="promo"]`, '7,50');
+
+  /* regras do varejo e do atacado */
+  await adm.click('#t-varejo');
+  await adm.fill('[data-regra="varejo.freteGratis"]', '150');
+  await adm.fill('[data-regra="varejo.cupom.codigo"]', 'geladinha10');
+  await adm.fill('[data-regra="varejo.cupom.desconto"]', '95');
+  ok('cupom acima de 90% é recusado', /90%/.test(await adm.textContent('#a-varejo')));
+  await adm.fill('[data-regra="varejo.cupom.desconto"]', '10');
+  await adm.click('#t-atacado');
+  await adm.fill('[data-regra="atacado.desconto"]', '30');
+  await esperar();
+  ok('o desconto de revenda muda a coluna Atacado', /6,93/.test(await adm.textContent(`${linha('estrella-galicia-330')} [data-calc]`)));
+  ok('Publicar liga com alterações válidas', !(await adm.$eval('#publicar', e => e.disabled)));
+
+  /* remover e adicionar produto */
+  await adm.click('#t-produtos');
+  await adm.click(`${linha('no3-gin-700')} [data-acao="tirar"]`);
+  await adm.click('#novoProduto');
+  const novo = await adm.$eval('#linhasProdutos tr:last-child', e => e.dataset.sku);
+  ok('produto novo nasce com os obrigatórios marcados', /4 campos com erro/.test(await estadoTxt()), await estadoTxt());
+  const nl = linha(novo);
+  await adm.fill(`${nl} [data-campo="marca"]`, 'Itaipava');
+  await adm.fill(`${nl} [data-campo="nome"]`, 'Pilsen lata 350 ml');
+  await adm.fill(`${nl} [data-campo="vol"]`, '350 ml');
+  await adm.fill(`${nl} [data-campo="teor"]`, '4,5%');
+  await adm.fill(`${nl} [data-campo="preco"]`, '4,29');
+  await adm.fill(`${nl} [data-campo="estoque"]`, '480');
+  await esperar();
+  ok('preenchido, o produto novo entra no rascunho',
+     (await rascunho()).bebidas.some(b => b.marca === 'Itaipava') && !(await rascunho()).bebidas.some(b => b.sku === 'no3-gin-700'));
+
+  /* a loja, no mesmo navegador, mostra a prévia */
+  const loja = await ctx.newPage();
+  const errosLoja = [];
+  loja.on('pageerror', e => errosLoja.push(e.message));
+  await loja.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(loja, CPF);
+  ok('a loja avisa que é prévia', !!(await loja.$('.previa')));
+  ok('o preço novo aparece no card', /7,50/.test(await loja.$eval('.card[data-cat="cerveja"]', e => e.innerText)));
+  ok('o produto removido some', !(await loja.evaluate(() => BEBIDAS.some(b => b.sku === 'no3-gin-700'))));
+  ok('o produto novo aparece', /Itaipava/.test(await loja.textContent('#grid')));
+  ok('e cai na silhueta, sem foto quebrada', await loja.$$eval('.card', cs => {
+    const c = cs.find(x => /Itaipava/.test(x.textContent)); return !!c && !c.querySelector('.card-art.com-foto') && !!c.querySelector('.silhueta');
+  }));
+  ok('o texto da página segue a regra nova', /150/.test(await loja.textContent('.info-row b.hl')));
+  ok('o cupom novo é o que o botão copia', (await loja.textContent('#code')).trim() === 'GELADINHA10');
+  ok('e é o que o carrinho aceita', await loja.evaluate(() => REGRAS.cupom.codigo === 'GELADINHA10' && REGRAS.cupom.desconto === 0.1));
+  ok('a loja em prévia não tem erro', errosLoja.length === 0, errosLoja[0]);
+
+  const bal = await ctx.newPage();
+  await bal.goto(`${BASE}/atacado.html`, { waitUntil:'networkidle' });
+  await entrar(bal, CNPJ);
+  ok('o atacado usa o desconto novo', await bal.evaluate(() => ATACADO.desconto === 0.3));
+  ok('e também avisa a prévia', !!(await bal.$('.previa')));
+
+  /* publicar baixa o arquivo; servido no lugar do ajustes.js, vale para todos */
+  const [baixa] = await Promise.all([adm.waitForEvent('download'), adm.click('#publicar')]);
+  ok('Publicar baixa ajustes.js', baixa.suggestedFilename() === 'ajustes.js');
+  const arquivo = readFileSync(await baixa.path(), 'utf8');
+  ok('o arquivo define AJUSTES_PUBLICADOS', /const AJUSTES_PUBLICADOS = \{/.test(arquivo));
+  ok('e mostra como subir', await adm.$eval('#dlgPublicar', e => e.open));
+  await adm.click('#dlgPublicar button');
+
+  const outro = await contexto();                 /* um cliente: sem rascunho nenhum */
+  await outro.route(/\/js\/ajustes\.js/, r => r.fulfill({ contentType:'text/javascript', body: arquivo }));
+  const cli = await outro.newPage();
+  await cli.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(cli, CPF);
+  ok('publicado, o cliente vê o preço novo', /7,50/.test(await cli.$eval('.card[data-cat="cerveja"]', e => e.innerText)));
+  ok('sem aviso de prévia', !(await cli.$('.previa')));
+  ok('e com o produto novo', /Itaipava/.test(await cli.textContent('#grid')));
+
+  /* no ar, o painel vê que o rascunho é igual ao publicado e o apaga */
+  await outro.addInitScript(r => localStorage.setItem('zg-admin-rascunho', r), JSON.stringify(await rascunho()));
+  const adm2 = await outro.newPage();
+  await adm2.goto(`${BASE}/admin.html`, { waitUntil:'networkidle' });
+  await adm2.waitForTimeout(400);
+  ok('publicado, o painel mostra "sem alterações"', /Sem alterações/.test(await adm2.textContent('#estado')));
+  ok('e apaga o rascunho sozinho', await adm2.evaluate(() => localStorage.getItem('zg-admin-rascunho')) === null);
+  await outro.close();
+
+  /* descartar volta ao que está no ar, e a loja sai da prévia */
+  await adm.click('#descartar');
+  await esperar();
+  ok('descartar apaga o rascunho', (await rascunho()) === null);
+  ok('e o painel volta ao publicado', /Sem alterações/.test(await estadoTxt()));
+  await loja.reload({ waitUntil:'networkidle' });
+  await loja.waitForTimeout(250);
+  ok('a loja sai da prévia', !(await loja.$('.previa')));
+
+  /* rascunho estragado não derruba a loja */
+  await loja.evaluate(() => localStorage.setItem('zg-admin-rascunho',
+    JSON.stringify({ versao:1, bebidas:[{ sku:'x', marca:'X', nome:'Y', cat:'nada', forma:'can', preco:'abc', estoque:-1 }],
+                     varejo:{ minimo:'muito', freteGratis:-5 }, atacado:{ desconto: 7 } })));
+  errosLoja.length = 0;
+  await loja.reload({ waitUntil:'networkidle' });
+  await loja.waitForTimeout(250);
+  ok('rascunho torto é ignorado, sem erro', errosLoja.length === 0, errosLoja[0]);
+  ok('e a loja segue com o catálogo inteiro', await loja.evaluate(() => BEBIDAS.length) === total);
+  ok('e com as regras de antes', await loja.evaluate(() => REGRAS.freteGratis === 120 && ATACADO.desconto === 0.28));
+  await loja.evaluate(() => localStorage.setItem('zg-admin-rascunho', '{isto não é json'));
+  errosLoja.length = 0;
+  await loja.reload({ waitUntil:'networkidle' });
+  ok('nem com lixo no lugar do rascunho', errosLoja.length === 0, errosLoja[0]);
+  await ctx.close();
+
+  /* celular: o painel é usável — sem barra lateral na página, a tabela rola na caixa dela */
+  const cel = await contexto({ largura:390, altura:844, celular:true });
+  const pc = await cel.newPage();
+  await pc.goto(`${BASE}/admin.html`, { waitUntil:'networkidle' });
+  ok('390px: a página do painel não vaza para os lados',
+     await pc.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  const alvos = await pc.$$eval('.adm-acoes .btn, .adm-aba, #novoProduto', es => es.map(e => e.getBoundingClientRect().height));
+  ok('390px: botões do painel com altura de dedo', alvos.every(h => h >= 44), alvos.join(','));
+  await cel.close();
+}
+
+/* ====================================================================== */
 secao('Estrutura do documento');
 {
   const ctx = await contexto();
@@ -805,6 +958,7 @@ secao('Arquivos de indexação');
   ok('robots.txt é servido', robots.status() === 200);
   const txt = await robots.text();
   ok('robots barra o atacado', /Disallow:\s*\/atacado\.html/.test(txt), txt.slice(0,80));
+  ok('robots barra o painel', /Disallow:\s*\/admin\.html/.test(txt));
   ok('robots aponta o sitemap', /Sitemap:/.test(txt));
 
   const mapa = await p.request.get(BASE + '/sitemap.xml');

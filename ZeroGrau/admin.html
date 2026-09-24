@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="balcao">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero Grau · Painel</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#101418">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
+<!-- ?v= é selo de versão contra cache: suba o número ao mexer em css/ ou js/.
+     Esta página não marca a classe "js" no <html>: ela não é a casca de tela
+     única das lojas, é um documento que rola, que é o que tabela longa pede. -->
+<link rel="stylesheet" href="css/style.css?v=10">
+<link rel="stylesheet" href="css/temas.css?v=10">
+</head>
+<body data-publico="admin" class="adm">
+
+<header class="adm-topo">
+  <a class="logo" href="admin.html" aria-label="Painel da Zero Grau">
+    <div class="logo-mark" aria-hidden="true">0°</div>
+    <div class="logo-word">Zero Grau<small>Painel</small></div>
+  </a>
+  <p class="adm-estado" id="estado" role="status" aria-live="polite">Sem alterações</p>
+  <div class="adm-acoes">
+    <a class="btn btn-ghost" href="index.html" target="_blank" rel="noopener">Ver varejo</a>
+    <a class="btn btn-ghost" href="atacado.html" target="_blank" rel="noopener">Ver atacado</a>
+    <button type="button" class="btn btn-ghost" id="descartar">Descartar rascunho</button>
+    <button type="button" class="btn btn-primary" id="publicar">Publicar</button>
+  </div>
+</header>
+
+<main class="adm-corpo">
+  <p class="adm-nota">
+    <b>Como funciona.</b> O que você muda aqui vira um rascunho, salvo sozinho, e as duas lojas
+    <em>neste navegador</em> já mostram o resultado, com um aviso de prévia. Os clientes só veem depois de
+    <b>Publicar</b>: o botão baixa o arquivo <code>ajustes.js</code>, que vai para a pasta
+    <code>ZeroGrau/js/</code> do repositório.
+    Este painel ainda não tem senha — sem servidor, ele só consegue mexer no navegador de quem o abre.
+  </p>
+
+  <nav class="adm-abas" role="tablist" aria-label="Seções do painel">
+    <button type="button" class="adm-aba" role="tab" id="t-produtos" aria-controls="a-produtos" aria-selected="true">Produtos</button>
+    <button type="button" class="adm-aba" role="tab" id="t-varejo" aria-controls="a-varejo" aria-selected="false">Varejo</button>
+    <button type="button" class="adm-aba" role="tab" id="t-atacado" aria-controls="a-atacado" aria-selected="false">Atacado</button>
+  </nav>
+
+  <!-- ============ PRODUTOS ============ -->
+  <section class="adm-painel" id="a-produtos" role="tabpanel" aria-labelledby="t-produtos">
+    <div class="adm-barra">
+      <h1 class="adm-h">Produtos <span class="adm-conta" id="contaProdutos"></span></h1>
+      <label class="adm-busca">
+        <span class="so-leitor">Buscar produto</span>
+        <input id="busca" type="search" placeholder="Buscar marca ou produto" autocomplete="off">
+      </label>
+      <button type="button" class="btn btn-primary" id="novoProduto">Adicionar produto</button>
+    </div>
+    <p class="adm-dica">Vale para as duas lojas. O preço de atacado sai do preço de varejo menos o desconto de revenda (aba Atacado); a coluna à direita mostra o resultado. Promoção vazia = sem promoção. Casco vazio = não retornável. Un./caixa vazio = o padrão da embalagem.</p>
+    <div class="adm-rolo" tabindex="0" aria-label="Tabela de produtos, role para os lados">
+      <table class="adm-tabela" id="tabProdutos">
+        <thead>
+          <tr>
+            <th scope="col" class="fixa">Produto</th>
+            <th scope="col">Categoria</th>
+            <th scope="col">Volume</th>
+            <th scope="col">Teor</th>
+            <th scope="col">Embalagem</th>
+            <th scope="col">Foto</th>
+            <th scope="col" class="n">Preço</th>
+            <th scope="col" class="n">Promoção</th>
+            <th scope="col" class="n">Estoque</th>
+            <th scope="col" class="n">Un./caixa</th>
+            <th scope="col" class="n">Casco</th>
+            <th scope="col">Gelada</th>
+            <th scope="col">Alcoólica</th>
+            <th scope="col" class="n">Atacado</th>
+            <th scope="col"><span class="so-leitor">Remover</span></th>
+          </tr>
+        </thead>
+        <tbody id="linhasProdutos"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ VAREJO ============ -->
+  <section class="adm-painel" id="a-varejo" role="tabpanel" aria-labelledby="t-varejo" hidden>
+    <h1 class="adm-h">Varejo · CPF</h1>
+    <div class="adm-grupos">
+      <fieldset class="adm-grupo">
+        <legend>Pedido e entrega</legend>
+        <label class="adm-campo"><span>Pedido mínimo (R$)</span><input data-regra="varejo.minimo" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Frete grátis acima de (R$)</span><input data-regra="varejo.freteGratis" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Taxa base (R$)</span><input data-regra="varejo.taxaBase" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Taxa por km (R$)</span><input data-regra="varejo.taxaKm" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Raio de entrega (km)</span><input data-regra="varejo.raioMax" data-tipo="km" inputmode="decimal"></label>
+      </fieldset>
+      <fieldset class="adm-grupo">
+        <legend>Cupom de primeiro pedido</legend>
+        <label class="adm-campo"><span>Código</span><input data-regra="varejo.cupom.codigo" data-tipo="codigo" autocapitalize="characters" spellcheck="false"></label>
+        <label class="adm-campo"><span>Desconto (%)</span><input data-regra="varejo.cupom.desconto" data-tipo="pct" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Vale a partir de (R$)</span><input data-regra="varejo.cupom.minimo" data-tipo="brl" inputmode="decimal"></label>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ ATACADO ============ -->
+  <section class="adm-painel" id="a-atacado" role="tabpanel" aria-labelledby="t-atacado" hidden>
+    <h1 class="adm-h">Atacado · CNPJ</h1>
+    <div class="adm-grupos">
+      <fieldset class="adm-grupo">
+        <legend>Preço e pedido</legend>
+        <label class="adm-campo"><span>Desconto sobre o varejo (%)</span><input data-regra="atacado.desconto" data-tipo="pct" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Pedido mínimo (R$)</span><input data-regra="atacado.minimo" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Frete grátis acima de (R$)</span><input data-regra="atacado.freteGratis" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo adm-campo--largo"><span>Prazo de pagamento</span><input data-regra="atacado.prazo" data-tipo="texto"></label>
+      </fieldset>
+      <fieldset class="adm-grupo">
+        <legend>Desconto por volume</legend>
+        <p class="adm-dica">Desconto extra sobre o pedido inteiro a partir de tantas caixas. Vale a maior faixa atingida.</p>
+        <div id="faixas" class="adm-faixas"></div>
+        <button type="button" class="btn btn-ghost adm-mini" id="novaFaixa">Adicionar faixa</button>
+      </fieldset>
+      <fieldset class="adm-grupo">
+        <legend>Unidades por caixa, por embalagem</legend>
+        <p class="adm-dica">O padrão de cada embalagem. Um produto que foge dele tem o próprio número na coluna Un./caixa da aba Produtos.</p>
+        <label class="adm-campo"><span>Lata</span><input data-regra="caixaPadrao.can" data-tipo="int" inputmode="numeric"></label>
+        <label class="adm-campo"><span>Long neck</span><input data-regra="caixaPadrao.bottle" data-tipo="int" inputmode="numeric"></label>
+        <label class="adm-campo"><span>Garrafa alta</span><input data-regra="caixaPadrao.tall" data-tipo="int" inputmode="numeric"></label>
+        <label class="adm-campo"><span>PET / garrafão</span><input data-regra="caixaPadrao.pet" data-tipo="int" inputmode="numeric"></label>
+        <label class="adm-campo"><span>Saco</span><input data-regra="caixaPadrao.saco" data-tipo="int" inputmode="numeric"></label>
+      </fieldset>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PUBLICAR ============ -->
+<dialog class="adm-dialogo" id="dlgPublicar" aria-labelledby="dlgTitulo">
+  <h2 id="dlgTitulo">Arquivo pronto</h2>
+  <p>O navegador baixou <code>ajustes.js</code>. Para os clientes verem as mudanças:</p>
+  <ol>
+    <li>No GitHub, abra a pasta <code>ZeroGrau/js/</code> do repositório.</li>
+    <li><b>Add file → Upload files</b>, solte o <code>ajustes.js</code> e confirme o commit na <code>main</code>. Ele substitui o que está lá.</li>
+    <li>Em um ou dois minutos o site é publicado. Quem esteve nele nos últimos dez minutos pode demorar esse tanto para ver.</li>
+    <li>Quando o arquivo estiver no ar, o painel percebe sozinho que o rascunho ficou igual ao publicado e o apaga.</li>
+  </ol>
+  <form method="dialog"><button class="btn btn-primary">Entendi</button></form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span></div>
+
+<script src="js/ajustes.js?v=10"></script>
+<script src="js/dados.js?v=10"></script>
+<script src="js/admin.js?v=10"></script>
+</body>
+</html>
