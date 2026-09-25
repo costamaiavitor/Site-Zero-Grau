@@ -110,12 +110,25 @@ const externo = t => /fonts\.(googleapis|gstatic)\.com|ERR_CERT_AUTHORITY_INVALI
    Depois da porta o varejo abre na vista de abertura, não no catálogo, e a
    grade fica escondida — por isso o padrão é seguir para o catálogo. Quem
    quiser testar a abertura passa `vista: null`. */
-/* O login pede e-mail e senha além do documento; quem só quer passar pela
-   porta usa estes, que estão no formato certo. */
+/* O login pede só e-mail e senha; o documento mora na conta, criada no
+   cadastro. Sem servidor a conta fica registrada no navegador, então o teste
+   registra a conta de teste com o documento que quer e entra com ela. */
+const mascaraDoc = d => d.length === 14
+  ? `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`
+  : `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
+
+async function registrarConta(p, doc, email = EMAIL){
+  await p.evaluate(([email, doc, tipo]) => {
+    const todas = JSON.parse(localStorage.getItem('zg-contas') || '{}');
+    todas[email] = { email, nome: 'Cliente de Teste', doc, tipo };
+    localStorage.setItem('zg-contas', JSON.stringify(todas));
+  }, [email, mascaraDoc(doc), doc.length === 14 ? 'cnpj' : 'cpf']);
+}
+
 async function preencherLogin(p, doc, email = EMAIL, senha = SENHA){
+  await registrarConta(p, doc, email);
   await p.fill('#emailInput', email);
   await p.fill('#senhaInput', senha);
-  await p.fill('#docInput', doc);
 }
 
 async function entrar(p, doc = CPF, vista = 'catalogo'){
@@ -400,26 +413,28 @@ secao('A porta separa as duas lojas');
   ok('CPF entra na vitrine de varejo', new URL(p1.url()).pathname.endsWith('index.html') || new URL(p1.url()).pathname === '/');
   ok('e a vitrine tem cards', (await p1.$$('.card')).length > 0);
 
-  /* Com a chave desligada, o que a porta exige é a contagem. Número curto
-     continua barrado antes de qualquer navegação. */
+  /* O documento é conferido no cadastro. Com a chave desligada, o que a porta
+     exige é a contagem: número curto é barrado antes de qualquer navegação. */
   const p2 = await ctx.newPage();
   await p2.goto(BASE, { waitUntil:'networkidle' });
   await p2.click('#gateYes');
   await p2.waitForTimeout(120);
-  await preencherLogin(p2, '1114447773');          /* 10 dígitos */
-  await p2.click('#docBtn');
-  await p2.waitForTimeout(200);
-  ok('número com dígitos a menos é recusado', /11 dígitos/.test(await p2.textContent('#docMsg')));
+  await p2.click('#painelEntrar [data-painel="criar"]');
+  const criarCom = async doc => {
+    await p2.fill('#cDocInput', doc);          await p2.fill('#nomeInput', 'Maria da Silva');
+    await p2.fill('#cEmailInput', 'contagem@teste.com');
+    await p2.fill('#cSenhaInput', SENHA);      await p2.fill('#cConfInput', SENHA);
+    await p2.click('#criarBtn');
+    await p2.waitForTimeout(250);
+  };
+  await criarCom('1114447773');                    /* 10 dígitos */
+  ok('número com dígitos a menos é recusado', /11 dígitos/.test(await p2.textContent('#criarMsg')));
   ok('e a porta continua aberta', await p2.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
 
-  await p2.fill('#docInput', '111444777351');      /* 12: nem CPF nem CNPJ */
-  await p2.click('#docBtn');
-  await p2.waitForTimeout(200);
+  await criarCom('111444777351');                  /* 12: nem CPF nem CNPJ */
   ok('12 dígitos não é CPF nem CNPJ', await p2.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
 
-  await p2.fill('#docInput', CPF_QUALQUER);
-  await p2.click('#docBtn');
-  await p2.waitForTimeout(300);
+  await criarCom(CPF_QUALQUER);
   ok('com a chave desligada, 11 dígitos quaisquer entram',
      await p2.$eval('#porta', e => getComputedStyle(e).display === 'none'));
 
@@ -495,7 +510,7 @@ secao('A porta separa as duas lojas');
     await pt.waitForTimeout(250);
     ok(`${nome}: trocar conta reabre a porta`,
        await pt.$eval('#porta', e => getComputedStyle(e).display !== 'none'));
-    ok(`${nome}: e o campo volta vazio`, (await pt.inputValue('#docInput')) === '');
+    ok(`${nome}: e o campo volta vazio`, (await pt.inputValue('#emailInput')) === '');
   }
   await ctx.close();
 }
@@ -509,39 +524,41 @@ secao('Login');
   await p.click('#gateYes');
   await p.waitForTimeout(120);
 
-  ok('a porta pede e-mail, senha e documento',
-     !!(await p.$('#emailInput')) && !!(await p.$('#senhaInput')) && !!(await p.$('#docInput')));
+  ok('o login pede só e-mail e senha',
+     !!(await p.$('#emailInput')) && !!(await p.$('#senhaInput')) && !(await p.$('#painelEntrar input[inputmode="numeric"]')));
   ok('a senha nasce escondida', (await p.getAttribute('#senhaInput', 'type')) === 'password');
   ok('o foco começa no e-mail', await p.evaluate(() => document.activeElement?.id === 'emailInput'));
 
-  const tentar = async (email, senha, doc) => {
-    await p.fill('#emailInput', email); await p.fill('#senhaInput', senha); await p.fill('#docInput', doc);
+  await registrarConta(p, CPF);
+  const tentar = async (email, senha) => {
+    await p.fill('#emailInput', email); await p.fill('#senhaInput', senha);
     await p.click('#docBtn'); await p.waitForTimeout(150);
     return { msg: await p.textContent('#docMsg'),
              foco: await p.evaluate(() => document.activeElement?.id),
              aberta: await p.$eval('#porta', e => getComputedStyle(e).display !== 'none') };
   };
 
-  let r = await tentar('', SENHA, CPF);
+  let r = await tentar('', SENHA);
   ok('sem e-mail não entra', r.aberta && /e-mail/i.test(r.msg), r.msg);
   ok('e o foco vai para o e-mail', r.foco === 'emailInput', r.foco);
   ok('que fica marcado como inválido', (await p.getAttribute('#emailInput', 'aria-invalid')) === 'true');
 
-  r = await tentar('cliente@exemplo', SENHA, CPF);
+  r = await tentar('cliente@exemplo', SENHA);
   ok('e-mail sem domínio completo é recusado', r.aberta && /domínio/.test(r.msg), r.msg);
 
-  r = await tentar(EMAIL, '', CPF);
+  r = await tentar(EMAIL, '');
   ok('sem senha não entra', r.aberta && /senha/i.test(r.msg) && r.foco === 'senhaInput', r.msg);
   ok('e o e-mail deixa de estar marcado', (await p.getAttribute('#emailInput', 'aria-invalid')) === null);
 
-  r = await tentar(EMAIL, '12345', CPF);
+  r = await tentar(EMAIL, '12345');
   ok('senha com menos de 6 caracteres é recusada', r.aberta && /6 caracteres/.test(r.msg), r.msg);
 
   await p.fill('#senhaInput', '1234567');
   ok('corrigir o campo apaga a queixa', (await p.textContent('#docMsg')) === '');
 
-  r = await tentar(EMAIL, SENHA, '123');
-  ok('documento curto continua recusado', r.aberta && /11 dígitos/.test(r.msg) && r.foco === 'docInput', r.msg);
+  r = await tentar('ninguem@exemplo.com', SENHA);
+  ok('e-mail sem conta é recusado, sugerindo criar uma',
+     r.aberta && /Não encontramos/.test(r.msg) && /crie uma conta/.test(r.msg) && r.foco === 'emailInput', r.msg);
 
   await p.click('#senhaVer');
   ok('"Mostrar" revela a senha', (await p.getAttribute('#senhaInput', 'type')) === 'text'
@@ -550,8 +567,8 @@ secao('Login');
   ok('e "Ocultar" esconde de novo', (await p.getAttribute('#senhaInput', 'type')) === 'password');
 
   /* Enter em qualquer campo envia, como em todo formulário de login */
-  await p.fill('#emailInput', EMAIL); await p.fill('#senhaInput', SENHA); await p.fill('#docInput', CPF);
-  await p.press('#docInput', 'Enter');
+  await p.fill('#emailInput', EMAIL); await p.fill('#senhaInput', SENHA);
+  await p.press('#senhaInput', 'Enter');
   await p.waitForTimeout(250);
   ok('Enter entra', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
 
@@ -562,12 +579,18 @@ secao('Login');
   ok('o botão de conta diz quem está conectado',
      (await p.getAttribute('.conta-btn', 'title')).includes(EMAIL));
 
-  /* com CPF no atacado a porta volta, mas já sabe o e-mail */
+  ok('o documento vem da conta, sem ter sido digitado', /111\.444\.777-35/.test(await p.textContent('[data-doc]')));
+
+  /* conta de CPF no atacado: a porta volta pedindo uma conta de CNPJ */
   await p.click('.app-pe a[data-loja="atacado"]');
   await p.waitForTimeout(600);
-  ok('CPF no atacado reabre a porta com o e-mail preenchido',
-     (await p.inputValue('#emailInput')) === EMAIL, await p.inputValue('#emailInput'));
-  ok('e o foco já vai para a senha', await p.evaluate(() => document.activeElement?.id === 'senhaInput'));
+  ok('conta de CPF no atacado reabre a porta pedindo CNPJ', /conta de CNPJ/.test(await p.textContent('#docMsg')),
+     await p.textContent('#docMsg'));
+  ok('com o foco no e-mail', await p.evaluate(() => document.activeElement?.id === 'emailInput'));
+  await preencherLogin(p, CNPJ, 'compras@empresa.com.br');
+  await p.click('#docBtn');
+  await p.waitForTimeout(300);
+  ok('e uma conta de CNPJ entra ali mesmo', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
   await ctx.close();
 
   /* celular pequeno: o cartão cresceu, e tem de dar para chegar ao botão */
@@ -668,6 +691,33 @@ secao('Criar conta');
   await p.waitForTimeout(600);
   ok('conta criada com CNPJ vai para o atacado', new URL(p.url()).pathname.endsWith('atacado.html'), p.url());
   ok('e o balcão abre sem pedir login de novo', await p.$eval('#porta', e => getComputedStyle(e).display === 'none'));
+
+  /* depois, só e-mail e senha: a conta lembra o CNPJ e a loja */
+  const pl = await ctx.newPage();
+  await pl.goto(BASE, { waitUntil:'networkidle' });
+  await pl.click('#gateYes');
+  await pl.waitForTimeout(120);
+  await pl.fill('#emailInput', 'compras@boaesquina.com.br');
+  await pl.fill('#senhaInput', SENHA);
+  await pl.click('#docBtn');
+  await pl.waitForTimeout(600);
+  ok('entrando só com e-mail e senha, a conta de CNPJ vai ao atacado', new URL(pl.url()).pathname.endsWith('atacado.html'), pl.url());
+  ok('com a razão social no botão de conta', (await pl.getAttribute('.conta-btn', 'title')).includes('Mercadinho Boa Esquina'));
+
+  /* o mesmo e-mail não abre segunda conta */
+  const pdup = await ctx.newPage();
+  await pdup.goto(BASE, { waitUntil:'networkidle' });
+  await pdup.click('#gateYes');
+  await pdup.waitForTimeout(120);
+  await pdup.click('#painelEntrar [data-painel="criar"]');
+  await pdup.fill('#cDocInput', CPF); await pdup.fill('#nomeInput', 'Outra Pessoa');
+  await pdup.fill('#cEmailInput', 'COMPRAS@boaesquina.com.br');
+  await pdup.fill('#cSenhaInput', SENHA); await pdup.fill('#cConfInput', SENHA);
+  await pdup.click('#criarBtn');
+  await pdup.waitForTimeout(250);
+  ok('e-mail já cadastrado não cria outra conta, nem com maiúsculas', /Já existe uma conta/.test(await pdup.textContent('#criarMsg')),
+     await pdup.textContent('#criarMsg'));
+  ok('o registro de contas não guarda senha', !(await pdup.evaluate(() => localStorage.getItem('zg-contas'))).includes(SENHA));
   await ctx.close();
 
   /* celular pequeno: o cadastro é o cartão mais alto do site */

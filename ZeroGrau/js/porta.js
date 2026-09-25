@@ -4,22 +4,22 @@
    Duas perguntas antes do catálogo, nesta ordem:
 
    1. Idade. Exigência da Lei nº 13.106/2015 para bebida alcoólica.
-   2. Login — ou criar conta — com e-mail, senha e CPF ou CNPJ (o cadastro
-      pede também nome ou razão social). O documento é o que decide para
-      qual das duas lojas a pessoa vai: CPF vai para a vitrine de varejo,
-      CNPJ vai para o balcão de atacado, que vende por caixa fechada e com
-      preço de revenda.
+   2. Login, só com e-mail e senha — ou criar conta, que pede também o CPF
+      ou CNPJ e o nome ou razão social. O documento fica na conta, e é ele
+      que decide para qual das duas lojas a pessoa vai: CPF vai para a
+      vitrine de varejo, CNPJ vai para o balcão de atacado, que vende por
+      caixa fechada e com preço de revenda.
 
-   ⚠ O login ainda não tem servidor. A tela está pronta, mas nada aqui confere
-   se a senha é a certa: o script só olha o formato (e-mail com @ e domínio,
-   senha com 6 caracteres ou mais, documento com a contagem certa). Por isso
-   a senha não é guardada em lugar nenhum — nem sessionStorage, nem
-   localStorage — e o campo é esvaziado logo depois de entrar. Guardar senha
-   no navegador sem um servidor para conferi-la seria só um risco a mais.
+   ⚠ O login ainda não tem servidor. As contas ficam registradas neste
+   navegador (e-mail, nome, documento — nunca a senha), então a conta só
+   existe onde foi criada, e nada confere se a senha é a certa: o script só
+   olha o formato (e-mail com @ e domínio, senha com 6 caracteres ou mais).
+   A senha não é guardada em lugar nenhum e o campo é esvaziado logo depois
+   de entrar. Guardar senha no navegador sem um servidor para conferi-la
+   seria só um risco a mais.
 
    Para ligar o servidor, os pontos são `autenticar()` e `cadastrar()`, na
-   seção 2: hoje aceitam tudo que passou na conferência de formato; é ali
-   que entram as chamadas ao backend, e o resto da porta não precisa mudar.
+   seção 2; o resto da porta não precisa mudar.
 
    ⚠ A conferência do dígito verificador está DESLIGADA (CONFERE_DIGITO, logo
    abaixo). Neste momento qualquer número passa, desde que tenha 11 dígitos
@@ -160,9 +160,7 @@ const tituloDe  = {entrar: "portaTitle", criar: "criarTitle"};
 const loginForm  = $id("loginForm");
 const emailInput = $id("emailInput");
 const senhaInput = $id("senhaInput");
-const docInput   = $id("docInput");
 const docMsg     = $id("docMsg");
-const docTipo    = $id("docTipo");
 
 /* criar conta */
 const criarForm   = $id("criarForm");
@@ -229,13 +227,40 @@ function textoDoc(v){
     : "Esse número não fecha no dígito verificador. Confira e tente de novo.";
 }
 
-/* Os dois pontos onde o servidor entra. Hoje não há: quem passou na
-   conferência de formato está dentro, e toda conta nova é aceita. Quando
-   houver, `autenticar` confere e-mail e senha, `cadastrar` cria a conta e
-   responde se o e-mail já estava em uso — e uma recusa volta pela mesma
-   `recusar()`, no campo certo. */
-function autenticar(dados){ return Promise.resolve(true) }
-function cadastrar(dados){  return Promise.resolve(true) }
+/* ---------- contas ----------
+   O documento é pedido só ao criar a conta; no login bastam e-mail e senha,
+   e é a conta que diz se a pessoa é CPF (varejo) ou CNPJ (atacado).
+
+   Sem servidor, as contas ficam registradas neste navegador: e-mail, nome e
+   documento — NUNCA a senha. Consequência honesta: a conta só existe no
+   navegador em que foi criada, e qualquer senha no formato certo entra.
+
+   Os dois pontos onde o servidor entra são `autenticar` e `cadastrar`.
+   Quando houver, `autenticar` confere e-mail e senha lá e devolve a conta
+   (ou null), `cadastrar` cria e responde se o e-mail já estava em uso — e o
+   resto da porta não muda. */
+const CONTAS = {
+  todas(){ try{ return JSON.parse(localStorage.getItem("zg-contas") || "{}") || {} }catch{ return {} } },
+  achar(email){ return this.todas()[email.toLowerCase()] || null },
+  gravar(conta){
+    try{
+      const todas = this.todas();
+      todas[conta.email.toLowerCase()] = conta;
+      localStorage.setItem("zg-contas", JSON.stringify(todas));
+      return true;
+    }catch{ return false }
+  }
+};
+
+/* devolve a conta ({email, nome, tipo, doc}) ou null */
+function autenticar({email}){
+  return Promise.resolve(CONTAS.achar(email));
+}
+/* devolve true se criou, false se o e-mail já tinha conta */
+function cadastrar({nome, email, doc, tipo}){
+  if(CONTAS.achar(email)) return Promise.resolve(false);
+  return Promise.resolve(CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo}));
+}
 
 /* Entrar ou criar conta terminam igual: grava quem é, grava a loja e vai
    para ela. A senha nunca entra no perfil. */
@@ -254,13 +279,10 @@ async function entrar(){
   if(!senhaInput.value)   return r(senhaInput, "Digite sua senha.");
   if(senhaInput.value.length < SENHA_MIN)
     return r(senhaInput, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
-  const destino = tipoDe(docInput.value);
-  if(!destino) return r(docInput, textoDoc(docInput.value));
-
-  const ok = await autenticar({email, senha: senhaInput.value, doc: digitos(docInput.value)});
+  const conta = await autenticar({email, senha: senhaInput.value});
   senhaInput.value = "";                      /* a senha não fica nem no campo */
-  if(!ok) return r(senhaInput, "E-mail ou senha não conferem.");
-  concluir(destino, {doc: mascarar(docInput.value), email});
+  if(!conta) return r(emailInput, "Não encontramos uma conta com esse e-mail. Confira o endereço ou crie uma conta.");
+  concluir(conta.tipo === "cnpj" ? "atacado" : "varejo", {doc: conta.doc, email: conta.email, nome: conta.nome});
 }
 
 async function criar(){
@@ -281,21 +303,20 @@ async function criar(){
   if(cConfInput.value !== cSenhaInput.value)
     return r(cConfInput, "As duas senhas não são iguais.");
 
-  const ok = await cadastrar({nome, email, senha: cSenhaInput.value, doc: digitos(cDocInput.value)});
+  const tipo = destino === "atacado" ? "cnpj" : "cpf";
+  const ok = await cadastrar({nome, email, senha: cSenhaInput.value, doc: mascarar(cDocInput.value), tipo});
   cSenhaInput.value = cConfInput.value = "";
   if(!ok) return r(cEmailInput, "Já existe uma conta com esse e-mail. Entre com ela.");
-  concluir(destino, {doc: mascarar(cDocInput.value), email, nome});
+  concluir(destino, {doc: mascarar(cDocInput.value), email: email.toLowerCase(), nome});
 }
 
 /* Trocar de painel leva junto o que já foi digitado no outro — quem escreveu
    o e-mail para entrar e descobriu que não tem conta não digita de novo. */
 function mostrarPainel(qual){
   const outro = qual === "entrar" ? "criar" : "entrar";
-  const levar = qual === "criar"
-    ? [[emailInput, cEmailInput], [docInput, cDocInput]]
-    : [[cEmailInput, emailInput], [cDocInput, docInput]];
-  for(const [de, para] of levar) if(de.value && !para.value) para.value = de.value;
-  dica(docInput, docTipo); dica(cDocInput, cDocTipo); rotularNome();
+  const [de, para] = qual === "criar" ? [emailInput, cEmailInput] : [cEmailInput, emailInput];
+  if(de.value && !para.value) para.value = de.value;
+  dica(cDocInput, cDocTipo); rotularNome();
 
   paineis[qual].hidden = false;
   paineis[outro].hidden = true;
@@ -363,7 +384,7 @@ function seguir(){
      revenda e nota, então aqui o documento tem de ser CNPJ. O caminho de
      volta é o mesmo campo — digitar um CPF manda para o varejo. */
   if(PUBLICO === "atacado" && p.tipo !== "cnpj"){
-    abrirPorta("O balcão de atacado precisa de um CNPJ.", p.email || "");
+    abrirPorta("O balcão de atacado é para conta de CNPJ. Entre com uma, ou crie uma conta com o CNPJ da empresa.", "");
     return;
   }
   document.dispatchEvent(new CustomEvent("zg:entrou", {detail: p}));
@@ -397,13 +418,11 @@ function ligarQueixa(form, saida){
 ligarQueixa(loginForm, docMsg);
 ligarQueixa(criarForm, criarMsg);
 
-for(const [campo, saida] of [[docInput, docTipo], [cDocInput, cDocTipo]]){
-  campo.addEventListener("input", () => {
-    campo.value = mascarar(campo.value);
-    dica(campo, saida);
-    if(campo === cDocInput) rotularNome();
-  });
-}
+cDocInput.addEventListener("input", () => {
+  cDocInput.value = mascarar(cDocInput.value);
+  dica(cDocInput, cDocTipo);
+  rotularNome();
+});
 
 for(const b of porta.querySelectorAll("[data-painel]"))
   b.addEventListener("click", () => mostrarPainel(b.dataset.painel));

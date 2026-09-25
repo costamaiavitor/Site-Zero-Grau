@@ -12,19 +12,18 @@ São duas lojas sobre o mesmo estoque:
 | **Atacado** `atacado.html` | CNPJ | tabela sóbria, sem slogan | caixa fechada |
 
 Quem decide é a porta, em `js/porta.js`: depois do aviso de idade vem o
-login — e-mail, senha e CPF ou CNPJ — e o documento manda para a loja
-correspondente. Na mesma caixa fica "Criar conta", que pede o documento
-primeiro (o campo seguinte vira "Nome completo" ou "Razão social" conforme
-for CPF ou CNPJ), depois e-mail, senha e a confirmação, e já entra.
+login, só com e-mail e senha. O CPF ou CNPJ é pedido uma vez, em "Criar
+conta" (que também pede nome ou razão social), fica guardado na conta e é ele
+que manda para a loja correspondente a cada login.
 
-⚠ **O login ainda não tem servidor.** A tela está pronta, mas só confere o
-formato: e-mail com `@` e domínio, senha com 6 caracteres ou mais, documento
-com a contagem certa. Qualquer senha nesse formato entra, e toda conta nova é
-aceita. Por isso a senha não é guardada em lugar nenhum (e-mail, nome e
-documento ficam no `sessionStorage` da aba). Para ligar o backend, os pontos
-são `autenticar()` e `cadastrar()` em `js/porta.js`: recebem os dados e
-devolvem se conferem (ou, no cadastro, se o e-mail já estava em uso); o resto
-da porta não muda.
+⚠ **O login ainda não tem servidor.** As contas ficam registradas no
+navegador (`localStorage`, chave `zg-contas`): e-mail, nome e documento —
+nunca a senha. Então a conta só existe no navegador em que foi criada, e
+qualquer senha no formato certo (6 caracteres ou mais) entra; e-mail sem
+conta é recusado com o convite para criar uma. Para ligar o backend, os
+pontos são `autenticar()` e `cadastrar()` em `js/porta.js`: `autenticar`
+devolve a conta (ou nada), `cadastrar` diz se o e-mail já estava em uso; o
+resto da porta não muda.
 
 ⚠ **A conferência do dígito verificador está desligada.** Hoje passa qualquer
 número com 11 dígitos (vai para o varejo) ou 14 (vai para o atacado). O

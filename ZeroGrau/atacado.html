@@ -16,8 +16,8 @@
      max-age=600, então uma mudança recém-publicada continua chegando velha
      no navegador de quem esteve aqui nos últimos dez minutos — e o site
      parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
-<link rel="stylesheet" href="css/style.css?v=13">
-<link rel="stylesheet" href="css/temas.css?v=13">
+<link rel="stylesheet" href="css/style.css?v=14">
+<link rel="stylesheet" href="css/temas.css?v=14">
 <script>document.documentElement.classList.add("js")</script>
 </head>
 <body data-publico="atacado">
@@ -78,7 +78,7 @@
          aponta o aria-labelledby do diálogo para o título que está à vista -->
     <section class="porta-painel" id="painelEntrar">
       <h2 id="portaTitle">Entrar</h2>
-      <p>Com CPF você compra na vitrine de varejo; com CNPJ, no balcão de atacado, por caixa fechada e com preço de revenda.</p>
+      <p>Entre com o e-mail e a senha da sua conta. Conta de CPF compra na vitrine de varejo; conta de CNPJ, no balcão de atacado, por caixa fechada.</p>
       <!-- novalidate: a conferência é do script, que diz o que falta em português
            e num lugar só, em vez do balão de cada navegador -->
       <form class="login" id="loginForm" novalidate>
@@ -93,11 +93,6 @@
             <button type="button" class="senha-ver" id="senhaVer" aria-controls="senhaInput" aria-pressed="false">Mostrar</button>
           </span>
         </label>
-        <label class="doc-campo">
-          <span class="tag">CPF ou CNPJ</span>
-          <input id="docInput" type="text" inputmode="numeric" maxlength="18" placeholder="000.000.000-00" autocomplete="off" aria-describedby="docTipo docMsg">
-        </label>
-        <p class="doc-tipo" id="docTipo" role="status" aria-live="polite"></p>
         <p class="doc-msg" id="docMsg" role="status" aria-live="polite"></p>
         <div class="gate-btns">
           <button type="submit" class="btn btn-primary" id="docBtn">Entrar</button>
@@ -254,9 +249,9 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/ajustes.js?v=13"></script>
-<script src="js/dados.js?v=13"></script>
-<script src="js/porta.js?v=13"></script>
-<script src="js/atacado.js?v=13"></script>
+<script src="js/ajustes.js?v=14"></script>
+<script src="js/dados.js?v=14"></script>
+<script src="js/porta.js?v=14"></script>
+<script src="js/atacado.js?v=14"></script>
 </body>
 </html>
