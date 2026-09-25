@@ -77,12 +77,20 @@ const secao = t => console.log(`\n${t}`);
 
 const navegador = await chromium.launch();
 
-async function contexto({ js = true, largura = 1280, altura = 900, celular = false } = {}){
+/* Os testes de comportamento rodam sobre o catálogo BASE de js/dados.js, com
+   o js/ajustes.js publicado neutralizado. O painel muda cupom, raio e preço
+   quando o dono quiser, e o teste de "cupom abaixo do mínimo" não pode quebrar
+   porque o cupom mudou de nome. O arquivo publicado tem seção própria
+   ("Ajustes publicados"), que abre com `publicado: true`. */
+async function contexto({ js = true, largura = 1280, altura = 900, celular = false, publicado = false } = {}){
   const ctx = await navegador.newContext({
     viewport:{ width:largura, height:altura },
     javaScriptEnabled:js,
     isMobile:celular, hasTouch:celular
   });
+  if(!publicado)
+    await ctx.route(/\/js\/ajustes\.js/, r =>
+      r.fulfill({ contentType:'text/javascript', body:'const AJUSTES_PUBLICADOS = null;' }));
   if(FONTES && existsSync(path.join(FONTES,'google.css'))){
     await ctx.route('**://fonts.googleapis.com/**', r =>
       r.fulfill({ contentType:'text/css', body:readFileSync(path.join(FONTES,'google.css'),'utf8') }));
@@ -1034,6 +1042,42 @@ secao('Painel de administração');
   ok('e Publicar volta a pedir a chave', await adm.$eval('#dlgSemChave', e => e.open));
   const [d] = await Promise.all([adm.waitForEvent('download'), adm.click('#baixarMesmo')]);
   ok('com a opção de baixar', d.suggestedFilename() === 'ajustes.js');
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Ajustes publicados');
+{
+  /* O js/ajustes.js que está no repositório, do jeito que o cliente recebe.
+     Roda a cada push — inclusive os que o painel faz ao publicar —, então é
+     aqui que uma publicação torta aparece antes de alguém reclamar. */
+  const texto = readFileSync(path.join(RAIZ, 'js', 'ajustes.js'), 'utf8');
+  const ctx = await contexto({ publicado: true });
+  const p = await ctx.newPage();
+  const erros = [];
+  p.on('pageerror', e => erros.push(e.message));
+  p.on('console', m => { if(m.type() === 'error' && !externo(m.text())) erros.push(m.text()); });
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  ok('a loja abre com o publicado, sem erro', erros.length === 0, erros[0]);
+  const pub = await p.evaluate(() => typeof AJUSTES_PUBLICADOS === 'undefined' ? 'ausente' : AJUSTES_PUBLICADOS);
+  ok('ajustes.js define AJUSTES_PUBLICADOS', pub !== 'ausente');
+  if(pub && pub !== 'ausente'){
+    ok('é da versão que as lojas entendem', pub.versao === 1, String(pub.versao));
+    const validos = await p.evaluate(() => AJUSTES_PUBLICADOS.bebidas.map(produtoDe).filter(Boolean).length);
+    ok(`os ${pub.bebidas.length} produtos publicados são todos válidos`, validos === pub.bebidas.length, `${validos}/${pub.bebidas.length}`);
+    ok('e são o catálogo que a loja mostra', await p.evaluate(() => BEBIDAS.length) === pub.bebidas.length);
+    ok('as regras publicadas valem na loja', await p.evaluate(() =>
+      REGRAS.cupom.codigo === AJUSTES_PUBLICADOS.varejo.cupom.codigo &&
+      REGRAS.freteGratis === AJUSTES_PUBLICADOS.varejo.freteGratis && RAIO_MAX === AJUSTES_PUBLICADOS.varejo.raioMax &&
+      ATACADO.desconto === AJUSTES_PUBLICADOS.atacado.desconto));
+    const semFoto = await p.evaluate(() => BEBIDAS.filter(b => b.foto).map(b => b.foto));
+    const faltando = semFoto.filter(f => !existsSync(path.join(RAIZ, 'img', `${f}-400.webp`)));
+    ok('toda foto citada existe em img/', faltando.length === 0, faltando.join(', '));
+    await entrar(p, CPF);
+    ok('e a vitrine desenha um card por produto', (await p.$$('.card')).length === pub.bebidas.length);
+  }else{
+    ok('nada publicado pelo painel: vale o dados.js', /AJUSTES_PUBLICADOS = null/.test(texto));
+  }
   await ctx.close();
 }
 
