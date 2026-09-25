@@ -324,6 +324,7 @@ function pintarCarrinho(){
   fechar.disabled = vazio || c.base < REGRAS.minimo;
 
   guardar.salvar();
+  if($("pedidosAntigos")) pintarPedidosAntigos();
 }
 
 function adicionar(item, n = 1){
@@ -358,6 +359,8 @@ function tirarDoCarrinho(sku){
 const focoCart = prenderFoco(cartEl);
 
 function abrirCarrinho(abrir){
+  /* depois de um pedido enviado, o carrinho reabre do começo */
+  if(abrir && etapa === "feito") irEtapa("carrinho");
   cartEl.classList.toggle("aberto", abrir);
   cartEl.setAttribute("aria-hidden", String(!abrir));
   if(abrir) cartOverlay.hidden = false;
@@ -422,23 +425,297 @@ $("cupomBtn").addEventListener("click", () => {
 });
 $("cupomInput").addEventListener("keydown", e => { if(e.key === "Enter") $("cupomBtn").click(); });
 
-/* finalizar: o pedido vira uma mensagem de WhatsApp já formatada */
-$("finalizar").addEventListener("click", () => {
+/* ---------- 6b. FECHAMENTO DO PEDIDO ----------
+   Quatro etapas dentro do carrinho: a lista; entrega e pagamento; o Pix,
+   quando o cliente paga pelo site; e a confirmação.
+
+   Os dois caminhos terminam no WhatsApp da loja. Pagando na entrega, a
+   mensagem leva endereço e forma de pagamento (com troco, se for dinheiro).
+   Pagando pelo site, o cliente paga o Pix gerado aqui e manda o pedido com
+   a referência do pagamento — sem servidor, quem confirma o recebimento é a
+   loja, no extrato. Nenhum dado do pedido sai do aparelho por outro caminho
+   que não a própria conversa do WhatsApp. */
+const TITULO_ETAPA = {carrinho: "Seu carrinho", dados: "Entrega e pagamento", pix: "Pagar com Pix", feito: "Pedido pronto"};
+let etapa = "carrinho";
+
+function irEtapa(nome){
+  etapa = nome;
+  for(const e of cartEl.querySelectorAll(".cart-etapa")) e.hidden = e.dataset.etapa !== nome;
+  $("cartTitulo").textContent = TITULO_ETAPA[nome];
+  $("cartVoltar").hidden = !(nome === "dados" || nome === "pix");
+  const alvo = {carrinho: $("cartClose"), dados: $("ckNome"), pix: $("pixCopiar"), feito: $("feitoZap")}[nome];
+  alvo?.focus({preventScroll: true});
+}
+$("cartVoltar").addEventListener("click", () => irEtapa(etapa === "pix" ? "dados" : "carrinho"));
+$("feitoFechar").addEventListener("click", () => { abrirCarrinho(false); irEtapa("carrinho"); });
+
+/* O endereço fica no aparelho para o próximo pedido — só aqui, e só se o
+   navegador deixar. */
+const ENDERECO = {
+  ler(){ try{ return JSON.parse(localStorage.getItem("zg-endereco") || "null") || {} }catch{ return {} } },
+  gravar(e){ try{ localStorage.setItem("zg-endereco", JSON.stringify(e)) }catch{} }
+};
+
+const temPix = () => !!chavePix(PIX.chave);
+const valorCk = id => $(id).value.trim();
+
+function pintarCheckout(){
   const c = contas();
-  const linhas = [...carrinho.values()].map(({item,qtd}) =>
+  const retirada = !!entrega?.retirada;
+  $("ckEndereco").hidden = retirada;
+  $("ckRetirada").hidden = !retirada;
+  $("ckRetirada").textContent = `Retirada no balcão: ${CONTATO.endereco} — ${CONTATO.bairro}. Sem taxa.`;
+  $("ckEntregaTit").textContent = retirada ? "Pagar na retirada" : "Pagar na entrega";
+  $("ckEntrega").textContent = entrega === null ? "calcule o CEP" : retirada ? "retirar no balcão" : c.taxa === 0 ? "grátis" : "R$ " + brl(c.taxa);
+  $("ckTotal").textContent = "R$ " + brl(c.total);
+
+  $("ckOpPix").hidden = !temPix();
+  const fechar = cartEl.querySelector('input[name="fechar"]:checked')?.value;
+  $("ckFormas").hidden = fechar !== "entrega";
+  const forma = cartEl.querySelector('input[name="forma"]:checked')?.value;
+  $("ckTrocoBloco").hidden = fechar !== "entrega" || forma !== "dinheiro";
+  $("ckTroco").disabled = $("ckSemTroco").checked;
+  $("ckEnviar").textContent = fechar === "pix-site" ? "Ir para o Pix" : "Enviar pedido pelo WhatsApp";
+
+  /* loja fechada: o pedido pode ir, mas agendado — e o cliente sabe disso antes */
+  const s = situacaoLoja();
+  $("ckFechada").hidden = s.aberto;
+  $("ckFechada").textContent = s.aberto ? "" :
+    `A loja está fechada agora (${abreTxt(s)}). Seu pedido fica agendado para quando ela abrir.`;
+}
+
+function abrirCheckout(){
+  const salvo = ENDERECO.ler();
+  const perfil = PERFIL.ler?.() || null;
+  if(!valorCk("ckNome")) $("ckNome").value = salvo.nome || perfil?.nome || "";
+  if(!valorCk("ckCep") && entrega?.cep) $("ckCep").value = entrega.cep;
+  const mesmoCep = salvo.cep && entrega?.cep === salvo.cep;
+  if(!valorCk("ckRua")) $("ckRua").value = mesmoCep && salvo.rua ? salvo.rua : entrega?.rua || "";
+  if(mesmoCep){
+    for(const [id, k] of [["ckNumero", "numero"], ["ckCompl", "compl"], ["ckRef", "ref"]])
+      if(!valorCk(id)) $(id).value = salvo[k] || "";
+  }
+  if(!cartEl.querySelector('input[name="fechar"]:checked')){
+    const padrao = cartEl.querySelector(`input[name="fechar"][value="${temPix() ? "pix-site" : "entrega"}"]`);
+    padrao.checked = true;
+  }
+  $("ckMsg").textContent = "";
+  pintarCheckout();
+  irEtapa("dados");
+}
+$("finalizar").addEventListener("click", abrirCheckout);
+
+ligarCep($("ckCep"), $("ckCepBtn"), $("ckCepMsg"));
+document.addEventListener("zg:entrega", e => {
+  if(e.detail?.rua && !valorCk("ckRua")) $("ckRua").value = e.detail.rua;
+  if(etapa === "dados") pintarCheckout();
+});
+$("checkout").addEventListener("change", pintarCheckout);
+
+/* Um erro de cada vez, na ordem da tela, com foco no campo. */
+function recusarCk(campo, texto){
+  for(const c of $("checkout").querySelectorAll("[aria-invalid]")) c.removeAttribute("aria-invalid");
+  $("ckMsg").textContent = texto;
+  if(campo){ campo.setAttribute("aria-invalid", "true"); campo.focus(); }
+  return null;
+}
+$("checkout").addEventListener("input", e => {
+  if(e.target.getAttribute("aria-invalid") === "true"){ e.target.removeAttribute("aria-invalid"); $("ckMsg").textContent = ""; }
+});
+
+/* confere a etapa 2 e devolve o que a mensagem precisa, ou null */
+function lerCheckout(){
+  const c = contas();
+  const nome = valorCk("ckNome").replace(/\s+/g, " ");
+  if(nome.length < 2) return recusarCk($("ckNome"), "Diga o nome de quem vai receber.");
+  if(entrega === null) return recusarCk($("ckCep"), "Calcule o CEP da entrega para seguir.");
+  if(!entrega.retirada){
+    if(!valorCk("ckRua"))    return recusarCk($("ckRua"), "Falta a rua.");
+    if(!valorCk("ckNumero")) return recusarCk($("ckNumero"), "Falta o número. Sem número, escreva s/n.");
+  }
+  const fechar = cartEl.querySelector('input[name="fechar"]:checked')?.value;
+  if(!fechar) return recusarCk(cartEl.querySelector('input[name="fechar"]'), "Escolha como vai pagar.");
+  let pagamento = "";
+  if(fechar === "entrega"){
+    const forma = cartEl.querySelector('input[name="forma"]:checked')?.value;
+    const quando = entrega.retirada ? "na retirada" : "na entrega";
+    if(!forma) return recusarCk(cartEl.querySelector('input[name="forma"]'), `Escolha como vai pagar ${quando}.`);
+    if(forma === "pix")    pagamento = `Pix ${quando}`;
+    if(forma === "cartao") pagamento = `Cartão ${quando} (débito ou crédito)`;
+    if(forma === "dinheiro"){
+      if($("ckSemTroco").checked) pagamento = `Dinheiro ${quando} — sem troco`;
+      else{
+        const troco = lerDinheiro(valorCk("ckTroco"));
+        if(!(troco > c.total))
+          return recusarCk($("ckTroco"), `O troco tem de ser para um valor acima do total (R$ ${brl(c.total)}). Se não precisa, marque "Não preciso de troco".`);
+        pagamento = `Dinheiro ${quando} — troco para R$ ${brl(troco)} (levar R$ ${brl(troco - c.total)})`;
+      }
+    }
+  }
+  $("ckMsg").textContent = "";
+  return {
+    fechar, pagamento, nome,
+    rua: valorCk("ckRua"), numero: valorCk("ckNumero"), compl: valorCk("ckCompl"), ref: valorCk("ckRef"),
+    obs: valorCk("ckObs").replace(/\s+/g, " ")
+  };
+}
+
+/* "100", "100,50", "R$ 1.000,00" */
+function lerDinheiro(t){
+  let x = String(t).replace(/[^\d,.]/g, "");
+  if(x.includes(",")) x = x.replace(/\./g, "").replace(",", ".");
+  const n = Number(x);
+  return x && Number.isFinite(n) ? n : NaN;
+}
+
+function mensagemPedido(d){
+  const c = contas();
+  const s = situacaoLoja();
+  const linhas = [...carrinho.values()].map(({item, qtd}) =>
     `• ${qtd}x ${item.marca} ${item.nome} — R$ ${brl(precoDe(item) * qtd)}`);
-  const entregaTxt = !entrega          ? "Entrega: a combinar"
-                   : entrega.retirada  ? `Retirada no balcão (${entrega.onde || "fora do raio"})`
-                   : `Entrega (${entrega.onde || entrega.km.toFixed(1).replace(".", ",") + " km"}): ${c.taxa === 0 ? "grátis" : "R$ " + brl(c.taxa)}`;
-  const texto = [
-    "*Pedido Zero Grau*", "", ...linhas, "",
+  const entregaTxt = entrega.retirada ? `Retirada no balcão (${entrega.onde || "fora do raio"})`
+                   : `Entrega (${entrega.onde}): ${c.taxa === 0 ? "grátis" : "R$ " + brl(c.taxa)}`;
+  const onde = entrega.retirada ? ["*Retira no balcão:* " + d.nome]
+    : [`*Entregar para:* ${d.nome}`,
+       `${d.rua}, ${d.numero}${d.compl ? " — " + d.compl : ""}`,
+       `${entrega.onde} — CEP ${entrega.cep || ""}`.replace(/ — CEP $/, ""),
+       d.ref ? `Referência: ${d.ref}` : null];
+  return [
+    "*Pedido Zero Grau*",
+    s.aberto ? null : `_Pedido feito com a loja fechada — entregar quando abrir (${abreTxt(s)})._`,
+    "", ...linhas, "",
     `Subtotal: R$ ${brl(c.sub)}`,
     c.desconto > 0 ? `Desconto (${REGRAS.cupom.codigo}): − R$ ${brl(c.desconto)}` : null,
     entregaTxt,
-    `*Total: R$ ${brl(c.total)}*`
-  ].filter(Boolean).join("\n");
+    `*Total: R$ ${brl(c.total)}*`,
+    "", ...onde, "",
+    `*Pagamento:* ${d.pagamento}`,
+    d.obs ? `*Observação:* ${d.obs}` : null
+  ].filter(l => l !== null).join("\n");
+}
 
-  open(CONTATO.whatsapp + "?text=" + encodeURIComponent(texto), "_blank", "noopener");
+/* Abre o WhatsApp, guarda o pedido para "pedir de novo" e esvazia o carrinho.
+   O link fica na tela de confirmação: se o navegador barrar a janela nova,
+   o cliente toca e vai. */
+function enviarPedido(d){
+  const texto = mensagemPedido(d);
+  const url = CONTATO.whatsapp + "?text=" + encodeURIComponent(texto);
+  const c = contas();
+  ENDERECO.gravar({nome: d.nome, cep: entrega?.cep || "", rua: d.rua, numero: d.numero, compl: d.compl, ref: d.ref});
+  PEDIDOS.guardar({
+    em: Date.now(), total: c.total,
+    itens: [...carrinho.values()].map(({item, qtd}) => [item.sku, qtd, `${item.marca} ${item.nome}`])
+  });
+  if(typeof registrarEvento === "function") registrarEvento("pedido", {forma: d.fechar === "pix-site" ? "pix-site" : "whatsapp"});
+
+  open(url, "_blank", "noopener");
+  $("feitoZap").href = url;
+  $("feitoTxt").textContent = d.fechar === "pix-site"
+    ? "Abrimos a conversa com a loja com o pedido e a referência do Pix. Toque em enviar e mande o comprovante."
+    : "Abrimos a conversa com a loja com o pedido escrito. É só tocar em enviar.";
+
+  carrinho.clear();
+  cupomAtivo = false;
+  $("cupomInput").value = ""; $("cupomMsg").textContent = "";
+  for(const id of ["ckObs", "ckTroco"]) $(id).value = "";
+  $("ckSemTroco").checked = false;
+  pintarCarrinho();
+  irEtapa("feito");
+}
+
+let pedidoPix = null;          /* os dados da etapa 2, enquanto o cliente paga */
+
+$("checkout").addEventListener("submit", async e => {
+  e.preventDefault();
+  const d = lerCheckout();
+  if(!d) return;
+  if(d.fechar !== "pix-site"){ enviarPedido(d); return; }
+
+  /* Pix: gera o código com o valor exato e uma referência para o extrato */
+  const c = contas();
+  const txid = txidPedido();
+  const codigo = codigoPix({chave: chavePix(PIX.chave), nome: PIX.nome, cidade: PIX.cidade, valor: Math.round(c.total * 100) / 100, txid});
+  pedidoPix = {...d, pagamento: `Pix pago pelo site — R$ ${brl(c.total)} — referência ${txid}. O comprovante segue nesta conversa.`};
+  $("pixValor").textContent = "R$ " + brl(c.total);
+  $("pixCodigo").value = codigo;
+  $("pixRef").textContent = txid;
+  $("pixNome").textContent = PIX.nome;
+  $("pixQr").innerHTML = "";
+  irEtapa("pix");
+  try{
+    await carregarQr();
+    const qr = qrcode(0, "M");
+    qr.addData(codigo);
+    qr.make();
+    $("pixQr").innerHTML = qr.createSvgTag({cellSize: 4, margin: 3, scalable: true});
+  }catch{
+    $("pixQr").innerHTML = '<p class="pix-semqr">Não deu para desenhar o QR code aqui. Use o código "copia e cola" abaixo.</p>';
+  }
+});
+
+/* a biblioteca do QR só é baixada por quem escolhe pagar pelo site */
+function carregarQr(){
+  if(window.qrcode) return Promise.resolve();
+  return new Promise((ok, erro) => {
+    const el = document.createElement("script");
+    el.src = "js/vendor/qrcode.js?v=15";
+    el.onload = ok; el.onerror = erro;
+    document.head.append(el);
+  });
+}
+
+$("pixCopiar").addEventListener("click", () => {
+  const codigo = $("pixCodigo").value;
+  const feito = () => toast("Código Pix copiado. Cole no app do seu banco.");
+  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(codigo).then(feito).catch(() => { $("pixCodigo").select(); feito(); });
+  else{ $("pixCodigo").select(); feito(); }
+});
+$("pixPaguei").addEventListener("click", () => { if(pedidoPix) enviarPedido(pedidoPix); });
+
+/* ---------- 6c. PEDIR DE NOVO ----------
+   Os últimos pedidos ficam no aparelho (itens e total, nada de endereço ou
+   pagamento). Com o carrinho vazio, eles aparecem ali mesmo, e um toque põe
+   tudo de volta — respeitando o estoque de hoje e pulando o que saiu do
+   catálogo. */
+const PEDIDOS = {
+  ler(){ try{ const l = JSON.parse(localStorage.getItem("zg-pedidos") || "[]"); return Array.isArray(l) ? l : [] }catch{ return [] } },
+  guardar(p){ try{ localStorage.setItem("zg-pedidos", JSON.stringify([p, ...this.ler()].slice(0, 5))) }catch{} }
+};
+
+function pintarPedidosAntigos(){
+  const lista = PEDIDOS.ler();
+  const caixa = $("pedidosAntigos");
+  caixa.hidden = !lista.length || carrinho.size > 0;
+  if(caixa.hidden) return;
+  $("pedidosLista").innerHTML = lista.map((p, i) => {
+    const qtd = p.itens.reduce((n, [, q]) => n + q, 0);
+    const quando = new Date(p.em).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit"});
+    const nomes = p.itens.slice(0, 3).map(([, q, nome]) => `${q}x ${nome}`).join(", ") + (p.itens.length > 3 ? "…" : "");
+    return `<li class="pedido-antigo">
+      <div><b>${quando} · ${qtd} ${qtd === 1 ? "item" : "itens"} · R$ ${brl(p.total)}</b><small>${esc(nomes)}</small></div>
+      <button type="button" class="btn btn-ghost btn-sm" data-denovo="${i}">Pedir de novo</button>
+    </li>`;
+  }).join("");
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+
+cartEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-denovo]");
+  if(!b) return;
+  const p = PEDIDOS.ler()[+b.dataset.denovo];
+  if(!p) return;
+  let faltou = 0, entrou = 0;
+  for(const [sku, qtd] of p.itens){
+    const item = BEBIDAS.find(x => x.sku === sku);
+    if(!item || item.estoque === 0){ faltou++; continue; }
+    const n = Math.min(qtd, item.estoque);
+    carrinho.set(sku, {item, qtd: n});
+    entrou++;
+    if(n < qtd) faltou++;
+  }
+  pintarCarrinho();
+  toast(!entrou ? "Nenhum item desse pedido está disponível hoje."
+      : faltou ? "Pedido de volta no carrinho — alguns itens mudaram, confira." : "Pedido de volta no carrinho.");
 });
 
 /* restaura carrinho e endereço da última visita */
@@ -475,18 +752,6 @@ function toast(msg){
 
    Rede é coisa que falha. Quando falha, a resposta é dizer que não deu para
    conferir — nunca cair de volta num palpite. */
-const cepInput = $("cepInput");
-const cepMsg   = $("cepMsg");
-const cepBtn   = $("cepBtn");
-
-cepInput.addEventListener("input", e => {
-  const v = e.target.value.replace(/\D/g, "").slice(0, 8);
-  e.target.value = v.length > 5 ? `${v.slice(0,5)}-${v.slice(5)}` : v;
-});
-cepInput.addEventListener("keydown", e => { if(e.key === "Enter") cepBtn.click() });
-
-const aviso = (classe, texto) => { cepMsg.className = "cep-msg " + classe; cepMsg.textContent = texto; };
-
 /* distância a partir do que o ViaCEP devolveu; null = não atendemos a cidade */
 function distanciaDe(lugar){
   const cidade = chaveLugar(lugar.localidade);
@@ -500,51 +765,53 @@ function guardarEntrega(e){
   entrega = e;
   try{ localStorage.setItem("zg-entrega", JSON.stringify(e)) }catch{ /* segue sem lembrar */ }
   pintarCarrinho();
+  document.dispatchEvent(new CustomEvent("zg:entrega", {detail: e}));
 }
 
-cepBtn.addEventListener("click", async () => {
-  const digitos = cepInput.value.replace(/\D/g, "");
-  if(digitos.length !== 8){
-    aviso("bad", "O CEP precisa ter 8 dígitos. Confira e calcule de novo.");
-    return;
-  }
+const mascaraCep = v => { const d = v.replace(/\D/g, "").slice(0, 8); return d.length > 5 ? `${d.slice(0,5)}-${d.slice(5)}` : d; };
 
-  cepBtn.disabled = true;
-  aviso("", "Consultando o CEP…");
-
+/* Consulta o CEP e devolve {classe, texto, entrega?}. Quem chama decide onde
+   mostrar: a abertura e o fechamento do pedido usam a mesma consulta. */
+async function consultarCep(digitos){
+  if(digitos.length !== 8) return {classe: "bad", texto: "O CEP precisa ter 8 dígitos. Confira e calcule de novo."};
   let lugar;
   try{
     const r = await fetch(`https://viacep.com.br/ws/${digitos}/json/`);
     if(!r.ok) throw new Error(r.status);
     lugar = await r.json();
   }catch{
-    aviso("bad", "Não deu para consultar o CEP agora. Tente de novo em instantes ou fale com a loja pelo WhatsApp.");
-    cepBtn.disabled = false;
-    return;
-  }finally{
-    cepBtn.disabled = false;
+    return {classe: "bad", texto: "Não deu para consultar o CEP agora. Tente de novo em instantes ou fale com a loja pelo WhatsApp."};
   }
-
-  if(lugar.erro){
-    aviso("bad", "Esse CEP não existe na base dos Correios. Confira os oito dígitos.");
-    return;
-  }
+  if(lugar.erro) return {classe: "bad", texto: "Esse CEP não existe na base dos Correios. Confira os oito dígitos."};
 
   const onde = [lugar.bairro, lugar.localidade].filter(Boolean).join(", ") || lugar.localidade;
+  const cep = mascaraCep(digitos), rua = lugar.logradouro || "";
   const km = distanciaDe(lugar);
-
   if(km === null || km > RAIO_MAX){
-    aviso("bad", `${onde} fica fora do raio de ${RAIO_MAX} km. Você pode retirar no balcão, sem taxa.`);
-    guardarEntrega({km: km ?? 0, taxa: 0, minutos: 0, retirada: true, onde});
-    return;
+    return {classe: "bad", texto: `${onde} fica fora do raio de ${RAIO_MAX} km. Você pode retirar no balcão, sem taxa.`,
+            entrega: {km: km ?? 0, taxa: 0, minutos: 0, retirada: true, onde, cep, rua}};
   }
-
   const taxa   = TAXA_BASE + km * TAXA_KM;
   const minuto = Math.round(18 + km * 2.6);
-  const kmTxt  = km.toFixed(1).replace(".", ",");
-  aviso("ok", `Entregamos em ${onde}. ${kmTxt} km · taxa R$ ${brl(taxa)} · cerca de ${minuto} minutos.`);
-  guardarEntrega({km, taxa, minutos: minuto, retirada: false, onde});
-});
+  return {classe: "ok", texto: `Entregamos em ${onde}. ${km.toFixed(1).replace(".", ",")} km · taxa R$ ${brl(taxa)} · cerca de ${minuto} minutos.`,
+          entrega: {km, taxa, minutos: minuto, retirada: false, onde, cep, rua}};
+}
+
+/* liga um par campo + botão + mensagem à consulta */
+function ligarCep(campo, botao, msg){
+  const aviso = (classe, texto) => { msg.className = "cep-msg " + classe; msg.textContent = texto; };
+  campo.addEventListener("input", () => { campo.value = mascaraCep(campo.value); });
+  campo.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); botao.click(); } });
+  botao.addEventListener("click", async () => {
+    botao.disabled = true;
+    aviso("", "Consultando o CEP…");
+    const r = await consultarCep(campo.value.replace(/\D/g, ""));
+    botao.disabled = false;
+    aviso(r.classe, r.texto);
+    if(r.entrega) guardarEntrega(r.entrega);
+  });
+}
+ligarCep($("cepInput"), $("cepBtn"), $("cepMsg"));
 
 /* ---------- 9. CUPOM ---------- */
 $("code").addEventListener("click", function(){
@@ -563,6 +830,23 @@ $("code").addEventListener("click", function(){
 });
 
 /* ---------- 13. FAIXA DE OPERAÇÃO ---------- */
+
+/* Aberto ou fechado, pelo relógio de Fortaleza e pelo HORARIO de dados.js
+   (que o painel edita). Repinta a cada minuto: quem deixa a aba aberta até
+   as 03h vê a loja fechar na hora. */
+function pintarHorario(){
+  const s = situacaoLoja();
+  for(const el of document.querySelectorAll('[data-horario="resumo"]')) el.textContent = resumoHorario();
+  for(const el of document.querySelectorAll('[data-horario="agora"], [data-horario="status"]')){
+    el.classList.toggle("fechado", !s.aberto);
+    el.innerHTML = '<i class="live" aria-hidden="true"></i> ' + (s.aberto
+      ? `<b>Aberto</b> ${s.fecha ? "até " + horaLonga(s.fecha) : "24 horas"}`
+      : `<b>Fechado</b> · ${abreTxt(s)}`);
+  }
+  document.body.classList.toggle("loja-fechada", !s.aberto);
+}
+pintarHorario();
+setInterval(pintarHorario, 60_000);
 const semMovimento = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 if(!semMovimento){

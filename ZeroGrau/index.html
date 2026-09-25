@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0A0A1E">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icone-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 
 <!-- Prévia ao compartilhar. O canal de venda é o WhatsApp, e é ele quem lê isto.
      ⚠ og:url e og:image precisam ser absolutos. O endereço abaixo é o do
@@ -34,8 +35,8 @@
      max-age=600, então uma mudança recém-publicada continua chegando velha
      no navegador de quem esteve aqui nos últimos dez minutos — e o site
      parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
-<link rel="stylesheet" href="css/style.css?v=14">
-<link rel="stylesheet" href="css/temas.css?v=14">
+<link rel="stylesheet" href="css/style.css?v=15">
+<link rel="stylesheet" href="css/temas.css?v=15">
 
 <!-- A casca de uma tela só existe com script. Marcar aqui, e não depois que o
      script.js roda, evita a página nascer rolando e encolher na cara de quem
@@ -145,6 +146,8 @@
     <div class="vista-rola">
       <div class="abertura">
         <div class="hero-eyebrow">
+          <!-- sem script não há como saber se está aberto agora: fica o horário -->
+          <span class="loja-agora" data-horario="agora">Seg a dom · 10h00 – 03h00</span>
           <span>Distribuidora de bebidas</span>
           <span>Fortaleza / CE</span>
           <span>Câmara fria própria desde 2014</span>
@@ -180,6 +183,11 @@
         <div class="abertura-btns">
           <button class="btn btn-primary" data-vista="catalogo">Ver o catálogo
             <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <!-- aparece só onde o navegador oferece instalar (Chrome, Android) -->
+          <button type="button" class="btn btn-ghost" id="instalarApp" hidden>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            Instalar o app
           </button>
           <a data-contato="whatsapp" class="btn btn-ghost" rel="noopener">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2m0 2a8 8 0 1 1-4.1 14.8l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 0 1 12 4"/></svg>
@@ -283,7 +291,7 @@
           <div class="srule">
             <span class="srule-k">A loja</span>
             <span class="srule-line"></span>
-            <span class="srule-v">Seg a dom · 10h00 – 03h00</span>
+            <span class="srule-v" data-horario="resumo">Seg a dom · 10h00 – 03h00</span>
           </div>
           <h2>A loja</h2>
           <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
@@ -319,7 +327,7 @@
             </div>
 
             <div class="info-list">
-              <div class="info-row"><span>Funcionamento</span><b>Seg a dom · 10h00 – 03h00</b></div>
+              <div class="info-row"><span>Funcionamento</span><b data-horario="resumo">Seg a dom · 10h00 – 03h00</b></div>
               <div class="info-row"><span>Raio de entrega</span><b><span data-regra="raio" data-fmt="km">12</span> km</b></div>
               <div class="info-row"><span>Taxa base</span><b>R$ <span data-regra="taxaBase" data-fmt="brl">4,90</span> <i>+ R$ <span data-regra="taxaKm" data-fmt="brl">1,20</span>/km</i></b></div>
               <div class="info-row"><span>Pedido mínimo</span><b>R$ <span data-regra="minimo" data-fmt="brl">30,00</span></b></div>
@@ -364,7 +372,7 @@
 
 <!-- ============ RODAPÉ DE OPERAÇÃO ============ -->
 <footer class="app-pe">
-  <span><i class="live" aria-hidden="true"></i> <b>Aberto</b> até 03h00</span>
+  <span data-horario="status">Seg a dom · 10h00 – 03h00</span>
   <span class="some">Câmara <b class="num" id="t1">−2,0 °C</b></span>
   <span class="some">Em rota <b class="num" id="rotas">6</b></span>
   <span><b class="num" data-total="itens">15</b> itens · <b class="num" data-total="unidades">1439</b> unidades</span>
@@ -472,12 +480,19 @@
 <div class="cart-overlay" id="cartOverlay" hidden></div>
 <aside class="cart" id="cart" aria-label="Carrinho de compras" aria-hidden="true">
   <header class="cart-head">
-    <h3>Seu carrinho</h3>
+    <button type="button" class="cart-voltar" id="cartVoltar" hidden aria-label="Voltar à etapa anterior">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    </button>
+    <h3 id="cartTitulo">Seu carrinho</h3>
     <button class="cart-close" id="cartClose" aria-label="Fechar carrinho">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </header>
 
+  <!-- O fechamento acontece dentro do carrinho, em etapas: a lista, os dados
+       de entrega e pagamento, o Pix (quando o cliente paga pelo site) e a
+       confirmação. Uma etapa à mostra por vez. -->
+  <div class="cart-etapa" data-etapa="carrinho">
   <div class="cart-itens" id="cartItens"></div>
 
   <div class="cart-vazio" id="cartVazio">
@@ -487,6 +502,10 @@
     </svg>
     <p>Carrinho vazio</p>
     <small>Adicione uma gelada e ela aparece aqui.</small>
+    <section class="pedidos-antigos" id="pedidosAntigos" hidden aria-labelledby="pedidosTit">
+      <h4 id="pedidosTit">Seus últimos pedidos</h4>
+      <ul id="pedidosLista"></ul>
+    </section>
   </div>
 
   <footer class="cart-pe" id="cartPe">
@@ -504,10 +523,119 @@
     </dl>
 
     <p class="cart-aviso" id="cartAviso" role="status" aria-live="polite"></p>
-    <button class="btn btn-primary cart-fechar-pedido" id="finalizar">Finalizar pelo WhatsApp
+    <button class="btn btn-primary cart-fechar-pedido" id="finalizar">Continuar
       <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
   </footer>
+  </div>
+
+  <!-- ETAPA 2 · entrega e pagamento -->
+  <div class="cart-etapa" data-etapa="dados" hidden>
+    <form class="checkout" id="checkout" novalidate>
+      <div class="checkout-rola">
+        <p class="ck-fechada" id="ckFechada" hidden></p>
+
+        <fieldset class="ck-grupo">
+          <legend>Quem recebe</legend>
+          <label class="ck-campo"><span>Nome</span>
+            <input id="ckNome" autocomplete="name" aria-describedby="ckMsg"></label>
+        </fieldset>
+
+        <fieldset class="ck-grupo">
+          <legend>Entrega</legend>
+          <div class="ck-cep">
+            <label class="ck-campo"><span>CEP</span>
+              <input id="ckCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code" aria-describedby="ckCepMsg ckMsg"></label>
+            <button type="button" class="btn btn-ghost btn-sm" id="ckCepBtn">Calcular</button>
+          </div>
+          <p class="cep-msg" id="ckCepMsg" role="status" aria-live="polite"></p>
+          <div id="ckEndereco">
+            <label class="ck-campo"><span>Rua</span>
+              <input id="ckRua" autocomplete="address-line1" aria-describedby="ckMsg"></label>
+            <div class="ck-dupla">
+              <label class="ck-campo"><span>Número</span>
+                <input id="ckNumero" autocomplete="address-line2" placeholder="ou s/n" aria-describedby="ckMsg"></label>
+              <label class="ck-campo"><span>Complemento <i>opcional</i></span>
+                <input id="ckCompl" placeholder="apto, bloco"></label>
+            </div>
+            <label class="ck-campo"><span>Ponto de referência <i>opcional</i></span>
+              <input id="ckRef"></label>
+          </div>
+          <p class="ck-retirada" id="ckRetirada" hidden></p>
+        </fieldset>
+
+        <fieldset class="ck-grupo">
+          <legend>Como vai pagar?</legend>
+          <label class="ck-opcao" id="ckOpPix">
+            <input type="radio" name="fechar" value="pix-site">
+            <span><b>Pagar agora com Pix, pelo site</b><small>O QR code e o copia e cola aparecem na próxima tela.</small></span>
+          </label>
+          <label class="ck-opcao">
+            <input type="radio" name="fechar" value="entrega">
+            <span><b id="ckEntregaTit">Pagar na entrega</b><small>O pedido vai pelo WhatsApp e você paga quando ele chegar.</small></span>
+          </label>
+          <div class="ck-formas" id="ckFormas" hidden>
+            <p class="ck-sub">Pagar com:</p>
+            <label class="ck-check"><input type="radio" name="forma" value="pix"> Pix</label>
+            <label class="ck-check"><input type="radio" name="forma" value="cartao"> Cartão (débito ou crédito)</label>
+            <label class="ck-check"><input type="radio" name="forma" value="dinheiro"> Dinheiro</label>
+            <div class="ck-troco" id="ckTrocoBloco" hidden>
+              <label class="ck-campo"><span>Troco para quanto?</span>
+                <input id="ckTroco" inputmode="decimal" placeholder="R$ 100,00" aria-describedby="ckMsg"></label>
+              <label class="ck-check"><input type="checkbox" id="ckSemTroco"> Não preciso de troco</label>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="ck-grupo">
+          <legend>Observação <i>opcional</i></legend>
+          <textarea id="ckObs" rows="2" maxlength="300" placeholder="Ex.: interfone quebrado, ligar quando chegar" aria-label="Observação"></textarea>
+        </fieldset>
+      </div>
+
+      <footer class="cart-pe">
+        <dl class="cart-resumo">
+          <div><dt>Entrega</dt><dd class="num" id="ckEntrega">—</dd></div>
+          <div class="cart-total-linha"><dt>Total</dt><dd class="num" id="ckTotal">R$ 0,00</dd></div>
+        </dl>
+        <p class="cart-aviso bad" id="ckMsg" role="alert"></p>
+        <button type="submit" class="btn btn-primary cart-fechar-pedido" id="ckEnviar">Enviar pedido pelo WhatsApp</button>
+      </footer>
+    </form>
+  </div>
+
+  <!-- ETAPA 3 · Pix pelo site -->
+  <div class="cart-etapa" data-etapa="pix" hidden>
+    <div class="checkout-rola pix-rola">
+      <p class="pix-valor">Total <b class="num" id="pixValor">R$ 0,00</b></p>
+      <div class="pix-qr" id="pixQr" role="img" aria-label="QR code do Pix"></div>
+      <label class="ck-campo"><span>Pix copia e cola</span>
+        <textarea id="pixCodigo" readonly rows="3"></textarea></label>
+      <button type="button" class="btn btn-ghost" id="pixCopiar">Copiar código</button>
+      <ol class="pix-passos">
+        <li>Abra o app do seu banco e escolha <b>Pix</b>.</li>
+        <li>Leia o QR code ou cole o código.</li>
+        <li>Confira o recebedor, <b id="pixNome">Zero Grau</b>, e o valor.</li>
+        <li>Pagou? Toque em <b>Já paguei</b> para mandar o pedido.</li>
+      </ol>
+      <p class="pix-ref">Referência do pedido: <b class="num" id="pixRef"></b></p>
+    </div>
+    <footer class="cart-pe">
+      <button type="button" class="btn btn-primary cart-fechar-pedido" id="pixPaguei">Já paguei — enviar pedido</button>
+      <p class="cart-aviso">O pedido vai pelo WhatsApp com a referência do Pix. Mande o comprovante na mesma conversa.</p>
+    </footer>
+  </div>
+
+  <!-- ETAPA 4 · pedido enviado -->
+  <div class="cart-etapa" data-etapa="feito" hidden>
+    <div class="cart-feito">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/></svg>
+      <p>Pedido pronto no WhatsApp</p>
+      <small id="feitoTxt">Abrimos a conversa com a loja com o pedido escrito. É só tocar em enviar.</small>
+      <a class="btn btn-primary" id="feitoZap" target="_blank" rel="noopener">Abrir o WhatsApp de novo</a>
+      <button type="button" class="btn btn-ghost" id="feitoFechar">Voltar à loja</button>
+    </div>
+  </div>
 </aside>
 
 <div class="toast" id="toast" role="status" aria-live="polite">
@@ -515,9 +643,11 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/ajustes.js?v=14"></script>
-<script src="js/dados.js?v=14"></script>
-<script src="js/porta.js?v=14"></script>
-<script src="js/script.js?v=14"></script>
+<script src="js/ajustes.js?v=15"></script>
+<script src="js/dados.js?v=15"></script>
+<script src="js/porta.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
+<script src="js/pix.js?v=15"></script>
+<script src="js/script.js?v=15"></script>
 </body>
 </html>

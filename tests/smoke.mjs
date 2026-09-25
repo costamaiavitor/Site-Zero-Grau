@@ -49,7 +49,8 @@ const TIPOS = {
   '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8',
   '.js':'text/javascript; charset=utf-8', '.webp':'image/webp', '.svg':'image/svg+xml',
   '.png':'image/png', '.jpg':'image/jpeg', '.md':'text/markdown; charset=utf-8',
-  '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8'
+  '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8',
+  '.webmanifest':'application/manifest+json'
 };
 
 /* ---------- servidor estático mínimo, sem dependência ---------- */
@@ -82,11 +83,15 @@ const navegador = await chromium.launch();
    quando o dono quiser, e o teste de "cupom abaixo do mínimo" não pode quebrar
    porque o cupom mudou de nome. O arquivo publicado tem seção própria
    ("Ajustes publicados"), que abre com `publicado: true`. */
-async function contexto({ js = true, largura = 1280, altura = 900, celular = false, publicado = false } = {}){
+/* O service worker fica bloqueado por padrão: ele responderia do cache e
+   passaria por cima das rotas simuladas (ViaCEP, ajustes.js, GitHub). A seção
+   "App instalável" liga com `sw: true`. */
+async function contexto({ js = true, largura = 1280, altura = 900, celular = false, publicado = false, sw = false } = {}){
   const ctx = await navegador.newContext({
     viewport:{ width:largura, height:altura },
     javaScriptEnabled:js,
-    isMobile:celular, hasTouch:celular
+    isMobile:celular, hasTouch:celular,
+    serviceWorkers: sw ? 'allow' : 'block'
   });
   if(!publicado)
     await ctx.route(/\/js\/ajustes\.js/, r =>
@@ -162,6 +167,10 @@ secao('Carga limpa');
   const cards = await p.$$eval('.card', e => e.length);
   ok(`as ${cards} fotos de produto carregam`, fotos === cards, `${fotos}/${cards}`);
   const zaps = await p.$$eval('a[data-contato="whatsapp"]', es => es.map(e => e.href));
+  /* o número amarrado à regra tem o corpo do número, não o da legenda */
+  const corpos = await p.$$eval('.hstat b [data-regra]', es => es.map(e =>
+    getComputedStyle(e).fontSize === getComputedStyle(e.closest('b')).fontSize && getComputedStyle(e).display === 'inline'));
+  ok('os valores da abertura ficam no tamanho do número', corpos.length > 0 && corpos.every(Boolean), corpos.join(','));
   ok(`os ${zaps.length} links de WhatsApp vão para (85) 98149-4445`,
      zaps.length > 0 && zaps.every(h => h === 'https://wa.me/5585981494445'), zaps.join(' '));
   await ctx.close();
@@ -742,7 +751,7 @@ secao('Criar conta');
   const pd = await cel2.newPage();
   await pd.goto(BASE, { waitUntil:'networkidle' });
   await pd.click('#gateYes'); await pd.waitForTimeout(150);
-  const h = await pd.$eval('#painelEntrar [data-painel="criar"]', e => e.getBoundingClientRect().height);
+  const h = Math.round(await pd.$eval('#painelEntrar [data-painel="criar"]', e => e.getBoundingClientRect().height));
   ok('o link "Criar conta" tem altura de dedo', h >= 44, `${h}px`);
   await cel2.close();
 }
@@ -823,6 +832,201 @@ for(const largura of LARGURAS){
   }));
   ok(`balcão ${largura}px: sem barra horizontal`, m.scroll <= m.client + 1, `${m.scroll} > ${m.client}`);
   ok(`balcão ${largura}px: a página não rola`, m.alto <= m.tela + 1, `${m.alto} > ${m.tela}`);
+  await ctx.close();
+}
+
+/* ====================================================================== */
+/* Publica ajustes na rota do js/ajustes.js — como se o painel tivesse posto
+   no ar. Registrada depois da rota neutra, tem precedência sobre ela. */
+async function comAjustes(ctx, ajustes){
+  await ctx.route(/\/js\/ajustes\.js/, r =>
+    r.fulfill({ contentType:'text/javascript', body:`const AJUSTES_PUBLICADOS = ${JSON.stringify({ versao:1, ...ajustes })};` }));
+}
+const VIACEP_MEIRELES = { cep:'60160-000', logradouro:'Rua Silva Paulet', bairro:'Meireles', localidade:'Fortaleza', uf:'CE' };
+const VIACEP_LONGE    = { cep:'61760-000', logradouro:'Rua das Flores', bairro:'Centro', localidade:'Aquiraz', uf:'CE' };
+
+/* Loja pronta para fechar pedido: login, itens no carrinho acima do mínimo,
+   WhatsApp interceptado (window.open vira registro) e o relógio parado. */
+async function lojaParaFechar({ ajustes = null, viacep = VIACEP_MEIRELES, hora = '2026-09-25T23:30:00Z', largura = 1280 } = {}){
+  const ctx = await contexto({ largura });
+  if(ajustes) await comAjustes(ctx, ajustes);
+  await ctx.route('**://viacep.com.br/**', r => r.fulfill({ contentType:'application/json', body: JSON.stringify(viacep) }));
+  await ctx.addInitScript(() => { window.__abertos = []; window.open = u => { window.__abertos.push(u); return null; }; });
+  const p = await ctx.newPage();
+  await p.clock.setFixedTime(new Date(hora));
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(p, CPF);
+  await p.evaluate(() => { for(let i = 0; i < 6; i++) document.querySelector('.card:not(.hide) .add:not([disabled])').click(); });
+  await p.click('#cartBtn');
+  await p.waitForTimeout(350);
+  return { ctx, p };
+}
+const abertos = p => p.evaluate(() => window.__abertos);
+const textoZap = url => decodeURIComponent(url.split('?text=')[1] || '');
+
+/* ====================================================================== */
+secao('Horário de funcionamento');
+{
+  const ver = async hora => {
+    const ctx = await contexto();
+    const p = await ctx.newPage();
+    await p.clock.setFixedTime(new Date(hora));
+    await p.goto(BASE, { waitUntil:'networkidle' });
+    await entrar(p, CPF, null);
+    const r = { topo: await p.textContent('[data-horario="agora"]'), pe: await p.textContent('[data-horario="status"]'),
+                fechada: await p.evaluate(() => document.body.classList.contains('loja-fechada')) };
+    await ctx.close();
+    return r;
+  };
+  let r = await ver('2026-09-25T23:30:00Z');           /* sexta, 20h30 em Fortaleza */
+  ok('20h30: aberto até 03h00', /Aberto\s+até 03h00/.test(r.topo) && !r.fechada, r.topo);
+  r = await ver('2026-09-26T04:30:00Z');               /* sábado, 01h30: ainda o turno de sexta */
+  ok('01h30 da madrugada: ainda aberto pelo turno da noite', /Aberto/.test(r.topo), r.topo);
+  r = await ver('2026-09-26T07:00:00Z');               /* sábado, 04h00 */
+  ok('04h00: fechado, abre hoje às 10h', /Fechado · abre hoje às 10h/.test(r.topo) && r.fechada, r.topo);
+  ok('o rodapé diz o mesmo', /Fechado/.test(r.pe));
+
+  const ctx = await contexto();
+  await comAjustes(ctx, { horario:{ dias:[null, ['10:00','22:00'], ['10:00','22:00'], ['10:00','22:00'], ['10:00','22:00'], ['10:00','03:00'], ['12:00','03:00']] } });
+  const p = await ctx.newPage();
+  await p.clock.setFixedTime(new Date('2026-09-27T12:00:00Z'));   /* domingo, 09h00 */
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(p, CPF, null);
+  ok('horário publicado vale: domingo fechado abre amanhã', /abre amanhã às 10h/.test(await p.textContent('[data-horario="agora"]')),
+     await p.textContent('[data-horario="agora"]'));
+  ok('e o resumo semanal acompanha',
+     (await p.textContent('.info-row b[data-horario="resumo"]')) === 'Seg a qui · 10h00 – 22h00 · Sex · 10h00 – 03h00 · Sáb · 12h00 – 03h00 · Dom · fechado',
+     await p.textContent('.info-row b[data-horario="resumo"]'));
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Fechamento do pedido');
+{
+  /* sem chave Pix: só o WhatsApp */
+  let { ctx, p } = await lojaParaFechar();
+  await p.click('#finalizar');
+  await p.waitForTimeout(200);
+  ok('Continuar leva a entrega e pagamento', await p.$eval('[data-etapa="dados"]', e => !e.hidden));
+  ok('o nome vem da conta', (await p.inputValue('#ckNome')) === 'Cliente de Teste');
+  ok('sem chave Pix, a opção de pagar pelo site não aparece', await p.$eval('#ckOpPix', e => e.hidden));
+  ok('e "pagar na entrega" vem marcado', await p.isChecked('input[name="fechar"][value="entrega"]'));
+
+  const enviar = async () => { await p.click('#ckEnviar'); await p.waitForTimeout(200); return p.textContent('#ckMsg'); };
+  await p.fill('#ckNome', '');
+  ok('sem nome não segue', /nome/.test(await enviar()));
+  await p.fill('#ckNome', 'Maria da Silva');
+  ok('sem CEP calculado não segue', /CEP/.test(await enviar()));
+  await p.fill('#ckCep', '60160000');
+  await p.click('#ckCepBtn');
+  await p.waitForTimeout(300);
+  ok('o CEP preenche a rua', (await p.inputValue('#ckRua')) === 'Rua Silva Paulet');
+  ok('sem número não segue', /número/.test(await enviar()));
+  await p.fill('#ckNumero', '1580');
+  await p.fill('#ckCompl', 'apto 302');
+  ok('sem a forma de pagamento não segue', /Escolha como vai pagar/.test(await enviar()));
+  await p.check('input[name="forma"][value="dinheiro"]');
+  ok('dinheiro pede o troco', await p.$eval('#ckTrocoBloco', e => !e.hidden));
+  await p.fill('#ckTroco', '10');
+  ok('troco menor que o total é recusado', /acima do total/.test(await enviar()));
+  await p.fill('#ckTroco', '500');
+  await p.fill('#ckObs', 'interfone quebrado');
+  await p.click('#ckEnviar');
+  await p.waitForTimeout(300);
+  const url = (await abertos(p))[0] || '';
+  const msg = textoZap(url);
+  ok('abre o WhatsApp da loja', url.startsWith('https://wa.me/5585981494445?text='), url.slice(0, 40));
+  ok('com os itens e o total', /\*Pedido Zero Grau\*/.test(msg) && /\*Total: R\$ [\d.,]+\*/.test(msg));
+  ok('com o endereço completo', /\*Entregar para:\* Maria da Silva/.test(msg) && /Rua Silva Paulet, 1580 — apto 302/.test(msg) && /CEP 60160-000/.test(msg), msg);
+  ok('com o pagamento e o troco', /\*Pagamento:\* Dinheiro na entrega — troco para R\$ 500,00 \(levar R\$ [\d.,]+\)/.test(msg), msg);
+  ok('e a observação', /\*Observação:\* interfone quebrado/.test(msg));
+  ok('a loja aberta não marca agendado', !/loja fechada/.test(msg));
+  ok('mostra a confirmação', await p.$eval('[data-etapa="feito"]', e => !e.hidden));
+  ok('com o link de reserva para o WhatsApp', (await p.getAttribute('#feitoZap', 'href')) === url);
+  ok('e o carrinho esvazia', (await p.textContent('#cartCount')).trim() === '0');
+
+  /* pedir de novo */
+  await p.click('#feitoFechar');
+  await p.click('#cartBtn');
+  await p.waitForTimeout(300);
+  ok('com o carrinho vazio, o último pedido aparece', await p.$eval('#pedidosAntigos', e => !e.hidden));
+  await p.click('[data-denovo="0"]');
+  await p.waitForTimeout(200);
+  ok('"Pedir de novo" devolve os itens ao carrinho', +(await p.textContent('#cartCount')) === 6);
+  const guardado = await p.evaluate(() => localStorage.getItem('zg-pedidos'));
+  ok('o histórico não guarda endereço nem pagamento', !/Silva Paulet|Dinheiro|Maria/.test(guardado));
+
+  /* o endereço fica para a próxima */
+  await p.click('#finalizar');
+  await p.waitForTimeout(200);
+  ok('no pedido seguinte o endereço já vem', (await p.inputValue('#ckNumero')) === '1580' && (await p.inputValue('#ckCompl')) === 'apto 302');
+  await ctx.close();
+
+  /* retirada: fora do raio */
+  ({ ctx, p } = await lojaParaFechar({ viacep: VIACEP_LONGE }));
+  await p.click('#finalizar');
+  await p.fill('#ckCep', '61760000');
+  await p.click('#ckCepBtn');
+  await p.waitForTimeout(300);
+  ok('fora do raio: sem campos de endereço', await p.$eval('#ckEndereco', e => e.hidden) && await p.$eval('#ckRetirada', e => !e.hidden));
+  ok('e o pagamento vira "na retirada"', /retirada/.test(await p.textContent('#ckEntregaTit')));
+  await p.check('input[name="forma"][value="cartao"]');
+  await p.click('#ckEnviar');
+  await p.waitForTimeout(300);
+  const msgRet = textoZap((await abertos(p))[0] || '');
+  ok('a mensagem diz retirada no balcão', /\*Retira no balcão:\* Cliente de Teste/.test(msgRet) && /Cartão na retirada/.test(msgRet), msgRet);
+  await ctx.close();
+
+  /* loja fechada: vai, mas agendado */
+  ({ ctx, p } = await lojaParaFechar({ hora: '2026-09-26T07:00:00Z' }));
+  await p.click('#finalizar');
+  await p.waitForTimeout(200);
+  ok('loja fechada avisa no fechamento', /fechada agora \(abre hoje às 10h\)/.test(await p.textContent('#ckFechada')));
+  await p.fill('#ckCep', '60160000'); await p.click('#ckCepBtn'); await p.waitForTimeout(300);
+  await p.fill('#ckNumero', '10');
+  await p.check('input[name="forma"][value="pix"]');
+  await p.click('#ckEnviar');
+  await p.waitForTimeout(300);
+  ok('e o pedido chega marcado como agendado', /Pedido feito com a loja fechada — entregar quando abrir \(abre hoje às 10h\)/.test(textoZap((await abertos(p))[0] || '')));
+  await ctx.close();
+
+  /* Pix pelo site */
+  ({ ctx, p } = await lojaParaFechar({ ajustes: { pix:{ chave:'loja@exemplo.com', nome:'Zero Grau', cidade:'Fortaleza' } } }));
+  await p.click('#finalizar');
+  await p.waitForTimeout(200);
+  ok('com chave Pix, pagar pelo site aparece e vem marcado',
+     await p.$eval('#ckOpPix', e => !e.hidden) && await p.isChecked('input[name="fechar"][value="pix-site"]'));
+  ok('o botão diz "Ir para o Pix"', /Ir para o Pix/.test(await p.textContent('#ckEnviar')));
+  await p.fill('#ckCep', '60160000'); await p.click('#ckCepBtn'); await p.waitForTimeout(300);
+  await p.fill('#ckNumero', '1580');
+  await p.click('#ckEnviar');
+  await p.waitForTimeout(800);
+  ok('abre a etapa do Pix', await p.$eval('[data-etapa="pix"]', e => !e.hidden));
+  ok('sem abrir o WhatsApp ainda', (await abertos(p)).length === 0);
+  const pix = await p.evaluate(() => {
+    const codigo = document.getElementById('pixCodigo').value;
+    const total = document.getElementById('pixValor').textContent.replace(/[^\d,]/g, '').replace(',', '.');
+    return { codigo, total, crcOk: crc16(codigo.slice(0, -4)) === codigo.slice(-4),
+             qr: !!document.querySelector('#pixQr svg'), ref: document.getElementById('pixRef').textContent };
+  });
+  ok('o código Pix segue o padrão do Banco Central', /^000201/.test(pix.codigo) && pix.codigo.includes('br.gov.bcb.pix') && pix.crcOk);
+  ok('com a chave e o valor exato do pedido', pix.codigo.includes('loja@exemplo.com') && pix.codigo.includes('54' + String(Number(pix.total).toFixed(2).length).padStart(2, '0') + Number(pix.total).toFixed(2)),
+     pix.total);
+  ok('com a referência do pedido dentro', pix.codigo.includes(pix.ref) && /^ZG[A-Z0-9]+$/.test(pix.ref));
+  ok('e o QR code desenhado', pix.qr);
+  await p.click('#pixPaguei');
+  await p.waitForTimeout(300);
+  const msgPix = textoZap((await abertos(p))[0] || '');
+  ok('"Já paguei" manda o pedido com a referência do Pix', new RegExp(`Pix pago pelo site — R\\$ [\\d.,]+ — referência ${pix.ref}`).test(msgPix), msgPix);
+  await ctx.close();
+
+  /* celular: as etapas cabem e os botões têm altura de dedo */
+  ({ ctx, p } = await lojaParaFechar({ largura: 390 }));
+  await p.click('#finalizar');
+  await p.waitForTimeout(200);
+  const alvos = await p.$$eval('#checkout .ck-opcao, #checkout .btn, #ckEnviar', es => es.filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().height)));
+  ok('390px: opções e botões do fechamento com altura de dedo', alvos.every(h => h >= 44), alvos.join(','));
+  ok('390px: o fechamento não vaza para os lados', await p.$eval('#checkout', e => e.scrollWidth <= e.clientWidth));
   await ctx.close();
 }
 
@@ -1093,6 +1297,198 @@ secao('Painel de administração');
   const [d] = await Promise.all([adm.waitForEvent('download'), adm.click('#baixarMesmo')]);
   ok('com a opção de baixar', d.suggestedFilename() === 'ajustes.js');
   await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Painel: loja, foto e histórico');
+{
+  const ctx = await contexto({ largura:1366, altura:900 });
+  const pedidos = [];
+  const versaoAntiga = { versao:1, bebidas:null };
+  await ctx.route('https://api.github.com/**', async r => {
+    const req = r.request(), url = new URL(req.url());
+    pedidos.push({ metodo: req.method(), caminho: url.pathname, corpo: req.postData() ? JSON.parse(req.postData()) : null });
+    if(url.pathname.endsWith('/commits'))
+      return r.fulfill({ contentType:'application/json', body: JSON.stringify([
+        { sha:'aaaaaaa1111', commit:{ message:'Painel: publica 1 alteração no catálogo', author:{ name:'dono', date:'2026-09-24T12:00:00Z' } }, author:{ login:'costamaiavitor' } }]) });
+    if(req.method() === 'GET' && url.searchParams.get('ref') === 'aaaaaaa1111'){
+      const antigo = await (await ctx.request.get(BASE + '/admin.html')).text();   /* só para ter um contexto vivo */
+      const texto = `/* versão antiga */\nconst AJUSTES_PUBLICADOS = ${JSON.stringify({ versao:1, varejo:{ minimo: 45, freteGratis: 200 } }, null, 2)};\n`;
+      return r.fulfill({ contentType:'application/json', body: JSON.stringify({ sha:'x', content: Buffer.from(texto).toString('base64') }) });
+    }
+    if(req.method() === 'GET') return r.fulfill({ contentType:'application/json', body: JSON.stringify({ sha:'sha-atual' }) });
+    return r.fulfill({ status:201, contentType:'application/json', body: JSON.stringify({ commit:{ sha:'novo' } }) });
+  });
+  const adm = await ctx.newPage();
+  adm.on('dialog', d => d.accept());
+  const erros = [];
+  adm.on('pageerror', e => erros.push(e.message));
+  await adm.goto(`${BASE}/admin.html`, { waitUntil:'networkidle' });
+
+  /* aba Loja */
+  await adm.click('#t-loja');
+  await adm.fill('[data-regra="pix.chave"]', 'isto não é chave');
+  ok('chave Pix inválida é recusada', /Não é uma chave Pix/.test(await adm.textContent('#a-loja')));
+  await adm.fill('[data-regra="pix.chave"]', '11.222.333/0001-81');
+  await adm.fill('[data-regra="contato.whatsapp"]', '(85) 3333-4444');
+  await adm.check('.adm-dia[data-dia="0"] [data-h="fechado"]');
+  await adm.selectOption('#estTipo', 'ga4');
+  await adm.fill('#estId', 'UA-123');
+  ok('ID de estatística errado é recusado', /começa com G-/.test(await adm.textContent('#a-loja')));
+  await adm.fill('#estId', 'G-ABC123XYZ');
+  await adm.waitForTimeout(400);
+  const r = await adm.evaluate(() => JSON.parse(localStorage.getItem('zg-admin-rascunho')));
+  ok('a chave Pix vai normalizada para o rascunho', r.pix.chave === '11222333000181', r.pix.chave);
+  ok('o WhatsApp vira link wa.me', r.contato.whatsapp === 'https://wa.me/558533334444', r.contato.whatsapp);
+  ok('domingo fechado', r.horario.dias[0] === null);
+  ok('e a estatística ligada', r.estatistica.tipo === 'ga4' && r.estatistica.id === 'G-ABC123XYZ');
+
+  const loja = await ctx.newPage();
+  await loja.goto(BASE, { waitUntil:'networkidle' });
+  await entrar(loja, CPF, null);
+  ok('a loja em prévia usa o WhatsApp novo', (await loja.getAttribute('a[data-contato="whatsapp"]', 'href')) === 'https://wa.me/558533334444');
+  ok('e o horário novo', /Dom · fechado/.test(await loja.textContent('.info-row b[data-horario="resumo"]')));
+
+  /* foto: gera no navegador uma "lata" em PNG transparente e uma foto sem recorte */
+  const imagem = (transparente) => adm.evaluate(t => new Promise(ok => {
+    const c = document.createElement('canvas'); c.width = 520; c.height = 900;
+    const g = c.getContext('2d');
+    if(!t){ g.fillStyle = '#c9c1b0'; g.fillRect(0, 0, 520, 900); }
+    g.fillStyle = '#1d3f8f'; g.fillRect(110, 60, 300, 780);
+    g.fillStyle = '#e8e8e8'; g.fillRect(110, 60, 300, 40);
+    c.toBlob(b => { const f = new FileReader(); f.onload = () => ok(f.result.split(',')[1]); f.readAsDataURL(b); }, 'image/png');
+  }), transparente);
+  await adm.click('#t-produtos');
+  const subir = async (sku, b64) => {
+    const [fc] = await Promise.all([adm.waitForEvent('filechooser'), adm.click(`tr[data-sku="${sku}"] [data-acao="foto"]`)]);
+    await fc.setFiles({ name:'foto.png', mimeType:'image/png', buffer: Buffer.from(b64, 'base64') });
+    await adm.waitForTimeout(1200);
+  };
+  await subir('guinness-draught-500', await imagem(false));
+  ok('foto sem fundo transparente é recusada', /não tem fundo transparente/.test(await adm.textContent('#fotoResultado')) && await adm.$eval('#fotoUsar', e => e.disabled));
+  await adm.click('#dlgFoto .adm-cancelar');
+  await subir('guinness-draught-500', await imagem(true));
+  ok('foto recortada e em pé passa no padrão', /No padrão/.test(await adm.textContent('#fotoResultado')), await adm.textContent('#fotoResultado'));
+  await adm.click('#fotoUsar');
+  await adm.waitForTimeout(400);
+  const foto = await adm.evaluate(() => {
+    const r = JSON.parse(localStorage.getItem('zg-admin-rascunho'));
+    const nome = r.bebidas.find(b => b.sku === 'guinness-draught-500').foto;
+    return { nome, tem: !!r.fotosNovas?.[nome], webp: r.fotosNovas?.[nome]?.[400]?.startsWith('data:image/webp') };
+  });
+  ok('a foto nova entra no rascunho, em WebP', foto.tem && foto.webp && /^guinness-draught-stout-500-ml-/.test(foto.nome), foto.nome);
+  await loja.reload({ waitUntil:'networkidle' });
+  ok('e a loja em prévia já mostra a foto nova', await loja.evaluate(n => fotoAttrs(n).includes('data:image/webp'), foto.nome));
+  const alturas = await adm.evaluate(n => new Promise(ok => {
+    const r = JSON.parse(localStorage.getItem('zg-admin-rascunho')).fotosNovas[n];
+    const a = new Image(), b = new Image(); let c = 0;
+    const fim = () => ++c === 2 && ok([a.naturalHeight, b.naturalHeight]);
+    a.onload = b.onload = fim; a.src = r[400]; b.src = r[200];
+  }), foto.nome);
+  ok('nas duas alturas do padrão, 400 e 200', alturas[0] === 400 && alturas[1] === 200, alturas.join('/'));
+
+  /* a trava: produto apontando para foto que não existe não publica */
+  await adm.evaluate(() => {
+    const r = JSON.parse(localStorage.getItem('zg-admin-rascunho'));
+    r.bebidas.find(b => b.sku === 'red-bull-250').foto = 'foto-que-nao-existe';
+    localStorage.setItem('zg-admin-rascunho', JSON.stringify(r));
+    localStorage.setItem('zg-admin-github', 'github_pat_CHAVEDETESTE9876');
+  });
+  await adm.reload({ waitUntil:'networkidle' });
+  pedidos.length = 0;
+  await adm.click('#publicar');
+  await adm.waitForTimeout(300);
+  ok('produto com foto inexistente trava a publicação', /foto de Red Bull não está disponível/.test(await adm.textContent('#estado')) && !pedidos.some(p => p.metodo === 'PUT'),
+     await adm.textContent('#estado'));
+  await adm.evaluate(() => {
+    const r = JSON.parse(localStorage.getItem('zg-admin-rascunho'));
+    r.bebidas.find(b => b.sku === 'red-bull-250').foto = 'red-bull-250';
+    localStorage.setItem('zg-admin-rascunho', JSON.stringify(r));
+  });
+
+  /* publicar com a foto — depois de recarregar o painel: a foto nova tem de
+     sobreviver ao recarregamento; foto antes do ajustes.js */
+  await adm.evaluate(() => localStorage.setItem('zg-admin-github', 'github_pat_CHAVEDETESTE9876'));
+  await adm.reload({ waitUntil:'networkidle' });
+  pedidos.length = 0;
+  await adm.click('#publicar');
+  await adm.waitForTimeout(800);
+  const puts = pedidos.filter(p => p.metodo === 'PUT').map(p => p.caminho.split('/contents/')[1]);
+  ok('publicar sobe as duas fotos e depois o ajustes.js',
+     puts.length === 3 && puts[0] === `ZeroGrau/img/${foto.nome}-400.webp` && puts[1] === `ZeroGrau/img/${foto.nome}-200.webp` && puts[2] === 'ZeroGrau/js/ajustes.js', puts.join(' · '));
+  const put400 = pedidos.find(p => p.metodo === 'PUT' && p.caminho.endsWith('-400.webp'));
+  const bytes = Buffer.from(put400.corpo.content, 'base64');
+  ok('o arquivo da foto é WebP de verdade', bytes.slice(0, 4).toString() === 'RIFF' && bytes.slice(8, 12).toString() === 'WEBP');
+  const ajustes = Buffer.from(pedidos.find(p => p.metodo === 'PUT' && p.caminho.endsWith('ajustes.js')).corpo.content, 'base64').toString('utf8');
+  ok('o ajustes.js não carrega as fotos dentro', !ajustes.includes('fotosNovas') && ajustes.includes(foto.nome));
+
+  /* histórico */
+  await adm.click('#t-publicacao');
+  await adm.click('#histCarregar');
+  await adm.waitForTimeout(400);
+  ok('o histórico lista as publicações', /publica 1 alteração/.test(await adm.textContent('#histLista')) && /Versão original/.test(await adm.textContent('#histLista')));
+  await adm.click('[data-versao="aaaaaaa1111"]');
+  await adm.waitForTimeout(400);
+  const vr = await adm.evaluate(() => JSON.parse(localStorage.getItem('zg-admin-rascunho')));
+  ok('abrir uma versão antiga a traz para o rascunho', vr.varejo.minimo === 45 && vr.varejo.freteGratis === 200);
+  ok('sem publicar nada sozinho', pedidos.filter(p => p.metodo === 'PUT').length === 3);
+  await adm.click('[data-versao="base"]');
+  await adm.waitForTimeout(400);
+  ok('e a versão original também', await adm.evaluate(() => JSON.parse(localStorage.getItem('zg-admin-rascunho') || 'null')?.varejo?.minimo ?? REGRAS.minimo) === 30);
+  ok('o painel não teve erro', erros.length === 0, erros[0]);
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('App instalável');
+{
+  const ctx = await contexto({ sw: true });
+  const p = await ctx.newPage();
+  await p.goto(BASE, { waitUntil:'networkidle' });
+  const href = await p.getAttribute('link[rel="manifest"]', 'href');
+  ok('a página aponta o manifesto', href === 'manifest.webmanifest');
+  const man = await (await p.request.get(`${BASE}/manifest.webmanifest`)).json();
+  ok('o manifesto tem nome, início e modo app', man.short_name === 'Zero Grau' && man.start_url === './' && man.display === 'standalone');
+  const faltam = man.icons.filter(i => !existsSync(path.join(RAIZ, i.src))).map(i => i.src);
+  ok('os ícones do manifesto existem (192, 512 e maskable)', !faltam.length && man.icons.some(i => i.purpose === 'maskable'), faltam.join(','));
+  const ativo = await p.evaluate(async () => { await navigator.serviceWorker.ready; return !!navigator.serviceWorker.controller || !!(await navigator.serviceWorker.getRegistration()); });
+  ok('o service worker se registra', ativo);
+  await p.reload({ waitUntil:'networkidle' });
+  await ctx.setOffline(true);
+  await p.reload({ waitUntil:'domcontentloaded' }).catch(() => {});
+  ok('sem internet, o site ainda abre', /Zero Grau/.test(await p.title()) && !!(await p.$('.manchete')));
+  await ctx.setOffline(false);
+  const admSw = await p.evaluate(async () => { const r = await fetch('admin.html'); return r.ok; });
+  ok('e o painel continua indo à rede', admSw);
+  await ctx.close();
+}
+
+/* ====================================================================== */
+secao('Estatística');
+{
+  const externos = async (ajustes, consentir) => {
+    const ctx = await contexto();
+    if(ajustes) await comAjustes(ctx, ajustes);
+    const pedidos = [];
+    await ctx.route(/plausible\.io|googletagmanager\.com/, r => { pedidos.push(r.request().url()); r.fulfill({ contentType:'text/javascript', body:'' }); });
+    const p = await ctx.newPage();
+    await p.goto(BASE, { waitUntil:'networkidle' });
+    const banner = !!(await p.$('.consentimento'));
+    if(consentir){ await p.click(`[data-consentir="${consentir}"]`); await p.waitForTimeout(200); }
+    const r = { pedidos: [...pedidos], banner };
+    await ctx.close();
+    return r;
+  };
+  let r = await externos(null);
+  ok('desligada: nada de fora é carregado', r.pedidos.length === 0 && !r.banner);
+  r = await externos({ estatistica:{ tipo:'plausible', id:'costamaiavitor.github.io' } });
+  ok('Plausible: carrega sem pedir cookie', r.pedidos.some(u => /plausible\.io/.test(u)) && !r.banner);
+  r = await externos({ estatistica:{ tipo:'ga4', id:'G-ABC123XYZ' } });
+  ok('Google Analytics: pergunta antes', r.banner && r.pedidos.length === 0);
+  r = await externos({ estatistica:{ tipo:'ga4', id:'G-ABC123XYZ' } }, 'nao');
+  ok('recusado, não carrega', r.pedidos.length === 0);
+  r = await externos({ estatistica:{ tipo:'ga4', id:'G-ABC123XYZ' } }, 'sim');
+  ok('aceito, carrega', r.pedidos.some(u => /googletagmanager\.com\/gtag\/js\?id=G-ABC123XYZ/.test(u)));
 }
 
 /* ====================================================================== */

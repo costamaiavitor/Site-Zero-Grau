@@ -92,9 +92,14 @@ ZeroGrau/
   js/dados.js       catálogo, contato e regras de venda — fonte única das duas
   js/admin.js       o painel
   js/porta.js       aviso de idade, login e criar conta
-  js/script.js      varejo: vistas, busca, carrinho, CEP, cupom
+  js/app.js         o site como app (service worker, instalar) e a estatística
+  js/pix.js         código Pix "copia e cola" (BR Code do Banco Central)
+  js/vendor/        qrcode.js (Kazuhiko Arase, MIT), baixado só por quem paga pelo site
+  js/script.js      varejo: vistas, busca, carrinho, fechamento, Pix, CEP, cupom
   js/atacado.js     atacado: tabela, pedido por caixa, faixas de desconto
   img/              fotos de produto em WebP, 200 e 400 px de altura
+  sw.js             service worker: rede primeiro, cópia só sem sinal
+  manifest.webmanifest  nome, ícones e cores do app instalado
   robots.txt        libera o varejo, barra o atacado e o painel
   sitemap.xml       as duas páginas públicas
 ```
@@ -105,7 +110,8 @@ ZeroGrau/
 |---|---|
 | produtos, preço, estoque | `BEBIDAS`, no topo de `js/dados.js` |
 | categorias e abas | `CATEGORIAS`, logo abaixo |
-| telefone, WhatsApp, CNPJ, endereço | `CONTATO`, logo abaixo |
+| telefone, WhatsApp, CNPJ, endereço | `CONTATO`, logo abaixo — ou a aba Loja do painel |
+| chave Pix, horário, estatística | `PIX`, `HORARIO`, `ESTATISTICA` — ou a aba Loja do painel |
 | taxa, raio, pedido mínimo, cupom | `TAXA_BASE`, `RAIO_MAX` e `REGRAS` |
 | distância até cada bairro | `ENTREGA`, no fim de `js/dados.js` |
 | desconto de revenda, pedido mínimo do atacado | `ATACADO` |
@@ -131,6 +137,20 @@ O preço de atacado sai do preço cheio de varejo, não da promoção: promoçã
 fim de semana é isca, e não tem por que valer para quem leva vinte caixas.
 
 ## Painel de administração
+
+Abas: **Produtos**, **Varejo**, **Atacado**, **Loja** (contato, chave Pix,
+horário, estatística) e **Publicação** (chave do GitHub e histórico).
+
+- **Foto de produto:** "Subir foto" na linha do produto. O painel exige PNG
+  com fundo transparente e produto com pelo menos 400 px de altura, apara,
+  iguala ao padrão (mestre de 600 px, 2% de folga, WebP de 400 e 200) e
+  mede o mesmo que `ferramentas/confere-fotos.py` — inclinação, contorno,
+  lata em trapézio. O que não passa é recusado com o motivo. Ao publicar, as
+  fotos sobem antes do `ajustes.js`, e uma trava impede publicar um produto
+  que aponte para foto inexistente.
+- **Histórico:** lista as publicações (os commits do `ajustes.js`) e abre
+  qualquer uma — ou a versão original — no rascunho. Nada vai ao ar sem
+  você publicar.
 
 `admin.html` edita o que as duas lojas leem: produtos (preço, promoção,
 estoque, categoria, embalagem, foto, unidades por caixa, casco), as regras do
@@ -180,6 +200,42 @@ deste repositório (se vazar, basta revogá-la no GitHub). O painel fica fora
 do buscador pelo `robots.txt` e pelo `noindex`. No dia em que ganhar um
 servidor, ganha login junto: o ponto de troca é `publicar()`, em
 `js/admin.js`.
+
+## Fechamento do pedido e Pix
+
+O carrinho fecha em etapas: a lista, **entrega e pagamento** (nome, CEP, rua
+preenchida pelo CEP, número, complemento, referência, observação) e a
+escolha entre dois caminhos:
+
+- **Pagar agora com Pix, pelo site.** Gera o QR code e o "copia e cola" com o
+  valor exato do pedido e uma referência (`ZG…`). Depois de pagar, o cliente
+  toca em **Já paguei** e o pedido vai pelo WhatsApp com essa referência.
+  Sem servidor, **quem confirma o recebimento é a loja**, no extrato do banco,
+  pela referência. O código segue o padrão do Banco Central (`js/pix.js`),
+  conferido contra o exemplo do manual e decodificado nos testes.
+- **Pagar na entrega (ou na retirada).** O pedido vai pelo WhatsApp com a
+  forma: Pix, cartão ou dinheiro com "troco para quanto?".
+
+A opção de Pix pelo site só aparece com uma chave cadastrada (painel → aba
+Loja → Pix). Com a loja fechada, o fechamento avisa e o pedido chega marcado
+como agendado. Cada pedido enviado fica no aparelho (itens e total, nunca
+endereço ou pagamento) para o **Pedir de novo**, que aparece com o carrinho
+vazio.
+
+O horário de funcionamento (`HORARIO`, no fuso de Fortaleza) escreve o
+"Aberto até 03h00 / Fechado · abre hoje às 10h" no topo e no rodapé.
+
+## App e estatística
+
+O site pode ser instalado na tela do celular (`manifest.webmanifest`,
+`sw.js`); o botão **Instalar o app** aparece onde o navegador oferece isso. O
+service worker busca sempre a rede primeiro — o que o painel publica chega na
+hora — e só usa a cópia guardada sem sinal. O painel nunca passa por ele.
+
+A estatística vem desligada. Na aba Loja do painel dá para ligar o
+**Plausible** (sem cookie; o id é o domínio cadastrado lá) ou o **Google
+Analytics 4** (id `G-…`; usa cookie, então pela LGPD só liga depois que o
+visitante aceita). Conta visitas e pedidos enviados, sem dado pessoal.
 
 ## Imagens
 
@@ -244,6 +300,10 @@ caso, troque o `og:url` e o `og:image` pelo domínio novo.
 
 ## Antes de ir ao ar!
 
+- [ ] Cadastrar a chave Pix da loja no painel (aba Loja) e fazer um Pix de
+      R$ 0,01 pelo site para conferir nome, cidade e destino.
+- [ ] Se quiser estatística, criar a conta no Plausible ou no Google
+      Analytics e colar o id na aba Loja.
 - [ ] Dar login ao painel `admin.html` antes de ligá-lo a qualquer servidor.
 - [ ] Ligar login e cadastro a um servidor (`autenticar()` e `cadastrar()`
       em `js/porta.js`). Hoje qualquer senha com 6 caracteres entra e toda

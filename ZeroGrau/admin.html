@@ -13,8 +13,8 @@
 <!-- ?v= é selo de versão contra cache: suba o número ao mexer em css/ ou js/.
      Esta página não marca a classe "js" no <html>: ela não é a casca de tela
      única das lojas, é um documento que rola, que é o que tabela longa pede. -->
-<link rel="stylesheet" href="css/style.css?v=14">
-<link rel="stylesheet" href="css/temas.css?v=14">
+<link rel="stylesheet" href="css/style.css?v=15">
+<link rel="stylesheet" href="css/temas.css?v=15">
 </head>
 <body data-publico="admin" class="adm">
 
@@ -45,6 +45,7 @@
     <button type="button" class="adm-aba" role="tab" id="t-produtos" aria-controls="a-produtos" aria-selected="true">Produtos</button>
     <button type="button" class="adm-aba" role="tab" id="t-varejo" aria-controls="a-varejo" aria-selected="false">Varejo</button>
     <button type="button" class="adm-aba" role="tab" id="t-atacado" aria-controls="a-atacado" aria-selected="false">Atacado</button>
+    <button type="button" class="adm-aba" role="tab" id="t-loja" aria-controls="a-loja" aria-selected="false">Loja</button>
     <button type="button" class="adm-aba" role="tab" id="t-publicacao" aria-controls="a-publicacao" aria-selected="false">Publicação</button>
   </nav>
 
@@ -135,6 +136,52 @@
     </div>
   </section>
 
+  <!-- ============ LOJA ============ -->
+  <section class="adm-painel" id="a-loja" role="tabpanel" aria-labelledby="t-loja" hidden>
+    <h1 class="adm-h">Loja</h1>
+    <div class="adm-grupos">
+      <fieldset class="adm-grupo">
+        <legend>Contato</legend>
+        <p class="adm-dica">Vale para as duas lojas: botões de WhatsApp, rodapé e envio de pedido.</p>
+        <label class="adm-campo"><span>WhatsApp da loja</span><input data-regra="contato.whatsapp" data-tipo="zap" inputmode="tel" placeholder="(85) 98149-4445"></label>
+        <label class="adm-campo"><span>Telefone</span><input data-regra="contato.telefone" data-tipo="texto" inputmode="tel"></label>
+        <label class="adm-campo"><span>E-mail</span><input data-regra="contato.email" data-tipo="texto" inputmode="email" spellcheck="false"></label>
+        <label class="adm-campo"><span>CNPJ</span><input data-regra="contato.cnpj" data-tipo="texto" inputmode="numeric"></label>
+        <label class="adm-campo"><span>Endereço</span><input data-regra="contato.endereco" data-tipo="texto"></label>
+        <label class="adm-campo"><span>Bairro · cidade</span><input data-regra="contato.bairro" data-tipo="texto"></label>
+        <label class="adm-campo"><span>Instagram (link)</span><input data-regra="contato.instagram" data-tipo="link" placeholder="https://instagram.com/…" spellcheck="false"></label>
+        <label class="adm-campo"><span>Facebook (link)</span><input data-regra="contato.facebook" data-tipo="link" placeholder="https://facebook.com/…" spellcheck="false"></label>
+      </fieldset>
+
+      <fieldset class="adm-grupo">
+        <legend>Pix pelo site</legend>
+        <p class="adm-dica">Com a chave preenchida, o carrinho oferece "Pagar agora com Pix, pelo site". Vazia, a opção some e o cliente fecha pelo WhatsApp. O banco do cliente mostra o nome e a cidade abaixo na hora de pagar.</p>
+        <label class="adm-campo"><span>Chave Pix da loja</span><input data-regra="pix.chave" data-tipo="pixchave" spellcheck="false" placeholder="CNPJ, e-mail, telefone ou chave aleatória"></label>
+        <label class="adm-campo"><span>Nome do recebedor (até 25 letras)</span><input data-regra="pix.nome" data-tipo="texto" maxlength="25"></label>
+        <label class="adm-campo"><span>Cidade (até 15 letras)</span><input data-regra="pix.cidade" data-tipo="texto" maxlength="15"></label>
+        <p class="adm-dica adm-pix-aviso"><b>Confira a chave duas vezes:</b> o dinheiro dos clientes vai para ela. Depois de publicar, faça um Pix de R$ 0,01 pelo site para testar.</p>
+      </fieldset>
+
+      <fieldset class="adm-grupo adm-grupo--largo">
+        <legend>Horário de funcionamento</legend>
+        <p class="adm-dica">Hora de Fortaleza. Fechar antes de abrir = passa da meia-noite (10:00 → 03:00). Fora do horário o site avisa "fechado" e o pedido chega como agendado.</p>
+        <div class="adm-horario" id="horario"></div>
+      </fieldset>
+
+      <fieldset class="adm-grupo">
+        <legend>Estatística de visitas</legend>
+        <p class="adm-dica">Desligada, o site não carrega nada de fora. O Plausible não usa cookie; o Google Analytics usa, e por isso só liga depois que o visitante aceita.</p>
+        <label class="adm-campo"><span>Serviço</span>
+          <select id="estTipo">
+            <option value="">Desligada</option>
+            <option value="plausible">Plausible</option>
+            <option value="ga4">Google Analytics 4</option>
+          </select></label>
+        <label class="adm-campo" id="estIdCampo"><span id="estIdRotulo">ID</span><input id="estId" spellcheck="false"></label>
+      </fieldset>
+    </div>
+  </section>
+
   <!-- ============ PUBLICAÇÃO ============ -->
   <section class="adm-painel" id="a-publicacao" role="tabpanel" aria-labelledby="t-publicacao" hidden>
     <h1 class="adm-h">Publicação</h1>
@@ -166,6 +213,14 @@
       </fieldset>
 
       <fieldset class="adm-grupo">
+        <legend>Histórico de publicações</legend>
+        <p class="adm-dica">As últimas publicações do catálogo. "Abrir no rascunho" traz aquela versão de volta para cá — nada muda no site até você conferir e publicar.</p>
+        <button type="button" class="btn btn-ghost adm-mini" id="histCarregar">Ver histórico</button>
+        <p class="adm-gh-msg" id="histMsg" role="status" aria-live="polite"></p>
+        <ol class="adm-hist" id="histLista"></ol>
+      </fieldset>
+
+      <fieldset class="adm-grupo">
         <legend>Sem a chave</legend>
         <p class="adm-dica">Dá para publicar à mão a qualquer momento: baixe o arquivo e suba em <code>ZeroGrau/js/</code> no GitHub (Add file → Upload files).</p>
         <button type="button" class="btn btn-ghost adm-mini" id="baixar">Baixar ajustes.js</button>
@@ -173,6 +228,19 @@
     </div>
   </section>
 </main>
+
+<!-- ============ FOTO DE PRODUTO ============ -->
+<input type="file" id="fotoArquivo" accept="image/png,image/webp" hidden>
+<dialog class="adm-dialogo adm-dialogo--foto" id="dlgFoto" aria-labelledby="fotoTitulo">
+  <h2 id="fotoTitulo">Foto do produto</h2>
+  <p>PNG com fundo transparente, produto inteiro, em pé e de frente. O painel apara, iguala ao tamanho das outras e confere.</p>
+  <div class="adm-foto-previa" id="fotoPrevia"></div>
+  <div class="adm-foto-res" id="fotoResultado" role="status" aria-live="polite"></div>
+  <div class="adm-dialogo-botoes">
+    <button type="button" class="btn btn-primary" id="fotoUsar" disabled>Usar esta foto</button>
+  </div>
+  <form method="dialog"><button class="adm-cancelar">Cancelar</button></form>
+</dialog>
 
 <!-- ============ PUBLICAR SEM CHAVE ============
      Sem a chave, Publicar não baixa nada por conta própria: pergunta. Baixar
@@ -195,6 +263,7 @@
   <p>O navegador baixou <code>ajustes.js</code>. Para os clientes verem as mudanças:</p>
   <ol>
     <li>No GitHub, abra a pasta <code>ZeroGrau/js/</code> do repositório.</li>
+    <li id="dlgFotosAviso" hidden>As fotos novas (<code>.webp</code>) que desceram junto vão para <code>ZeroGrau/img/</code> — suba essas <b>antes</b> do <code>ajustes.js</code>.</li>
     <li><b>Add file → Upload files</b>, solte o <code>ajustes.js</code> e confirme o commit na <code>main</code>. Ele substitui o que está lá.</li>
     <li>Em um ou dois minutos o site é publicado. Quem esteve nele nos últimos dez minutos pode demorar esse tanto para ver.</li>
     <li>Quando o arquivo estiver no ar, o painel percebe sozinho que o rascunho ficou igual ao publicado e o apaga.</li>
@@ -204,8 +273,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span></div>
 
-<script src="js/ajustes.js?v=14"></script>
-<script src="js/dados.js?v=14"></script>
-<script src="js/admin.js?v=14"></script>
+<script src="js/ajustes.js?v=15"></script>
+<script src="js/dados.js?v=15"></script>
+<script src="js/pix.js?v=15"></script>
+<script src="js/admin.js?v=15"></script>
 </body>
 </html>

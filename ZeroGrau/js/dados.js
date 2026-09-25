@@ -70,6 +70,91 @@ const CONTATO = {
   facebook:  "#"
 };
 
+/* ---------- PIX ----------
+   Para o "pagar com Pix pelo site" do carrinho. Chave vazia = a opção não
+   aparece e o cliente fecha pelo WhatsApp, como antes — melhor não oferecer
+   do que gerar um Pix para uma chave que não é da loja. Preenche-se pelo
+   painel (aba Loja). `nome` e `cidade` vão dentro do código Pix e o banco
+   do cliente mostra os dois na hora de confirmar: até 25 e 15 caracteres,
+   sem acento, é o que o padrão do Banco Central aceita. */
+const PIX = {chave: "", nome: "ZERO GRAU", cidade: "FORTALEZA"};
+
+/* ---------- HORÁRIO ----------
+   Um turno por dia da semana, de domingo (0) a sábado (6): [abre, fecha] em
+   "HH:MM", ou null para fechado. Fechar antes de abrir quer dizer que o turno
+   passa da meia-noite (10:00 → 03:00). Abrir e fechar na mesma hora = 24 h.
+   O relógio é o de Fortaleza, não o do aparelho do cliente. */
+const HORARIO = {
+  fuso: "America/Fortaleza",
+  dias: [["10:00","03:00"], ["10:00","03:00"], ["10:00","03:00"], ["10:00","03:00"],
+         ["10:00","03:00"], ["10:00","03:00"], ["10:00","03:00"]]
+};
+
+/* ---------- ESTATÍSTICA ----------
+   tipo "" = desligada (nada é carregado). "plausible" usa o domínio do site
+   como id e não põe cookie; "ga4" usa o id G-XXXXXXX do Google Analytics e,
+   por usar cookie, só liga depois que o visitante aceita. */
+const ESTATISTICA = {tipo: "", id: ""};
+
+/* ---------- a loja está aberta? ----------
+   Tudo em minutos desde a meia-noite, no fuso da loja. Um turno que passa da
+   meia-noite continua valendo na madrugada do dia seguinte: sábado às 01h30,
+   com sexta 10:00 → 03:00, a loja está aberta pelo turno de sexta. */
+const DIAS_NOME = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+const DIAS_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const minutos = h => { const [a, b] = h.split(":").map(Number); return a * 60 + b; };
+const horaTxt = h => h.endsWith(":00") ? `${+h.slice(0, 2)}h` : `${+h.slice(0, 2)}h${h.slice(3)}`;
+const horaLonga = h => `${h.slice(0, 2)}h${h.slice(3)}`;           /* "03h00", como no resto do site */
+
+function agoraNaLoja(quando = new Date()){
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: HORARIO.fuso, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  }).formatToParts(quando).map(x => [x.type, x.value]));
+  return {dia: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(p.weekday), min: (+p.hour % 24) * 60 + +p.minute};
+}
+
+function situacaoLoja(quando = new Date()){
+  const {dia, min} = agoraNaLoja(quando);
+  const hoje = HORARIO.dias[dia], ontem = HORARIO.dias[(dia + 6) % 7];
+  const vira = d => d && minutos(d[1]) <= minutos(d[0]);     /* passa da meia-noite (ou 24 h) */
+
+  if(ontem && vira(ontem) && minutos(ontem[1]) !== minutos(ontem[0]) && min < minutos(ontem[1]))
+    return {aberto: true, fecha: ontem[1]};
+  if(hoje){
+    const a = minutos(hoje[0]), f = minutos(hoje[1]);
+    if(a === f) return {aberto: true, fecha: null};          /* 24 horas */
+    if(min >= a && (vira(hoje) || min < f)) return {aberto: true, fecha: hoje[1]};
+    if(min < a) return {aberto: false, abre: {quando: "hoje", hora: hoje[0]}};
+  }
+  for(let i = 1; i <= 7; i++){
+    const d = HORARIO.dias[(dia + i) % 7];
+    if(d) return {aberto: false, abre: {quando: i === 1 ? "amanhã" : DIAS_NOME[(dia + i) % 7], hora: d[0]}};
+  }
+  return {aberto: false, abre: null};                        /* fechada a semana toda */
+}
+
+/* "abre hoje às 10h" / "abre sexta às 10h30" */
+const abreTxt = s => s.abre ? `abre ${s.abre.quando} às ${horaTxt(s.abre.hora)}` : "sem horário marcado";
+
+/* "Seg a dom · 10h00 – 03h00", juntando dias seguidos com o mesmo turno */
+function resumoHorario(){
+  const ordem = [1, 2, 3, 4, 5, 6, 0];                       /* a semana começa na segunda */
+  const chave = d => d ? d.join("-") : "x";
+  const grupos = [];
+  for(const i of ordem){
+    const g = grupos[grupos.length - 1];
+    if(g && chave(HORARIO.dias[i]) === chave(HORARIO.dias[g.fim])) g.fim = i;
+    else grupos.push({ini: i, fim: i});
+  }
+  return grupos.map(g => {
+    const nome = g.ini === g.fim ? DIAS_CURTO[g.ini]
+               : ordem.indexOf(g.fim) - ordem.indexOf(g.ini) === 1 ? `${DIAS_CURTO[g.ini]} e ${DIAS_CURTO[g.fim].toLowerCase()}`
+               : `${DIAS_CURTO[g.ini]} a ${DIAS_CURTO[g.fim].toLowerCase()}`;
+    const d = HORARIO.dias[g.ini];
+    return `${nome} · ${d ? (minutos(d[0]) === minutos(d[1]) ? "24 horas" : `${horaLonga(d[0])} – ${horaLonga(d[1])}`) : "fechado"}`;
+  }).join(" · ");
+}
+
 /* taxa de entrega. `let` e não `const` porque o painel de administração
    pode mudá-las (ver AJUSTES, no fim do arquivo). */
 let TAXA_BASE = 4.90;
@@ -97,9 +182,15 @@ function alturaSilhueta(vol){
 }
 
 /* A foto ocupa sempre a mesma altura na tela (o .card-art é fixo), então o que
-   muda de aparelho para aparelho é só a densidade — daí descritor x, e não w. */
-const fotoAttrs = foto =>
-  `src="img/${foto}-200.webp" srcset="img/${foto}-200.webp 1x, img/${foto}-400.webp 2x"`;
+   muda de aparelho para aparelho é só a densidade — daí descritor x, e não w.
+   Foto que ainda não foi publicada (subida pelo painel, só no rascunho) vem de
+   FOTOS_PREVIA, como data URL, para a prévia não mostrar imagem quebrada. */
+const FOTOS_PREVIA = {};
+function fotoAttrs(foto){
+  const p = FOTOS_PREVIA[foto];
+  if(p) return `src="${p[200]}" srcset="${p[200]} 1x, ${p[400]} 2x"`;
+  return `src="img/${foto}-200.webp" srcset="img/${foto}-200.webp 1x, img/${foto}-400.webp 2x"`;
+}
 
 /* ---------- VAREJO ---------- */
 const REGRAS = {
@@ -249,7 +340,11 @@ function estadoAtual(){
       prazo: ATACADO.prazo, faixas: ATACADO.faixas.map(f => ({...f}))
     },
     caixaPadrao: {...CAIXA_PADRAO},
-    caixaExcecao: {...CAIXA_EXCECAO}
+    caixaExcecao: {...CAIXA_EXCECAO},
+    contato: {...CONTATO},
+    pix: {...PIX},
+    horario: {dias: HORARIO.dias.map(d => d ? [...d] : null)},
+    estatistica: {...ESTATISTICA}
   };
 }
 
@@ -295,8 +390,35 @@ function aplicarAjustes(a){
     for(const [sku, n] of Object.entries(a.caixaExcecao))
       if(Number.isInteger(n) && n > 0) CAIXA_EXCECAO[sku] = n;
   }
+
+  /* Contato: cada campo com o formato que o site sabe usar. Um link de
+     WhatsApp torto quebraria o fechamento de todos os pedidos. */
+  const ct = a.contato || {};
+  if(typeof ct.whatsapp === "string" && ZAP_OK.test(ct.whatsapp)) CONTATO.whatsapp = ct.whatsapp;
+  for(const k of ["telefone", "email", "cnpj", "endereco", "bairro"])
+    if(textoOk(ct[k]) && ct[k].length <= 120) CONTATO[k] = ct[k].trim();
+  for(const k of ["instagram", "facebook"])
+    if(ct[k] === "#" || (typeof ct[k] === "string" && /^https:\/\/\S+$/.test(ct[k]))) CONTATO[k] = ct[k];
+
+  const px = a.pix || {};
+  if(typeof px.chave === "string" && px.chave.length <= 77) PIX.chave = px.chave.trim();
+  if(textoOk(px.nome) && px.nome.length <= 25)   PIX.nome = px.nome.trim();
+  if(textoOk(px.cidade) && px.cidade.length <= 15) PIX.cidade = px.cidade.trim();
+
+  const dias = a.horario?.dias;
+  if(Array.isArray(dias) && dias.length === 7 && dias.every(d => d === null || turnoOk(d)))
+    HORARIO.dias.splice(0, 7, ...dias.map(d => d ? [...d] : null));
+
+  const es = a.estatistica || {};
+  if(es.tipo === "")                                             Object.assign(ESTATISTICA, {tipo: "", id: ""});
+  if(es.tipo === "ga4" && /^G-[A-Z0-9]{4,14}$/.test(es.id))      Object.assign(ESTATISTICA, {tipo: "ga4", id: es.id});
+  if(es.tipo === "plausible" && /^[a-z0-9.-]{3,120}$/.test(es.id)) Object.assign(ESTATISTICA, {tipo: "plausible", id: es.id});
   return true;
 }
+
+const ZAP_OK  = /^https:\/\/wa\.me\/55\d{10,11}$/;
+const HORA_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
+const turnoOk = d => Array.isArray(d) && d.length === 2 && HORA_OK.test(d[0]) && HORA_OK.test(d[1]);
 
 const RASCUNHO = {
   ler(){ try{ return JSON.parse(localStorage.getItem(RASCUNHO_CHAVE) || "null") }catch{ return null } },
@@ -304,11 +426,21 @@ const RASCUNHO = {
   limpar(){ try{ localStorage.removeItem(RASCUNHO_CHAVE) }catch{} }
 };
 
+/* camada 1 guardada à parte: o histórico do painel precisa dela para
+   restaurar a versão em que nada tinha sido publicado */
+const ESTADO_BASE = estadoAtual();
+
 /* camada 2: o publicado */
 if(typeof AJUSTES_PUBLICADOS !== "undefined") aplicarAjustes(AJUSTES_PUBLICADOS);
 
 /* camada 3: o rascunho, só nas lojas */
-const EM_PREVIA = document.body?.dataset.publico !== "admin" && aplicarAjustes(RASCUNHO.ler());
+const RASCUNHO_LIDO = document.body?.dataset.publico !== "admin" ? RASCUNHO.ler() : null;
+const EM_PREVIA = aplicarAjustes(RASCUNHO_LIDO);
+/* fotos subidas pelo painel e ainda não publicadas */
+if(EM_PREVIA && RASCUNHO_LIDO.fotosNovas && typeof RASCUNHO_LIDO.fotosNovas === "object")
+  for(const [nome, f] of Object.entries(RASCUNHO_LIDO.fotosNovas))
+    if(/^[a-z0-9-]+$/.test(nome) && /^data:image\/webp;base64,/.test(f?.[200] || "") && /^data:image\/webp;base64,/.test(f?.[400] || ""))
+      FOTOS_PREVIA[nome] = f;
 
 /* Quem está vendo o rascunho precisa saber disso: sem o aviso, o dono abre a
    loja, vê o preço novo e acha que já está no ar para todo mundo. */

@@ -26,13 +26,23 @@ const PUBLICADO = estadoAtual();
 
 /* O rascunho passa pelo mesmo filtro que as lojas usam, então o painel nunca
    mostra um estado que a loja recusaria. */
-aplicarAjustes(RASCUNHO.ler());
+const rascunhoSalvo = RASCUNHO.ler();
+aplicarAjustes(rascunhoSalvo);
 let estado = estadoAtual();
+/* estadoAtual() não conhece as fotos subidas e ainda não publicadas: elas
+   voltam do rascunho, senão a próxima publicação citaria uma foto que nunca
+   foi enviada */
+estado.fotosNovas = {};
+for(const [nome, f] of Object.entries(rascunhoSalvo?.fotosNovas || {}))
+  if(/^[a-z0-9-]+$/.test(nome) && /^data:image\/webp;base64,/.test(f?.[400] || "") && /^data:image\/webp;base64,/.test(f?.[200] || ""))
+    estado.fotosNovas[nome] = f;
 
 /* Fotos que existem: as do catálogo como estava no ar. Produto novo começa
    sem foto e cai na silhueta da embalagem — subir foto nova é trabalho de
    repositório (ver README, "Imagens"). */
 const FOTOS = [...new Set(PUBLICADO.bebidas.map(b => b.foto).filter(Boolean))].sort();
+const fotosDisponiveis = () => [...new Set([...FOTOS, ...Object.keys(estado.fotosNovas || {})])].sort();
+const srcFoto = f => estado.fotosNovas?.[f]?.[200] || `img/${f}-200.webp`;
 
 const ROTULO_FORMA = {can: "Lata", bottle: "Long neck", tall: "Garrafa alta", pet: "PET", saco: "Saco"};
 
@@ -60,7 +70,15 @@ const TIPO = {
   int:    { mostrar: v => v == null ? "" : String(v),
             ler: t => { const n = lerNumero(t); return n === null ? null : n } },
   texto:  { mostrar: v => v ?? "", ler: t => t.trim() },
-  codigo: { mostrar: v => v ?? "", ler: t => t.trim().toUpperCase() }
+  codigo: { mostrar: v => v ?? "", ler: t => t.trim().toUpperCase() },
+  /* WhatsApp: a pessoa digita o número; guarda-se o link wa.me */
+  zap:    { mostrar: v => { const d = String(v || "").replace(/\D/g, "").replace(/^55/, "");
+                           return d.length === 11 ? `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`
+                                : d.length === 10 ? `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}` : d; },
+            ler: t => { let d = t.replace(/\D/g, ""); if(d.length === 12 || d.length === 13) d = d.replace(/^55/, "");
+                        return d.length === 10 || d.length === 11 ? `https://wa.me/55${d}` : (t.trim() ? NaN : null); } },
+  link:   { mostrar: v => v === "#" ? "" : v ?? "", ler: t => t.trim() || "#" },
+  pixchave: { mostrar: v => v ?? "", ler: t => { const c = t.trim(); return c ? (chavePix(c) || NaN) : ""; } }
 };
 
 /* ---------- regras de cada campo ----------
@@ -81,6 +99,19 @@ const CONFERE = {
   "atacado.freteGratis":   v => v === null || !(v >= 0) ? "Valor em reais, 0 ou mais." : "",
   "atacado.prazo":         v => !v ? "Escreva a condição de pagamento." : ""
 };
+Object.assign(CONFERE, {
+  "contato.whatsapp": v => typeof v !== "string" ? "Número com DDD: (85) 98149-4445." : "",
+  "contato.telefone": v => !v ? "Obrigatório." : "",
+  "contato.email":    v => !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? "E-mail incompleto." : "",
+  "contato.cnpj":     v => !v ? "Obrigatório." : "",
+  "contato.endereco": v => !v ? "Obrigatório." : "",
+  "contato.bairro":   v => !v ? "Obrigatório." : "",
+  "contato.instagram": v => v !== "#" && !/^https:\/\/\S+$/.test(v) ? "Link começando com https://, ou vazio." : "",
+  "contato.facebook":  v => v !== "#" && !/^https:\/\/\S+$/.test(v) ? "Link começando com https://, ou vazio." : "",
+  "pix.chave":  v => Number.isNaN(v) ? "Não é uma chave Pix: use CNPJ, CPF, e-mail, telefone com DDD ou chave aleatória." : "",
+  "pix.nome":   v => !textoPix(v, 25) ? "Nome de quem recebe, até 25 letras." : v.length > 25 ? "Até 25 letras." : "",
+  "pix.cidade": v => !textoPix(v, 15) ? "Cidade, até 15 letras." : v.length > 15 ? "Até 15 letras." : ""
+});
 for(const f of FORMAS) CONFERE[`caixaPadrao.${f}`] = v => v === null || !inteiro(v) || v < 1 ? "Número inteiro, 1 ou mais." : "";
 
 /* Produto: campo a campo, com acesso à linha inteira (promoção depende do preço). */
@@ -109,7 +140,7 @@ function por(obj, caminho, valor){
 const erros = new Map();
 
 function marcar(campo, chave, msg){
-  const caixa = campo.closest(".adm-campo, td");
+  const caixa = campo.closest(".adm-campo, td, .adm-dia");
   let aviso = caixa?.querySelector(".adm-erro");
   if(msg){
     erros.set(chave, msg);
@@ -158,7 +189,11 @@ function linhaHTML(b){
     <td>${txt("vol", b.vol, "curto")}</td>
     <td>${txt("teor", b.teor, "curto")}</td>
     <td><select data-campo="forma" aria-label="${esc(rot)} — embalagem">${opcoes(FORMAS.map(f => [f, ROTULO_FORMA[f]]), b.forma)}</select></td>
-    <td><select data-campo="foto" aria-label="${esc(rot)} — foto">${opcoes([["", "sem foto"], ...FOTOS.map(f => [f, f])], b.foto || "")}</select></td>
+    <td class="adm-foto">
+      ${b.foto ? `<img class="adm-thumb" src="${esc(srcFoto(b.foto))}" alt="">` : ""}
+      <select data-campo="foto" aria-label="${esc(rot)} — foto">${opcoes([["", "sem foto"], ...fotosDisponiveis().map(f => [f, estado.fotosNovas?.[f] ? f + " (nova)" : f])], b.foto || "")}</select>
+      <button type="button" class="adm-foto-btn" data-acao="foto" aria-label="Subir foto de ${esc(rot)}">Subir foto</button>
+    </td>
     <td>${num("preco", b.preco, "brl")}</td>
     <td>${num("promo", b.promo, "brl")}</td>
     <td>${num("estoque", b.estoque, "int")}</td>
@@ -341,6 +376,250 @@ $("novaFaixa").addEventListener("click", () => {
   $("faixas").lastElementChild.querySelector("input").focus();
 });
 
+/* ---------- foto de produto ----------
+   A mesma régua de ferramentas/padroniza-fotos.py e confere-fotos.py, aqui no
+   navegador: fundo transparente obrigatório, véu do recorte limpo (alfa até
+   16), apara pelo contorno visível (alfa acima de 64), mestre de 600 px com 2%
+   de folga, e WebP de 400 e 200 px. Depois mede o que o confere mede —
+   inclinação, contorno serrilhado, lata em trapézio — e recusa o que não
+   passa, dizendo por quê. Foto sem fundo transparente não entra: recortar é
+   trabalho do Photoshop, e a estante só é uniforme se todas chegarem assim. */
+const fotoArquivo = $("fotoArquivo");
+let fotoAlvo = null, fotoPronta = null;
+
+linhas.addEventListener("click", e => {
+  const b = e.target.closest('[data-acao="foto"]');
+  if(!b) return;
+  fotoAlvo = b.closest("tr").dataset.sku;
+  fotoArquivo.value = "";
+  fotoArquivo.click();
+});
+
+function canvasDe(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+
+function medirFoto(cv, forma){
+  const {width: W, height: H} = cv;
+  const px = cv.getContext("2d").getImageData(0, 0, W, H).data;
+  const a = (x, y) => px[(y * W + x) * 4 + 3] > 128;
+  const L = [], R = [];
+  for(let y = 0; y < H; y++){
+    let l = -1, r = -1;
+    for(let x = 0; x < W; x++) if(a(x, y)){ if(l < 0) l = x; r = x; }
+    L.push(l < 0 ? NaN : l); R.push(r < 0 ? NaN : r);
+  }
+  const problemas = [];
+  const i0 = Math.floor(H * .4), i1 = Math.floor(H * .9);
+  let degraus = 0;
+  for(let y = i0 + 2; y < i1; y++){
+    for(const E of [L, R]){
+      const d2 = E[y] - 2 * E[y - 1] + E[y - 2];
+      if(Math.abs(d2) > 2) degraus++;
+    }
+  }
+  if(degraus > 0) problemas.push(`Contorno serrilhado (${degraus} degraus): o recorte mordeu o produto.`);
+  const ys = [], cs = [];
+  L.forEach((l, y) => { if(!Number.isNaN(l)){ ys.push(y); cs.push((l + R[y]) / 2); } });
+  const n = ys.length, my = ys.reduce((s, v) => s + v, 0) / n, mc = cs.reduce((s, v) => s + v, 0) / n;
+  let num = 0, den = 0;
+  for(let i = 0; i < n; i++){ num += (ys[i] - my) * (cs[i] - mc); den += (ys[i] - my) ** 2; }
+  const eixo = den ? num / den * n : 0;
+  if(Math.abs(eixo) > 4) problemas.push(`Produto inclinado (${eixo.toFixed(1)} px): a foto precisa estar em pé e de frente.`);
+  if(forma === "can"){
+    const larg = (a0, a1) => { const v = []; for(let y = Math.floor(H * a0); y < Math.floor(H * a1); y++) if(!Number.isNaN(L[y])) v.push(R[y] - L[y]); v.sort((x, y) => x - y); return v[v.length >> 1]; };
+    const razao = larg(.45, .5) / larg(.85, .9);
+    if(!(razao >= .98 && razao <= 1.02)) problemas.push(`Lata em trapézio (razão ${razao.toFixed(3)}): foto de lente grande-angular ou de cima.`);
+  }
+  return problemas;
+}
+
+async function processarFoto(arquivo, forma){
+  const problemas = [];
+  let bmp;
+  try{ bmp = await createImageBitmap(arquivo); }
+  catch{ return {problemas: ["Não deu para abrir esse arquivo como imagem. Use PNG com fundo transparente."]}; }
+  const src = canvasDe(bmp.width, bmp.height), g = src.getContext("2d");
+  g.drawImage(bmp, 0, 0);
+  const dados = g.getImageData(0, 0, src.width, src.height), px = dados.data;
+  let transparentes = 0, x0 = src.width, y0 = src.height, x1 = -1, y1 = -1;
+  for(let i = 0, n = px.length / 4; i < n; i++){
+    if(px[i * 4 + 3] <= 16){ px[i * 4 + 3] = 0; transparentes++; }
+    if(px[i * 4 + 3] > 64){
+      const x = i % src.width, y = (i / src.width) | 0;
+      if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+    }
+  }
+  if(transparentes / (px.length / 4) < 0.02)
+    return {problemas: ["A foto não tem fundo transparente. Recorte o produto (Photoshop, remove.bg) e salve em PNG."]};
+  if(x1 < 0) return {problemas: ["Não há produto visível nessa imagem."]};
+  g.putImageData(dados, 0, 0);
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+  if(bh < 400) problemas.push(`Foto pequena demais: o produto tem ${bh} px de altura e precisa de pelo menos 400.`);
+
+  /* mestre: 600 px de produto + 2% de folga, como no padroniza-fotos.py */
+  const ALT = 600, FOLGA = Math.round(ALT * 0.02), largura = Math.max(1, Math.round(bw * ALT / bh));
+  const mestre = canvasDe(largura + 2 * FOLGA, ALT + 2 * FOLGA), gm = mestre.getContext("2d");
+  gm.imageSmoothingQuality = "high";
+  gm.drawImage(src, x0, y0, bw, bh, FOLGA, FOLGA, largura, ALT);
+  const saida = h => { const w = Math.round(mestre.width * h / mestre.height), c = canvasDe(w, h), gc = c.getContext("2d");
+                       gc.imageSmoothingQuality = "high"; gc.drawImage(mestre, 0, 0, w, h); return c; };
+  const c400 = saida(400), c200 = saida(200);
+  problemas.push(...medirFoto(c400, forma));
+  const d400 = c400.toDataURL("image/webp", 0.82), d200 = c200.toDataURL("image/webp", 0.82);
+  if(!d400.startsWith("data:image/webp"))
+    problemas.push("Este navegador não gera WebP. Suba a foto pelo Chrome ou pelo Edge.");
+  return {problemas, d400, d200};
+}
+
+fotoArquivo.addEventListener("change", async () => {
+  const arquivo = fotoArquivo.files[0];
+  const b = estado.bebidas.find(x => x.sku === fotoAlvo);
+  if(!arquivo || !b) return;
+  $("fotoTitulo").textContent = `Foto de ${b.marca || "produto novo"} ${b.nome}`.trim();
+  $("fotoResultado").innerHTML = "Processando…";
+  $("fotoPrevia").innerHTML = "";
+  $("fotoUsar").disabled = true;
+  $("dlgFoto").showModal();
+  const r = await processarFoto(arquivo, b.forma);
+  fotoPronta = r.problemas.length ? null : r;
+  if(r.d400) $("fotoPrevia").innerHTML = `<img src="${r.d400}" alt="Prévia sobre fundo escuro"><img src="${r.d400}" alt="Prévia sobre fundo claro">`;
+  $("fotoResultado").className = "adm-foto-res " + (r.problemas.length ? "bad" : "ok");
+  $("fotoResultado").innerHTML = r.problemas.length
+    ? `<b>Não entra no padrão:</b><ul>${r.problemas.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`
+    : "<b>No padrão.</b> Altura, folga e contorno iguais aos das outras fotos.";
+  $("fotoUsar").disabled = !fotoPronta;
+});
+
+$("fotoUsar").addEventListener("click", () => {
+  const b = estado.bebidas.find(x => x.sku === fotoAlvo);
+  if(!b || !fotoPronta) return;
+  const base = semAcento(`${b.marca} ${b.nome}`).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "produto";
+  const nome = `${base}-${Date.now().toString(36)}`;
+  estado.fotosNovas = {...(estado.fotosNovas || {}), [nome]: {200: fotoPronta.d200, 400: fotoPronta.d400}};
+  b.foto = nome;
+  $("dlgFoto").close();
+  desenharProdutos();
+  mudou();
+  toast("Foto no rascunho. Ela vai para o site junto com a próxima publicação.");
+});
+
+/* ---------- histórico de publicações ----------
+   Cada publicação do painel é um commit do ajustes.js no GitHub, então o
+   histórico é a lista desses commits. "Abrir no rascunho" traz a versão de
+   volta para o painel — não publica nada: o dono confere e publica. */
+function decodificar64(b64){
+  const bin = atob(b64.replace(/\s/g, ""));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+function ajustesDoTexto(texto){
+  const m = texto.match(/const AJUSTES_PUBLICADOS = ([\s\S]*?);\s*$/);
+  if(!m) throw new Error("formato");
+  return JSON.parse(m[1]);
+}
+
+$("histCarregar").addEventListener("click", async () => {
+  const msg = $("histMsg"), lista = $("histLista");
+  msg.className = "adm-gh-msg"; msg.textContent = "Carregando…";
+  $("histCarregar").disabled = true;
+  try{
+    const r = await gh(`/commits?path=${encodeURIComponent(GITHUB.caminho)}&sha=${GITHUB.ramo}&per_page=15`);
+    if(!r.ok) throw new Error(explicarGH(r.status));
+    const commits = await r.json();
+    lista.innerHTML = commits.map(c => {
+      const quando = new Date(c.commit.author.date).toLocaleString("pt-BR", {dateStyle: "short", timeStyle: "short"});
+      return `<li><div><b>${esc(quando)}</b> · ${esc(c.commit.message.split("\n")[0])}<small>${esc(c.author?.login || c.commit.author.name)} · ${c.sha.slice(0, 7)}</small></div>
+        <button type="button" class="btn btn-ghost adm-mini" data-versao="${c.sha}" data-quando="${esc(quando)}">Abrir no rascunho</button></li>`;
+    }).join("") + `<li><div><b>Versão original</b> · o catálogo como está no dados.js, sem nada publicado pelo painel</div>
+        <button type="button" class="btn btn-ghost adm-mini" data-versao="base" data-quando="original">Abrir no rascunho</button></li>`;
+    msg.textContent = commits.length ? "" : "Nenhuma publicação pelo painel ainda.";
+  }catch(e){
+    msg.className = "adm-gh-msg bad";
+    msg.textContent = e instanceof TypeError ? "Sem conexão com o GitHub." : e.message;
+  }finally{
+    $("histCarregar").disabled = false;
+  }
+});
+
+$("histLista").addEventListener("click", async e => {
+  const b = e.target.closest("[data-versao]");
+  if(!b) return;
+  if(diferencas() && !confirm("Isto troca o rascunho atual pela versão escolhida. Continuar?")) return;
+  let versao;
+  try{
+    if(b.dataset.versao === "base") versao = ESTADO_BASE;
+    else{
+      const r = await gh(`/contents/${GITHUB.caminho}?ref=${b.dataset.versao}`);
+      if(!r.ok) throw new Error(explicarGH(r.status));
+      versao = ajustesDoTexto(decodificar64((await r.json()).content)) || ESTADO_BASE;
+    }
+  }catch(err){
+    $("histMsg").className = "adm-gh-msg bad";
+    $("histMsg").textContent = err.message === "formato" ? "Essa versão do arquivo não foi gerada pelo painel e não dá para abrir." : err.message;
+    return;
+  }
+  /* parte do publicado e aplica a versão por cima: campo que a versão antiga
+     não tinha (o painel cresceu depois) fica como está no ar */
+  aplicarAjustes(PUBLICADO);
+  aplicarAjustes(versao);
+  estado = estadoAtual();
+  estado.fotosNovas = {};
+  erros.clear();
+  desenharTudo();
+  toast(`Versão ${b.dataset.quando} aberta no rascunho. Confira e publique.`);
+});
+
+/* ---------- horário ----------
+   Uma linha por dia: fechado, ou abre/fecha em campos de hora do próprio
+   navegador (o relógio do celular aparece sozinho). */
+const DIAS_ORDEM = [1, 2, 3, 4, 5, 6, 0];
+function desenharHorario(){
+  $("horario").innerHTML = DIAS_ORDEM.map(i => {
+    const d = estado.horario.dias[i];
+    const nome = DIAS_NOME[i][0].toUpperCase() + DIAS_NOME[i].slice(1);
+    return `<div class="adm-dia" data-dia="${i}">
+      <span class="adm-dia-nome">${nome}</span>
+      <label class="adm-dia-fechado"><input type="checkbox" data-h="fechado"${d ? "" : " checked"}> Fechado</label>
+      <label><span class="so-leitor">${nome}, abre</span><input type="time" data-h="abre" value="${d ? d[0] : "10:00"}"${d ? "" : " disabled"}></label>
+      <span aria-hidden="true">→</span>
+      <label><span class="so-leitor">${nome}, fecha</span><input type="time" data-h="fecha" value="${d ? d[1] : "03:00"}"${d ? "" : " disabled"}></label>
+    </div>`;
+  }).join("");
+}
+$("horario").addEventListener("input", e => {
+  const linha = e.target.closest(".adm-dia"); if(!linha) return;
+  const i = +linha.dataset.dia;
+  const fechado = linha.querySelector('[data-h="fechado"]').checked;
+  const abre = linha.querySelector('[data-h="abre"]'), fecha = linha.querySelector('[data-h="fecha"]');
+  abre.disabled = fecha.disabled = fechado;
+  const ok = fechado || (HORA_OK.test(abre.value) && HORA_OK.test(fecha.value));
+  marcar(fecha, `horario.${i}`, ok ? "" : "Hora inválida.");
+  if(ok) estado.horario.dias[i] = fechado ? null : [abre.value, fecha.value];
+  mudou();
+});
+
+/* ---------- estatística ---------- */
+function desenharEstatistica(){
+  $("estTipo").value = estado.estatistica.tipo;
+  $("estId").value = estado.estatistica.id;
+  pintarEstatistica();
+}
+function pintarEstatistica(){
+  const tipo = $("estTipo").value;
+  $("estIdCampo").hidden = !tipo;
+  $("estIdRotulo").textContent = tipo === "ga4" ? "ID de medição (G-XXXXXXX)" : "Domínio cadastrado no Plausible";
+  $("estId").placeholder = tipo === "ga4" ? "G-ABC123XYZ" : "costamaiavitor.github.io";
+}
+function lerEstatistica(){
+  const tipo = $("estTipo").value, id = $("estId").value.trim();
+  const msg = !tipo ? "" : tipo === "ga4" ? (/^G-[A-Z0-9]{4,14}$/.test(id) ? "" : "O ID do GA4 começa com G-.")
+            : (/^[a-z0-9.-]{3,120}$/.test(id) ? "" : "Só o domínio, sem https://.");
+  marcar($("estId"), "estatistica", msg);
+  if(!msg) estado.estatistica = tipo ? {tipo, id} : {tipo: "", id: ""};
+  pintarEstatistica();
+  mudou();
+}
+$("estTipo").addEventListener("change", lerEstatistica);
+$("estId").addEventListener("input", lerEstatistica);
+
 /* ---------- o que mudou ----------
    Conta campo a campo contra o publicado e pinta o que está diferente, para o
    dono ver de relance o que vai para o ar. */
@@ -372,6 +651,14 @@ function diferencas(){
     if(diferente) n++;
   }
   if(JSON.stringify(estado.atacado.faixas) !== JSON.stringify(PUBLICADO.atacado.faixas)) n++;
+  for(const i of DIAS_ORDEM){
+    const dif = JSON.stringify(estado.horario.dias[i]) !== JSON.stringify(PUBLICADO.horario.dias[i]);
+    document.querySelector(`.adm-dia[data-dia="${i}"]`)?.classList.toggle("mudou", dif);
+    if(dif) n++;
+  }
+  const difEst = JSON.stringify(estado.estatistica) !== JSON.stringify(PUBLICADO.estatistica);
+  $("estTipo").classList.toggle("mudou", difEst);
+  if(difEst) n++;
   return n;
 }
 
@@ -404,6 +691,8 @@ function mudou(){
     /* sem alteração não há rascunho: a loja sai do modo prévia sozinha */
     if(n){
       estado.atacado.faixas.sort((x, y) => x.cx - y.cx);
+      for(const f of Object.keys(estado.fotosNovas || {}))
+        if(!estado.bebidas.some(b => b.foto === f)) delete estado.fotosNovas[f];
       if(!RASCUNHO.gravar(estado)) toast("O navegador não deixou salvar o rascunho.");
     }else RASCUNHO.limpar();
   }, 250);
@@ -423,9 +712,10 @@ $("descartar").addEventListener("click", () => {
    lojas usam e faixas em ordem, para que "o que foi enviado" e "o que está no
    ar" possam ser comparados sem depender de ordem de chave. */
 function retrato(e){
-  return {...structuredClone(e),
+  const {fotosNovas, ...resto} = e;
+  return {...structuredClone(resto),
           bebidas: e.bebidas.map(produtoDe).filter(Boolean),
-          atacado: {...structuredClone(e.atacado), faixas: [...e.atacado.faixas].sort((x, y) => x.cx - y.cx)}};
+          atacado: {...structuredClone(resto.atacado), faixas: [...resto.atacado.faixas].sort((x, y) => x.cx - y.cx)}};
 }
 /* JSON com chaves em ordem: dois retratos iguais dão o mesmo texto */
 function canonico(v){
@@ -490,7 +780,7 @@ function gh(caminho, {metodo = "GET", corpo, chave = CHAVE_GH.ler()} = {}){
     method: metodo,
     headers: {
       "Accept": "application/vnd.github+json",
-      "Authorization": `Bearer ${chave}`,
+      ...(chave ? {"Authorization": `Bearer ${chave}`} : {}),
       "X-GitHub-Api-Version": "2022-11-28",
       ...(corpo ? {"Content-Type": "application/json"} : {})
     },
@@ -518,7 +808,14 @@ function base64(texto){
 }
 
 async function gravarNoGitHub(texto, alteracoes){
-  const url = `/contents/${GITHUB.caminho}`;
+  const n = alteracoes;
+  return gravarArquivo(GITHUB.caminho, base64(texto),
+    `Painel: publica ${n} ${n === 1 ? "alteração" : "alterações"} no catálogo`);
+}
+
+/* Grava um arquivo qualquer do repositório; `conteudo` já em base64. */
+async function gravarArquivo(caminho, conteudo, mensagem){
+  const url = `/contents/${caminho}`;
   /* Duas voltas: se alguém gravou o arquivo entre a leitura do sha e o PUT,
      o GitHub recusa com 409, e a segunda volta relê o sha e tenta de novo. */
   for(let volta = 0; volta < 2; volta++){
@@ -526,8 +823,8 @@ async function gravarNoGitHub(texto, alteracoes){
     if(!atual.ok && atual.status !== 404) throw new Error(explicarGH(atual.status));
     const sha = atual.ok ? (await atual.json()).sha : undefined;
     const r = await gh(url, {metodo: "PUT", corpo: {
-      message: `Painel: publica ${alteracoes} ${alteracoes === 1 ? "alteração" : "alterações"} no catálogo`,
-      content: base64(texto),
+      message: mensagem,
+      content: conteudo,
       branch: GITHUB.ramo,
       ...(sha ? {sha} : {})
     }});
@@ -542,12 +839,27 @@ async function publicar(){
   const texto = arquivoAjustes();
   if(!CHAVE_GH.ler()){ $("dlgSemChave").showModal(); return; }
   const n = diferencas();
+  /* trava: nenhum ajustes.js vai ao ar citando foto que não está no site nem
+     no pacote a enviar — seria imagem quebrada para todo cliente */
+  const semArquivo = estado.bebidas.filter(b => b.foto && !FOTOS.includes(b.foto) && !estado.fotosNovas?.[b.foto]);
+  if(semArquivo.length){
+    avisoEstado("bad", `Não publicou: a foto de ${semArquivo.map(b => b.marca).join(", ")} não está disponível. Suba de novo ou escolha outra.`);
+    return;
+  }
   if(!confirm(`Publicar ${n} ${n === 1 ? "alteração" : "alterações"} no site, para todos os clientes?`)) return;
 
   publicando = true;
   $("publicar").disabled = true;
   $("publicar").textContent = "Publicando…";
   try{
+    /* fotos primeiro: o ajustes.js nunca pode ir ao ar citando uma foto que
+       ainda não está lá */
+    for(const [nome, f] of fotosParaPublicar()){
+      const b = estado.bebidas.find(x => x.foto === nome);
+      for(const h of [400, 200])
+        await gravarArquivo(`ZeroGrau/img/${nome}-${h}.webp`, f[h].split(",")[1],
+          `Painel: foto de ${b.marca} ${b.nome} (${h} px)`);
+    }
     await gravarNoGitHub(texto, n);
     ENVIADO.gravar({em: Date.now(), retrato: canonico(retrato(estado))});
     toast("Publicado. O site se atualiza em um ou dois minutos.");
@@ -573,12 +885,28 @@ $("irConectar").addEventListener("click", () => {
   mostrarAba($("t-publicacao"));
   $("ghChave").focus();
 });
+/* fotos novas que algum produto usa, prontas para ir ao ar */
+const fotosParaPublicar = () => Object.entries(estado.fotosNovas || {})
+  .filter(([nome]) => estado.bebidas.some(b => b.foto === nome));
+
+/* Sem chave, as fotos novas também descem, com o nome que o repositório
+   espera — vão para ZeroGrau/img/, e o ajustes.js para ZeroGrau/js/. */
+function baixarTudo(){
+  for(const [nome, f] of fotosParaPublicar())
+    for(const h of [400, 200]){
+      const a = document.createElement("a");
+      a.href = f[h]; a.download = `${nome}-${h}.webp`;
+      document.body.append(a); a.click(); a.remove();
+    }
+  baixar(arquivoAjustes());
+  $("dlgFotosAviso").hidden = !fotosParaPublicar().length;
+}
 $("baixarMesmo").addEventListener("click", () => {
   $("dlgSemChave").close();
-  baixar(arquivoAjustes());
+  baixarTudo();
   $("dlgPublicar").showModal();
 });
-$("baixar").addEventListener("click", () => baixar(arquivoAjustes()));
+$("baixar").addEventListener("click", baixarTudo);
 
 /* ---------- conectar a chave ----------
    Conectar lê o repositório com a chave: prova que ela existe e enxerga o
@@ -658,6 +986,8 @@ function toast(msg){
 function desenharTudo(){
   desenharProdutos();
   desenharRegras();
+  desenharHorario();
+  desenharEstatistica();
   desenharGH();
   mudou();
 }
