@@ -39,7 +39,7 @@ for(const [nome, f] of Object.entries(rascunhoSalvo?.fotosNovas || {}))
 
 /* Fotos que existem: as do catálogo como estava no ar. Produto novo começa
    sem foto e cai na silhueta da embalagem — subir foto nova é trabalho de
-   repositório (ver README, "Imagens"). */
+   repositório (ver docs/site/fotos.md). */
 const FOTOS = [...new Set(PUBLICADO.bebidas.map(b => b.foto).filter(Boolean))].sort();
 const fotosDisponiveis = () => [...new Set([...FOTOS, ...Object.keys(estado.fotosNovas || {})])].sort();
 const srcFoto = f => estado.fotosNovas?.[f]?.[200] || `img/${f}-200.webp`;

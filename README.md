@@ -1,110 +1,67 @@
-# Zero Grau · Distribuidora de Bebidas!
+# Zero Grau · Distribuidora de Bebidas
 
-Site estático de uma distribuidora que atende as duas pontas: quem vai beber e
-quem vai revender. Sem framework e sem build — HTML, CSS e alguns arquivos de
-JavaScript.
+[![Testes](https://github.com/costamaiavitor/Site-Zero-Grau/actions/workflows/ci.yml/badge.svg)](https://github.com/costamaiavitor/Site-Zero-Grau/actions/workflows/ci.yml)
+[![Publicação](https://github.com/costamaiavitor/Site-Zero-Grau/actions/workflows/pages.yml/badge.svg)](https://github.com/costamaiavitor/Site-Zero-Grau/actions/workflows/pages.yml)
 
-São duas lojas sobre o mesmo estoque:
+Site de pedidos de uma distribuidora de bebidas de Fortaleza, com duas lojas
+sobre o mesmo estoque: quem se cadastra com **CPF** compra no varejo, por
+unidade; quem se cadastra com **CNPJ** compra no atacado, por caixa fechada.
+O pedido fecha com entrega calculada pelo CEP, Pix ou pagamento na entrega, e
+vai para o WhatsApp da loja. Um painel deixa o dono mudar preço, estoque e
+regras sem mexer em código.
 
-| | quem entra | como é | unidade de venda |
+| | Endereço |
+|---|---|
+| Site no ar | https://costamaiavitor.github.io/Site-Zero-Grau/ |
+| Atacado | https://costamaiavitor.github.io/Site-Zero-Grau/atacado.html |
+| Painel do dono | https://costamaiavitor.github.io/Site-Zero-Grau/admin.html |
+
+## Trabalho final da disciplina
+
+Este repositório é também o trabalho final da disciplina. O site atual é o
+**protótipo** (HTML, CSS e JavaScript, sem servidor). O plano é refazê-lo com
+React + Bootstrap, API em Node.js + Express e banco MySQL.
+
+| Entrega | Data | Situação | Material |
 |---|---|---|---|
-| **Varejo** `index.html` | CPF | vitrine, foto grande, slogan | unidade |
-| **Atacado** `atacado.html` | CNPJ | tabela sóbria, sem slogan | caixa fechada |
+| 1 — Plano de Trabalho | 29/09/2026 | pronta | [`docs/entrega-1/`](docs/entrega-1) |
+| 2 — MVP | 03/11/2026 | a fazer | — |
+| 3 — Apresentação final com relatório | 26/11/2026 | a fazer | — |
 
-Quem decide é a porta, em `js/porta.js`: depois do aviso de idade vem o
-login, só com e-mail e senha. O CPF ou CNPJ é pedido uma vez, em "Criar
-conta" (que também pede nome ou razão social), fica guardado na conta e é ele
-que manda para a loja correspondente a cada login.
+## Estrutura do repositório
 
-⚠ **O login ainda não tem servidor.** As contas ficam registradas no
-navegador (`localStorage`, chave `zg-contas`): e-mail, nome e documento —
-nunca a senha. Então a conta só existe no navegador em que foi criada, e
-qualquer senha no formato certo (6 caracteres ou mais) entra; e-mail sem
-conta é recusado com o convite para criar uma. Para ligar o backend, os
-pontos são `autenticar()` e `cadastrar()` em `js/porta.js`: `autenticar`
-devolve a conta (ou nada), `cadastrar` diz se o e-mail já estava em uso; o
-resto da porta não muda.
-
-⚠ **A conferência do dígito verificador está desligada.** Hoje passa qualquer
-número com 11 dígitos (vai para o varejo) ou 14 (vai para o atacado). O
-algoritmo dos dois documentos continua em `js/porta.js` e coberto por teste;
-para religar, troque `CONFERE_DIGITO` para `true` e mais nada muda.
-
-Nenhuma das duas rola a página. O conteúdo que antes vinha empilhado em onze
-seções virou vistas que se revezam no mesmo espaço; rola só a lista de
-produtos. Sem JavaScript as vistas voltam a empilhar e a página rola como
-qualquer documento, que é o que o buscador lê.
-
-O varejo abre na vista **Início**, não no catálogo: quem chega precisa saber
-de quem é a loja, quanto custa a entrega e em quanto tempo ela chega antes de
-encarar dezenove rótulos. O catálogo fica a um clique, na aba ou no botão.
-
-As duas lojas têm o botão **Trocar conta** no topo: ele limpa o documento
-desta aba e reabre a porta. Num site que escolhe a vitrine pelo documento,
-errar o documento não pode ser sem saída.
-
-No celular a navegação desce para uma barra fixa no pé da tela, ao alcance do
-polegar, e a faixa de operação do rodapé sai — os mesmos números estão na
-abertura. Todo alvo de toque tem no mínimo 44 px de altura, e o teste de
-fumaça percorre as cinco vistas e as duas lojas medindo isso.
-
-## Rodar!
-
-```bash
-npm run dev     # sobe em http://localhost:8080
+```
+ZeroGrau/            o site, publicado no GitHub Pages a cada push na main
+  index.html           loja de varejo
+  atacado.html         balcão de atacado
+  admin.html           painel do dono
+  css/  js/  img/      estilos, scripts e fotos de produto
+docs/                documentação
+  entrega-1/           Plano de Trabalho: documento, apresentação e diagramas
+  site/                guias de como o site funciona por dentro
+ferramentas/         scripts em Python para padronizar e conferir as fotos
+tests/               teste automático do site no navegador (Playwright)
+.github/workflows/   testes a cada push (ci.yml) e publicação no Pages (pages.yml)
 ```
 
-Qualquer servidor estático serve. Abrir o `index.html` direto pelo `file://`
-funciona em quase tudo, menos no `localStorage` de alguns navegadores.
+## Rodar e testar
 
-## Testar!
+```bash
+npm run dev          # abre o site em http://localhost:8080
+```
 
 ```bash
 npm install
 npx playwright install chromium
-npm test
+npm test             # passa o Chromium pelas duas lojas e pelo painel
 ```
 
-O `tests/smoke.mjs` sobe um servidor próprio e passa o Chromium pelas duas
-lojas em nove larguras, com e sem JavaScript. Cobre o que já quebrou alguma
-vez: busca com acento, entrega fora do raio, o aviso de idade travando a página
-sem JavaScript, manchete estourando a coluna, números de catálogo divergindo do
-estoque, a página voltando a rolar e o pingue-pongue entre varejo e atacado.
-Roda também em cada push, por `.github/workflows/ci.yml`.
+Os testes rodam sozinhos a cada push. Se algum falhar, o selo "Testes" no
+topo desta página fica vermelho.
 
-Em rede sem saída para o Google Fonts, aponte as fontes para um espelho local:
+## Onde mexer
 
-```bash
-FONTES_DIR=/caminho/para/fontes npm test
-```
-
-## Como está organizado!
-
-```
-ZeroGrau/
-  index.html        varejo: vitrine em quatro vistas
-  atacado.html      atacado: tabela por caixa fechada
-  admin.html        painel: produtos e regras das duas lojas
-  creditos.html     atribuição das fotos (exigida pelas licenças CC BY-SA)
-  css/style.css     estrutura e componentes; o :root guarda todos os tokens
-  css/temas.css     as duas peles: "Madrugada" no varejo, "Balcão" no atacado
-  js/ajustes.js     o que o painel publicou (gerado; não edite à mão)
-  js/dados.js       catálogo, contato e regras de venda — fonte única das duas
-  js/admin.js       o painel
-  js/porta.js       aviso de idade, login e criar conta
-  js/app.js         o site como app (service worker, instalar) e a estatística
-  js/pix.js         código Pix "copia e cola" (BR Code do Banco Central)
-  js/vendor/        qrcode.js (Kazuhiko Arase, MIT), baixado só por quem paga pelo site
-  js/script.js      varejo: vistas, busca, carrinho, fechamento, Pix, CEP, cupom
-  js/atacado.js     atacado: tabela, pedido por caixa, faixas de desconto
-  img/              fotos de produto em WebP, 200 e 400 px de altura
-  sw.js             service worker: rede primeiro, cópia só sem sinal
-  manifest.webmanifest  nome, ícones e cores do app instalado
-  robots.txt        libera o varejo, barra o atacado e o painel
-  sitemap.xml       as duas páginas públicas
-```
-
-### Onde mexer!
+Os caminhos abaixo são dentro de `ZeroGrau/`.
 
 | Para mudar | Vá em |
 |---|---|
@@ -119,206 +76,23 @@ ZeroGrau/
 | cor, tipografia, forma | os tokens em `css/temas.css` |
 | conferir o dígito verificador na porta | `CONFERE_DIGITO`, em `js/porta.js` |
 | ligar o login e o cadastro a um servidor | `autenticar()` e `cadastrar()`, em `js/porta.js` |
-| preço, estoque e regras, sem mexer em código | `admin.html` (ver "Painel de administração") |
+| preço, estoque e regras, sem mexer em código | `admin.html` ([guia do painel](docs/site/painel.md)) |
 | publicar o painel direto num servidor | `publicar()`, em `js/admin.js` |
 | tamanho mínimo da senha | `SENHA_MIN`, em `js/porta.js` |
 
-Ao mexer em `css/` ou `js/`, suba o `?v=` dos `<link>` e `<script>` das três
-páginas. O GitHub Pages serve esses arquivos com `max-age=600`: sem o selo de
-versão, quem esteve no site nos últimos dez minutos continua recebendo a
-versão velha e acha que a mudança não foi ao ar.
+Ao mexer em `css/` ou `js/`, suba o `?v=` dos `<link>` e `<script>` das
+páginas, senão quem abriu o site nos últimos dez minutos continua vendo a
+versão antiga.
 
-Nenhum número de catálogo é escrito à mão no HTML. Os `data-total` da página
-são preenchidos a partir de `BEBIDAS`, justamente para que os textos não possam
-divergir do estoque — e as duas lojas leem a mesma lista, que é como elas
-discordariam primeiro.
+## Guias
 
-O preço de atacado sai do preço cheio de varejo, não da promoção: promoção de
-fim de semana é isca, e não tem por que valer para quem leva vinte caixas.
+| Guia | Assunto |
+|---|---|
+| [Como o site funciona](docs/site/como-funciona.md) | porta e login, as duas lojas, cada arquivo, fechamento do pedido e Pix, app instalável e estatística |
+| [Painel de administração](docs/site/painel.md) | o que o painel edita, as três camadas (base, publicado, rascunho), publicar com a chave do GitHub |
+| [Fotos de produto](docs/site/fotos.md) | padrão das fotos, origem e licença, como refazer o lote |
+| [Publicação e o que falta para ir ao ar](docs/site/publicacao.md) | GitHub Pages e a lista do que ainda é exemplo |
 
-## Painel de administração
-
-Abas: **Produtos**, **Varejo**, **Atacado**, **Loja** (contato, chave Pix,
-horário, estatística) e **Publicação** (chave do GitHub e histórico).
-
-- **Foto de produto:** "Subir foto" na linha do produto. O painel exige PNG
-  com fundo transparente e produto com pelo menos 400 px de altura, apara,
-  iguala ao padrão (mestre de 600 px, 2% de folga, WebP de 400 e 200) e
-  mede o mesmo que `ferramentas/confere-fotos.py` — inclinação, contorno,
-  lata em trapézio. O que não passa é recusado com o motivo. Ao publicar, as
-  fotos sobem antes do `ajustes.js`, e uma trava impede publicar um produto
-  que aponte para foto inexistente.
-- **Histórico:** lista as publicações (os commits do `ajustes.js`) e abre
-  qualquer uma — ou a versão original — no rascunho. Nada vai ao ar sem
-  você publicar.
-
-`admin.html` edita o que as duas lojas leem: produtos (preço, promoção,
-estoque, categoria, embalagem, foto, unidades por caixa, casco), as regras do
-varejo (pedido mínimo, frete grátis, taxa e raio de entrega, cupom) e as do
-atacado (desconto de revenda, mínimo, frete, prazo, faixas de volume,
-unidades por caixa de cada embalagem). A coluna "Atacado" da tabela mostra o
-preço que o revendedor paga, já com o desconto do rascunho.
-
-Não há servidor, então o painel trabalha em três camadas, aplicadas por
-`aplicarAjustes()` no fim de `js/dados.js`:
-
-1. **Base** — o que está escrito em `js/dados.js`.
-2. **Publicado** — `js/ajustes.js`, gerado pelo botão **Publicar**. Subido no
-   repositório, vale para todo mundo. É um retrato inteiro do que o painel
-   edita e substitui esses trechos da base; enquanto ele existir, mudar preço
-   direto em `dados.js` não tem efeito — mude pelo painel.
-3. **Rascunho** — no `localStorage` de quem está editando. As lojas abertas
-   nesse navegador já o aplicam, com um aviso amarelo de "prévia"; os
-   clientes continuam vendo o publicado.
-
-Para publicar, há dois caminhos:
-
-- **Direto (recomendado).** Na aba **Publicação** do painel, cole uma chave
-  de acesso do GitHub — *fine-grained token*, só para o repositório
-  `Site-Zero-Grau`, com **Contents: Read and write** e mais nada; o passo a
-  passo está na própria aba. Daí em diante **Publicar** grava o
-  `ajustes.js` direto na `main` pela API do GitHub (conferindo o `sha`, para
-  não sobrescrever o trabalho de outra pessoa), e o workflow do Pages põe no
-  ar em um ou dois minutos. A chave fica só no `localStorage` daquele
-  navegador; há um botão para esquecê-la.
-- **À mão.** Sem chave, **Publicar** baixa o `ajustes.js`; no GitHub, abra
-  `ZeroGrau/js/`, **Add file → Upload files**, solte o arquivo e confirme na
-  `main`.
-
-Quando o arquivo estiver no ar, o painel percebe que o rascunho ficou igual
-ao publicado e o apaga sozinho.
-
-Os textos do varejo que citam regra (frete grátis, taxa, pedido mínimo, raio,
-cupom) são escritos pelo script a partir dos atributos `data-regra` do HTML,
-para não prometerem um valor que o painel já trocou.
-
-⚠ **O painel não tem senha; quem guarda a porta é a chave.** Sem ela,
-qualquer um que abra `admin.html` mexe só no próprio navegador. Com ela,
-publica — por isso a chave mora só no navegador de quem a colou, deve ser
-esquecida em computador compartilhado e deve ter só a permissão de conteúdo
-deste repositório (se vazar, basta revogá-la no GitHub). O painel fica fora
-do buscador pelo `robots.txt` e pelo `noindex`. No dia em que ganhar um
-servidor, ganha login junto: o ponto de troca é `publicar()`, em
-`js/admin.js`.
-
-## Fechamento do pedido e Pix
-
-O carrinho fecha em etapas: a lista, **entrega e pagamento** (nome, CEP, rua
-preenchida pelo CEP, número, complemento, referência, observação) e a
-escolha entre dois caminhos:
-
-- **Pagar agora com Pix, pelo site.** Gera o QR code e o "copia e cola" com o
-  valor exato do pedido e uma referência (`ZG…`). Depois de pagar, o cliente
-  toca em **Já paguei** e o pedido vai pelo WhatsApp com essa referência.
-  Sem servidor, **quem confirma o recebimento é a loja**, no extrato do banco,
-  pela referência. O código segue o padrão do Banco Central (`js/pix.js`),
-  conferido contra o exemplo do manual e decodificado nos testes.
-- **Pagar na entrega (ou na retirada).** O pedido vai pelo WhatsApp com a
-  forma: Pix, cartão ou dinheiro com "troco para quanto?".
-
-A opção de Pix pelo site só aparece com uma chave cadastrada (painel → aba
-Loja → Pix). Com a loja fechada, o fechamento avisa e o pedido chega marcado
-como agendado. Cada pedido enviado fica no aparelho (itens e total, nunca
-endereço ou pagamento) para o **Pedir de novo**, que aparece com o carrinho
-vazio.
-
-O horário de funcionamento (`HORARIO`, no fuso de Fortaleza) escreve o
-"Aberto até 03h00 / Fechado · abre hoje às 10h" no topo e no rodapé.
-
-## App e estatística
-
-O site pode ser instalado na tela do celular (`manifest.webmanifest`,
-`sw.js`); o botão **Instalar o app** aparece onde o navegador oferece isso. O
-service worker busca sempre a rede primeiro — o que o painel publica chega na
-hora — e só usa a cópia guardada sem sinal. O painel nunca passa por ele.
-
-A estatística vem desligada. Na aba Loja do painel dá para ligar o
-**Plausible** (sem cookie; o id é o domínio cadastrado lá) ou o **Google
-Analytics 4** (id `G-…`; usa cookie, então pela LGPD só liga depois que o
-visitante aceita). Conta visitas e pedidos enviados, sem dado pessoal.
-
-## Imagens
-
-As fotos de produto vêm do Open Food Facts, sob CC BY-SA. A atribuição exigida
-pela licença está em `ZeroGrau/creditos.html`, com link no rodapé do site, e o
-detalhamento técnico em `ZeroGrau/img/CREDITOS.md`.
-
-São servidas em WebP em dois tamanhos, escolhidos pelo navegador conforme a
-densidade da tela (`srcset` com descritores `x`, porque o card exibe a foto
-sempre na mesma altura).
-
-O recorte é feito pelo Adobe Photoshop, via o conector **Adobe for Creativity**
-(`image_remove_background`), que segmenta o produto em vez de separar por cor —
-distinção que importa, porque numa foto de fundo branco vidro transparente e
-rótulo branco têm a mesma cor.
-
-Para refazer o lote:
-
-```bash
-pip install pillow
-python3 ferramentas/baixa-fotos.py        # frontais do Open Food Facts → /tmp/fonte2
-# subir cada foto ao Adobe e rodar image_remove_background → /tmp/adobe
-python3 ferramentas/padroniza-fotos.py    # iguala e exporta os WebP
-python3 ferramentas/confere-fotos.py      # confere o padrão
-```
-
-O passo do meio é interativo: o conector Adobe exige que o arquivo esteja no
-armazenamento dele (não aceita URL de terceiros), então cada foto passa por
-`asset_initialize_file_upload` → PUT → `asset_finalize_file_upload` antes do
-recorte.
-
-Toda foto nova passa por `python3 ferramentas/confere-fotos.py` antes de subir.
-Ele mede o que dá para medir do padrão (altura, folga, contorno sem mordida,
-produto em pé, lata sem trapézio) e sai com erro se algo falhar. O resto é
-olho: foto de estúdio, produto inteiro e lacrado, e rótulo batendo com o
-catálogo. O padrão completo e o que saiu por ele estão em `img/CREDITOS.md`.
-
-Os PNG do primeiro lote ficam no histórico do git, no commit `c000790`.
-
-## Publicar!
-
-`.github/workflows/pages.yml` publica a pasta `ZeroGrau/` no GitHub Pages a
-cada push na `main`. O conteúdo dessa pasta vira a raiz do site, então o
-endereço é `https://costamaiavitor.github.io/Site-Zero-Grau/` — sem `ZeroGrau`
-no caminho. É esse endereço que o `og:url` do `index.html` declara.
-
-Duas condições, as duas fora do workflow e só na primeira vez:
-
-1. **Repositório público.** No plano gratuito o Pages não atende repositório
-   privado; em privado exige GitHub Pro ou superior.
-2. **Settings → Pages → Source = GitHub Actions.**
-
-O passo 2 não dá para automatizar: criar o site pela API exige permissão de
-administração, que o `GITHUB_TOKEN` do workflow não recebe — com
-`enablement: true` o `configure-pages` falha em "Resource not accessible by
-integration". Enquanto o site não existir, o deploy morre em "Get Pages site
-failed". Depois de criado uma vez, todo push na `main` publica sozinho.
-
-Para hospedar sem tornar o repositório público, Netlify, Cloudflare Pages e
-Vercel publicam pasta estática de repositório privado no plano gratuito. Nesse
-caso, troque o `og:url` e o `og:image` pelo domínio novo.
-
-## Antes de ir ao ar!
-
-- [ ] Cadastrar a chave Pix da loja no painel (aba Loja) e fazer um Pix de
-      R$ 0,01 pelo site para conferir nome, cidade e destino.
-- [ ] Se quiser estatística, criar a conta no Plausible ou no Google
-      Analytics e colar o id na aba Loja.
-- [ ] Dar login ao painel `admin.html` antes de ligá-lo a qualquer servidor.
-- [ ] Ligar login e cadastro a um servidor (`autenticar()` e `cadastrar()`
-      em `js/porta.js`). Hoje qualquer senha com 6 caracteres entra e toda
-      conta nova é aceita; falta também "esqueci a senha", que depende do
-      mesmo servidor.
-- [ ] Trocar o resto do bloco `CONTATO` em `js/dados.js` pelos dados reais da
-      loja. O WhatsApp já é o real, (85) 98149-4445; telefone, e-mail, CNPJ,
-      endereço e redes sociais ainda são valores de exemplo.
-- [ ] Apontar `og:url` e `og:image` em `index.html` para o domínio final.
-- [ ] Escrever as páginas de "Trocas e devoluções" e "Política de casco" —
-      hoje esses links caem no WhatsApp.
-- [ ] Medir a distância real da loja até cada bairro e trocar a tabela
-      `ENTREGA` em `js/dados.js` — os quilômetros de hoje são estimativa, e o
-      endereço da loja também é exemplo. O CEP em si já é conferido de verdade,
-      no ViaCEP.
-- [ ] Trocar as fotos de produto por fotos da própria loja. As de hoje são de
-      produto importado, do Open Food Facts; o banco brasileiro de lá é quase
-      todo foto de celular com a mão na garrafa (ver "Imagens").
+⚠ Hoje o login não tem servidor: as contas ficam só no navegador em que foram
+criadas. O painel não tem senha; quem publica é quem tem a chave do GitHub.
+Os detalhes estão nos guias acima.

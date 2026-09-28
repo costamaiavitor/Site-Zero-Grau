@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Vitrine estática da Zero Grau Distribuidora de Bebidas.",
+  "description": "Site de pedidos da Zero Grau Distribuidora de Bebidas (varejo e atacado) e trabalho final da disciplina.",
   "scripts": {
     "dev": "npx --yes http-server ZeroGrau -p 8080 -c-1 -o",
     "test": "node tests/smoke.mjs"
