@@ -29,8 +29,14 @@ const quem=p=>`[${p} — nome: ${P}]`;
 
 /* 1 capa */
 {const s=novo(true);
- s.addImage({path:IMG('t3-inicio'),x:5.2,y:0,w:4.8*1.0,h:5.625,sizing:{type:'cover',w:4.8,h:5.625}});
- s.addShape(pres.shapes.RECTANGLE,{x:5.2,y:0,w:4.8,h:5.625,fill:{color:DARK,transparency:35},line:{color:DARK,transparency:100}});
+ /* fileira de garrafas do catálogo, com a base alinhada, como na estante do site */
+ s.addShape(pres.shapes.RECTANGLE,{x:5.35,y:0,w:4.65,h:5.625,fill:{color:'14142C'},line:{color:'14142C'}});
+ s.addShape(pres.shapes.OVAL,{x:5.5,y:4.55,w:4.35,h:0.4,fill:{color:'22224A'},line:{color:'22224A'}});
+ const fila=[['coca-cola-2l',2.4],['jack-daniels-1l',2.3],['estrella-galicia-330',1.3],['tanqueray-750',2.35],['red-bull-250',1.1],['absolut-mango-1l',2.35]];
+ const fotos=[];for(const [f,h0] of fila){const b=await sharp(path.join(__dirname,'..','..','..','ZeroGrau','img',f+'-400.webp')).png().toBuffer();const m=await sharp(b).metadata();const h=h0*0.88;fotos.push([b,h,h*m.width/m.height]);}
+ const larg=fotos.reduce((a,[, ,w])=>a+w,0);let fx=5.35+(4.65-larg)/2;
+ for(const [b,h,w] of fotos){s.addImage({data:'image/png;base64,'+b.toString('base64'),x:fx,y:4.75-h,w,h});fx+=w;}
+ marca(s,true);
  txt(s,'TRABALHO FINAL · ENTREGA 1',{x:0.5,y:1.1,w:4.6,h:0.3,fontSize:12,bold:true,color:PINK,charSpacing:3});
  txt(s,'Plano de Trabalho',{x:0.5,y:1.45,w:4.6,h:0.8,fontSize:36,bold:true,color:WHITE});
  txt(s,'ZERO GRAU',{x:0.5,y:2.35,w:4.6,h:0.45,fontSize:22,bold:true,color:CYAN,charSpacing:2});
