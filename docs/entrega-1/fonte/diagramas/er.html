@@ -1,0 +1,21 @@
+<!doctype html><meta charset=utf-8><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap"><link rel=stylesheet href=base.css>
+<body><div id=cv style="padding:30px 40px;width:1740px"><svg id=lig></svg>
+<div class=faixa>Clientes, pedidos e catálogo</div>
+<div class=linha><div id=USUARIO></div><div id=PEDIDO></div><div id=ITEM_PEDIDO></div><div id=PRODUTO></div></div>
+<div class=linha><div id=ENDERECO></div><div id=PAGAMENTO></div><div id=CUPOM></div><div id=CATEGORIA></div></div>
+<div class=faixa>Configuração da loja</div>
+<div class=linha style="margin-bottom:10px"><div id=HORARIO></div><div id=LOJA></div><div id=REGRA_VENDA></div><div id=FAIXA_ATACADO></div></div>
+</div>
+<script src=lib.js></script><script>
+fetch('er-dados.json').then(r=>r.json()).then(E=>{
+  for(const [n,at] of Object.entries(E)){const d=document.getElementById(n);d.className='ent';
+    d.innerHTML=`<h3>${n}</h3>`+at.map(([k,a,t])=>`<div class="a ${k.includes('PK')?'pk':k.includes('FK')?'fk':''}"><b>${k}</b><span>${a}</span><i>${t}</i></div>`).join('');}
+  Promise.all(['400 14px Manrope','600 14px Manrope','800 14px Manrope','900 17px Gabarito','800 15px Gabarito'].map(f=>document.fonts.load(f))).then(()=>new Promise(r=>setTimeout(r,300))).then(()=>requestAnimationFrame(()=>{
+    const L=[['USUARIO','PEDIDO','1','0..N'],['USUARIO','ENDERECO','1','0..N'],['ENDERECO','PEDIDO','0..1','0..N'],
+      ['PEDIDO','ITEM_PEDIDO','1','1..N'],['PRODUTO','ITEM_PEDIDO','1','0..N'],['CATEGORIA','PRODUTO','1','0..N'],
+      ['PEDIDO','PAGAMENTO','1','1'],['CUPOM','PEDIDO','0..1','0..N'],
+      ['LOJA','HORARIO','1','0..N'],['LOJA','REGRA_VENDA','1','1..2'],['REGRA_VENDA','FAIXA_ATACADO','1','0..N']];
+    for(const [a,b,c1,c2] of L) liga(a,b,{ortho:1,c1,c2,w:2.2});
+    document.body.dataset.pronto=1;}));
+});
+</script>

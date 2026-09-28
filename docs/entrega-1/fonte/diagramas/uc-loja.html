@@ -1,0 +1,15 @@
+<!doctype html><meta charset=utf-8><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap"><link rel=stylesheet href=base.css><body><div id=cv><svg id=lig></svg></div><script src=lib.js></script><script src=uc.js></script><script>
+desenhaUC({w:1560,h:1060,
+ limite:[440,20,830,1020,'Sistema Zero Grau · Loja (varejo e atacado)'],
+ atores:[['cli',200,540,'Cliente'],['con',110,840,'Consumidor<br>(CPF · varejo)'],['rev',320,840,'Revendedor<br>(CNPJ · atacado)']],
+ sistemas:[['cep',1440,630,'ViaCEP'],['zap',1440,800,'WhatsApp da loja']],
+ ucs:[['u1',613,90,'UC01 Criar conta',1],['u2',719,200,'UC02 Entrar',1],['u3',759,305,'UC03 Consultar catálogo',1],
+      ['u4',799,495,'UC04 Montar carrinho',1],['u5',754,757,'UC05 Finalizar pedido',1],['u6',597,975,'UC06 Consultar meus pedidos',1],
+      ['v1',1120,65,'Validar CPF/CNPJ'],['v2',1120,160,'Confirmar idade (18+)'],['v3',1120,260,'Buscar produto'],['v4',1120,350,'Filtrar por categoria'],
+      ['v5',1120,450,'Aplicar cupom'],['v6',1120,540,'Comprar por caixa fechada'],['v7',1120,630,'Calcular entrega pelo CEP'],['v8',1120,715,'Registrar pedido'],
+      ['v9',1120,800,'Enviar pedido ao WhatsApp'],['v10',1120,885,'Pagar com Pix (QR code)'],['v11',1120,975,'Pedir de novo']],
+ lig:[['cli','u1','a'],['cli','u2','a'],['cli','u3','a'],['cli','u4','a'],['cli','u5','a'],['cli','u6','a'],
+      ['con','cli','g'],['rev','cli','g'],
+      ['u1','v1','i'],['u1','v2','i'],['u2','v2','i'],['v3','u3','e'],['v4','u3','e'],['v5','u4','e'],['v6','u4','e'],
+      ['u5','v7','i'],['u5','v8','i'],['u5','v9','i'],['v10','u5','e'],['v11','u6','e'],['v7','cep','a'],['v9','zap','a']]});
+</script>

@@ -1,0 +1,22 @@
+<!doctype html><meta charset=utf-8><link rel=stylesheet href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap"><link rel=stylesheet href=base.css>
+<body><div id=cv style="width:1660px;height:680px"><svg id=lig></svg>
+<div id=fe class="cx f" style="left:20px;top:20px;width:430px"><span class=tag>Camada de apresentação</span><h3>Front-end · SPA</h3><div class=sub>React + Bootstrap 5 · roda no navegador (celular e computador)</div>
+<ul><li>Porta: aviso 18+, entrar, criar conta</li><li>Loja de varejo (CPF)<small>início, catálogo, carrinho, fechamento, Pix</small></li><li>Balcão de atacado (CNPJ)<small>tabela por caixa fechada</small></li><li>Painel de administração<small>produtos, regras, loja, pedidos</small></li><li>React Router · fetch com JWT · PWA</li></ul></div>
+<div id=api class="cx a" style="left:615px;top:20px;width:430px"><span class=tag>Camada de negócio</span><h3>API REST · Node.js + Express</h3><div class=sub>JSON sobre HTTPS · autenticação por JWT</div>
+<ul><li>/api/auth<small>cadastro, login (bcrypt + JWT)</small></li><li>/api/produtos · /api/categorias<small>leitura pública; escrita só admin</small></li><li>/api/pedidos<small>cria, lista, altera status, baixa estoque</small></li><li>/api/loja · /api/regras · /api/cupons</li><li>Serviços: frete, preço e desconto recalculados no servidor, Pix BR Code</li><li>Middlewares: JWT, perfil admin, validação, CORS</li></ul></div>
+<div id=db class="cx b" style="left:1210px;top:20px;width:430px"><span class=tag>Camada de dados</span><h3>Banco MySQL 8</h3><div class=sub>relacional · acesso pela API via Sequelize (mysql2)</div>
+<ul><li>usuario · endereco</li><li>categoria · produto</li><li>pedido · item_pedido · pagamento · cupom</li><li>loja · horario · regra_venda · faixa_atacado</li></ul></div>
+<div id=cep class="cx e" style="left:20px;top:560px;width:250px"><h3>ViaCEP</h3><div class=sub style="margin:0">«externo» endereço pelo CEP</div></div>
+<div id=zap class="cx e" style="left:300px;top:560px;width:250px"><h3>WhatsApp da loja</h3><div class=sub style="margin:0">«externo» link wa.me com o pedido</div></div>
+<div id=host class="cx e" style="left:615px;top:560px;width:1025px"><h3>Hospedagem</h3><div class=sub style="margin:0">Front-end na Vercel (sugerida pelo enunciado) · API e banco: provedor a definir na Sprint 5 · código no GitHub com testes automáticos a cada push</div></div>
+</div>
+<script src=lib.js></script><script>
+Promise.all(['400 14px Manrope','600 14px Manrope','800 14px Manrope','900 17px Gabarito'].map(f=>document.fonts.load(f))).then(()=>new Promise(r=>setTimeout(r,300))).then(()=>{
+  liga('fe','api',{ortho:1,seta:'v',seta2:'v',w:2.5});
+  liga('api','db',{ortho:1,seta:'v',seta2:'v',w:2.5});
+  const c=document.getElementById('cv').getBoundingClientRect(),y=R('fe').y+150;
+  rotulo((R('fe').x+R('fe').w+R('api').x)/2,pontos('fe','api',1)[0][1]-30,'HTTPS · JSON · token JWT','arq');
+  rotulo((R('api').x+R('api').w+R('db').x)/2,pontos('api','db',1)[0][1]-30,'SQL (ORM Sequelize)','arq');
+  liga('fe','cep',{ortho:1,seta:'v',tr:1});liga('fe','zap',{ortho:1,seta:'v',tr:1});
+  document.body.dataset.pronto=1;});
+</script>
