@@ -54,7 +54,7 @@ const capa=[
   new Paragraph({spacing:{after:600},children:[new TextRun({text:'Etapa 1 — Projeto Inicial',size:30,color:GREY})]}),
   new Paragraph({spacing:{after:100},children:[new TextRun({text:'Zero Grau',bold:true,size:40,color:NAVY})]}),
   new Paragraph({spacing:{after:900},children:[new TextRun({text:'Sistema web de pedidos para distribuidora de bebidas — varejo e atacado',size:26,color:NAVY})]}),
-  ...[['Instituição',C.P],['Curso / Disciplina',C.P],['Professor(a)',C.P],['Equipe',C.P],['Local e data',`Fortaleza (CE), ${C.P}`]].map(([k,v])=>new Paragraph({spacing:{after:80},children:[new TextRun({text:k+': ',bold:true,size:22}),...runs(v,{size:22})]})),
+  ...[['Instituição',C.P],['Curso / Disciplina',C.P],['Professor(a)',C.P],['Equipe',C.P],['Local e data','Fortaleza (CE), 29/09/2026']].map(([k,v])=>new Paragraph({spacing:{after:80},children:[new TextRun({text:k+': ',bold:true,size:22}),...runs(v,{size:22})]})),
   new Paragraph({children:[new PageBreak()]}),
   new Paragraph({children:[new TextRun({text:'Sumário',bold:true,size:32,color:NAVY})],spacing:{after:200}}),
   ...['1. Identificação','2. Escopo do Sistema','3. Diagramas de Caso de Uso (Principais Fluxos)','4. Requisitos Funcionais','5. Requisitos Não Funcionais','6. Wireframes/Protótipos das Telas Principais','7. Estrutura do Banco de Dados','8. Arquitetura Adotada','9. Divisão da Equipe','10. Cronograma de Execução','11. Funcionalidades Básicas previstas para o desenvolvimento inicial'].map(t=>new Paragraph({spacing:{after:140},children:[new TextRun({text:t,size:24})]})),
@@ -132,9 +132,11 @@ const s9=[h1('9. Divisão da Equipe'),
 
 /* ---------------- 10 ---------------- */
 const s10=[h1('10. Cronograma de Execução'),
-  p('Sprints de duas semanas a partir da Entrega 1. A Sprint 0 já aconteceu e está registrada no histórico do repositório. As datas das Sprints 2 a 5 dependem das datas das Entregas 2 e 3, ainda não informadas.'),
+  p('O cronograma parte do calendário da disciplina. Cada entrega fecha uma sprint, e entre as entregas o trabalho é dividido em sprints de duas a três semanas. A Sprint 0 começou no dia seguinte à definição dos temas e equipes (01/09) e está registrada no histórico do repositório.'),
+  tituloTab('Datas da disciplina'),tabela(['Data','Evento'],C.calendario,[2400,W-2400],{boldCol:0}),esp(),
   tituloTab('Sprints, atividades, responsáveis e marcos'),
-  tabela(['Sprint','Período','Atividades','Responsáveis','Marco'],C.sprints,[1450,1800,3388,1500,1500],{boldCol:0}),esp(),
+  tabela(['Sprint','Período','Atividades','Responsáveis','Marco'],C.sprints,[1450,1500,3388,1500,1800],{boldCol:0}),esp(),
+  p('Depois da Entrega 3 ficam a avaliação de 2ª chamada (03/12) e o último dia de aula (08/12), que servem de folga para ajustes pedidos na apresentação final.'),
   h2('Acompanhamento'),p(C.acompanhamento)];
 
 /* ---------------- 11 ---------------- */

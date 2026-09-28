@@ -16,7 +16,7 @@ module.exports = {
     ['Cliente / parceiro', `Distribuidora Zero Grau, Fortaleza (CE). ${P} nome do responsável e se a distribuidora participa da validação.`],
     ['Repositório', 'https://github.com/costamaiavitor/Site-Zero-Grau'],
     ['Protótipo publicado', 'https://costamaiavitor.github.io/Site-Zero-Grau/'],
-    ['Data da Entrega 1', P],
+    ['Data da Entrega 1', '29/09/2026 (terça-feira)'],
   ],
 
   problema: [
@@ -188,13 +188,25 @@ module.exports = {
   ],
 
   sprints: [
-    ['Sprint 0 — Protótipo', '02/09/2026 a 25/09/2026', 'Protótipo navegável das duas lojas e do painel; padrão de fotos; Pix, CEP e WhatsApp; testes automáticos; publicação no GitHub Pages.', 'Designer UX/UI, Front-end', 'Protótipo publicado (já concluído)'],
-    ['Sprint 1 — Planejamento', `28/09/2026 a ${P}`, 'Escopo, casos de uso, requisitos, wireframes, modelo ER, arquitetura, cronograma e apresentação.', 'Todos; Gerente de Projeto consolida', 'ENTREGA 1 — Plano de Trabalho'],
-    ['Sprint 2 — Base do back-end', `${P} (2 semanas)`, 'Estrutura do repositório (frontend/ e backend/), Express, MySQL, modelos e migrações, carga dos 15 produtos do protótipo, CRUD de produtos e categorias, cadastro de usuário.', 'Back-end; Gerente de Projeto', 'API respondendo com o catálogo do banco'],
-    ['Sprint 3 — Interface e MVP', `${P} (2 semanas)`, 'React + Bootstrap: porta, catálogo, carrinho, fechamento; painel com CRUD de produtos e lista de pedidos; pedido gravado no banco e enviado ao WhatsApp; relatório do sistema.', 'Front-end, Designer UX/UI; Back-end integra', 'ENTREGA 2 — MVP'],
-    ['Sprint 4 — Funcionalidades avançadas', `${P} (2 semanas)`, 'Login com JWT e perfil admin, busca e filtro, atacado por caixa, Pix, cupom, histórico e pedir de novo, horário, baixa de estoque.', 'Back-end, Front-end', 'Funcionalidades avançadas integradas'],
-    ['Sprint 5 — Integração e entrega final', `${P} (2 semanas)`, 'Hospedagem (Vercel + API e banco), testes de ponta a ponta, teste de usabilidade, ajustes, relatório final e apresentação.', 'Todos; Gerente de Projeto consolida', 'ENTREGA 3 — Apresentação final com relatório'],
+    ['Sprint 0 — Protótipo', '02/09 a 25/09/2026', 'Protótipo navegável das duas lojas e do painel; padrão de fotos; Pix, CEP e WhatsApp; testes automáticos; publicação no GitHub Pages.', 'Designer UX/UI, Front-end', 'Protótipo publicado (concluída)'],
+    ['Sprint 1 — Planejamento', '26/09 a 29/09/2026', 'Escopo, casos de uso, requisitos, wireframes, modelo ER, arquitetura, cronograma e apresentação.', 'Todos; Gerente de Projeto consolida', 'ENTREGA 1 — Plano de Trabalho (29/09)'],
+    ['Sprint 2 — Base do back-end', '30/09 a 15/10/2026', 'Estrutura do repositório (frontend/ e backend/), Express, MySQL, modelos e migrações, carga dos 15 produtos do protótipo, CRUD de produtos e categorias, cadastro de usuário.', 'Back-end; Gerente de Projeto', 'API respondendo com o catálogo do banco'],
+    ['Sprint 3 — Interface e MVP', '16/10 a 03/11/2026', 'React + Bootstrap: porta, catálogo, carrinho, fechamento; painel com CRUD de produtos e lista de pedidos; pedido gravado no banco e enviado ao WhatsApp; relatório do sistema.', 'Front-end, Designer UX/UI; Back-end integra', 'ENTREGA 2 — MVP (03/11)'],
+    ['Sprint 4 — Funcionalidades avançadas', '04/11 a 17/11/2026', 'Login com JWT e perfil admin, busca e filtro, atacado por caixa, Pix, cupom, histórico e pedir de novo, horário, baixa de estoque.', 'Back-end, Front-end', 'Funcionalidades avançadas integradas'],
+    ['Sprint 5 — Integração e entrega final', '18/11 a 26/11/2026', 'Hospedagem (Vercel + API e banco), testes de ponta a ponta, teste de usabilidade, ajustes, relatório final e apresentação.', 'Todos; Gerente de Projeto consolida', 'ENTREGA 3 — Apresentação final com relatório (26/11)'],
   ],
+  calendario: [
+    ['04/08/2026 (ter)', 'Acolhida do semestre e apresentação da disciplina'],
+    ['01/09/2026 (ter)', 'Definição dos trabalhos finais: temas e equipes'],
+    ['03/09/2026 (qui)', 'Prova 1'],
+    ['24/09/2026 (qui)', 'Prova 2'],
+    ['29/09/2026 (ter)', 'ENTREGA 1 — Apresentação do Plano de Trabalho'],
+    ['03/11/2026 (ter)', 'ENTREGA 2 — Apresentação do MVP'],
+    ['26/11/2026 (qui)', 'ENTREGA 3 — Apresentação final (com relatório)'],
+    ['03/12/2026 (qui)', 'Avaliação de 2ª chamada'],
+    ['08/12/2026 (ter)', 'Último dia de aula da disciplina'],
+  ],
+
   acompanhamento: `As tarefas viram issues no GitHub, uma por requisito (RF01…RF21), num quadro com as colunas A fazer, Fazendo, Em revisão e Feito. Cada sprint fecha com uma revisão do que foi entregue. ${P} dia e horário da reunião de acompanhamento.`,
 
   basicas: [

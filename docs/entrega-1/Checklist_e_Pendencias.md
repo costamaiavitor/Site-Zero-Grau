@@ -4,7 +4,7 @@
 
 | Item exigido | Seção do documento | Slide(s) | Status |
 |---|---|---|---|
-| Identificação | 1 (e capa) | 1, 16 | [PREENCHER] instituição, disciplina, professor(a), integrantes, data |
+| Identificação | 1 (e capa) | 1, 16 | [PREENCHER] instituição, disciplina, professor(a), integrantes (data da Entrega 1 preenchida: 29/09/2026) |
 | Escopo: problema real | 2.1 | 2 | ✅ (falta 1 dado da distribuidora, ver pendência 7) |
 | Escopo: funcionalidade principal | 2.2 | 2 | ✅ |
 | Escopo: público-alvo | 2.3 | 3 | ✅ |
@@ -18,7 +18,7 @@
 | Dicionário de dados resumido | 7 (Tabela 7) | — | ✅ |
 | Arquitetura: front-end ↔ API ↔ banco | 8 (Figura 13 e rotas) | 12 | ✅ |
 | Divisão da equipe (4 papéis) | 9 | 13 | [PREENCHER] nome de cada papel |
-| Cronograma: sprints, atividades, responsáveis e marcos das Entregas 1, 2 e 3 | 10 | 15 | [PREENCHER] datas das Sprints 2–5 e das Entregas |
+| Cronograma: sprints, atividades, responsáveis e marcos das Entregas 1, 2 e 3 | 10 (com as datas da disciplina) | 15 | ✅ Entregas em 29/09, 03/11 e 26/11/2026 |
 | Funcionalidades básicas do desenvolvimento inicial | 11 | 14 | ✅ |
 | Notas do apresentador (quem fala o quê) | — | 1–16 | ✅ (o nome de quem fala está como [PREENCHER]) |
 
@@ -28,11 +28,9 @@
 2. **Professor(a).** Documento: capa e seção 1. Slide 1.
 3. **Nome e matrícula dos integrantes.** Documento: capa e seção 1. Slides 1 e 16. O repositório tem commits das contas costamaiavitor e caiobholanda; confirme se as duas são da equipe e quem mais participa.
 4. **Quem ocupa cada papel** (Gerente, Front-end, Back-end, UX/UI). Documento: seção 9. Slide 13 e a primeira linha das notas de todos os slides.
-5. **Data da Entrega 1.** Documento: capa, seção 1 e seção 10 (fim da Sprint 1). Slides 1 e 15.
-6. **Datas das Entregas 2 e 3.** A partir delas saem as datas das Sprints 2 a 5, com 2 semanas cada. Documento: seção 10. Slide 15.
-7. **Como a distribuidora recebe pedidos hoje** (telefone, WhatsApp, balcão) **e volume aproximado por semana.** Documento: seção 2.1.
-8. **Responsável na distribuidora e se ela participa da validação.** Documento: seção 1.
-9. **Dia e horário da reunião de acompanhamento.** Documento: seção 10.
+5. **Como a distribuidora recebe pedidos hoje** (telefone, WhatsApp, balcão) **e volume aproximado por semana.** Documento: seção 2.1.
+6. **Responsável na distribuidora e se ela participa da validação.** Documento: seção 1.
+7. **Dia e horário da reunião de acompanhamento.** Documento: seção 10.
 
 ## Decisões tomadas no plano (confirmar com a equipe)
 

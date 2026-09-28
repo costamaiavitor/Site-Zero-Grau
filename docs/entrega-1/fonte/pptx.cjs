@@ -41,7 +41,7 @@ const quem=p=>`[${p} — nome: ${P}]`;
  txt(s,'Plano de Trabalho',{x:0.5,y:1.45,w:4.6,h:0.8,fontSize:36,bold:true,color:WHITE});
  txt(s,'ZERO GRAU',{x:0.5,y:2.35,w:4.6,h:0.45,fontSize:22,bold:true,color:CYAN,charSpacing:2});
  txt(s,'Sistema web de pedidos para distribuidora de bebidas — varejo e atacado',{x:0.5,y:2.85,w:4.4,h:0.7,fontSize:15,color:'DFE0EE'});
- txt(s,[{text:'Disciplina: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Professor(a): ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Equipe: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Data: ',options:{bold:true}},{text:P}],
+ txt(s,[{text:'Disciplina: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Professor(a): ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Equipe: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Data: ',options:{bold:true}},{text:'29/09/2026'}],
    {x:0.5,y:4.0,w:4.6,h:1.1,fontSize:11,color:'B8B9CC',paraSpaceAfter:3});
  s.addNotes(`${quem('Gerente de Projeto')}\nBoa noite. Somos a equipe ${P} e vamos apresentar o Plano de Trabalho do nosso trabalho final: o Zero Grau, um sistema web de pedidos para uma distribuidora de bebidas de Fortaleza, que vende tanto para quem consome quanto para quem revende.\nNa apresentação passamos por escopo, casos de uso, requisitos, telas, banco de dados, arquitetura, equipe e cronograma. A imagem ao lado é o protótipo que já está no ar.`);}
 
@@ -168,13 +168,13 @@ for(let k=0;k<3;k++){const s=novo();tit(s,`Protótipo das telas (${k+1}/3)`);
    card(s,x,y,w,1.55,feito?'E6F5F2':LIGHT);
    txt(s,nome.split(' — ')[0],{x:x+0.1,y:y+0.1,w:w-0.2,h:0.28,fontSize:12,bold:true,color:PINKD});
    txt(s,nome.split(' — ')[1],{x:x+0.1,y:y+0.4,w:w-0.2,h:0.55,fontSize:11,bold:true,color:NAVY});
-   txt(s,feito?'02/09 a 25/09/2026':(i===1?'28/09/2026 a '+P:P),{x:x+0.1,y:y+0.98,w:w-0.2,h:0.5,fontSize:9.5,color:GREY});
+   txt(s,per,{x:x+0.1,y:y+0.98,w:w-0.2,h:0.5,fontSize:9.5,color:GREY});
    s.addShape(pres.shapes.OVAL,{x:x+w/2-0.09,y:y+1.66,w:0.18,h:0.18,fill:{color:entrega?PINKD:NAVY},line:{color:WHITE,width:1.5}});
    if(entrega){const m=marco.match(/ENTREGA \d/)[0];card(s,x+0.05,y+2.05,w-0.1,0.5,PINKD);txt(s,m,{x:x+0.05,y:y+2.05,w:w-0.1,h:0.5,fontSize:12,bold:true,color:WHITE,align:'center',valign:'middle'});
-     txt(s,{'ENTREGA 1':'Plano de Trabalho','ENTREGA 2':'MVP','ENTREGA 3':'Final + relatório'}[m],{x,y:y+2.6,w,h:0.3,fontSize:10.5,color:NAVY,align:'center'});}
+     txt(s,{'ENTREGA 1':'Plano · 29/09','ENTREGA 2':'MVP · 03/11','ENTREGA 3':'Final · 26/11'}[m],{x,y:y+2.6,w,h:0.3,fontSize:10.5,color:NAVY,align:'center'});}
    if(feito){txt(s,'concluída',{x,y:y+2.1,w,h:0.3,fontSize:10.5,bold:true,color:'00897B',align:'center'});}});
- txt(s,'Sprints de 2 semanas · uma issue no GitHub por requisito · datas das Entregas 2 e 3: '+P,{x:0.5,y:4.85,w:9,h:0.3,fontSize:11,color:GREY});
- s.addNotes(`${quem('Gerente de Projeto')}\nO cronograma tem seis sprints. A Sprint 0, de 2 a 25 de setembro, já aconteceu: é o protótipo que mostramos. A Sprint 1 é este planejamento, que fecha na Entrega 1.\nAs Sprints 2 e 3 constroem o MVP: primeiro a base do back-end com MySQL e CRUD, depois a interface em React integrada à API, que fecham na Entrega 2. A Sprint 4 traz as funcionalidades avançadas e a Sprint 5 a hospedagem, os testes e o relatório final, que fecham na Entrega 3.\nCada requisito vira uma issue no GitHub, para acompanhar o andamento de cada sprint. As datas exatas: ${P}.`);}
+ txt(s,'Entregas: 29/09 · 03/11 · 26/11 · uma issue no GitHub por requisito · depois: 2ª chamada 03/12, fim das aulas 08/12',{x:0.5,y:4.85,w:9,h:0.3,fontSize:11,color:GREY});
+ s.addNotes(`${quem('Gerente de Projeto')}\nO cronograma segue o calendário da disciplina e tem seis sprints. A Sprint 0, de 2 a 25 de setembro, começou logo depois da definição das equipes e já está concluída: é o protótipo que mostramos. A Sprint 1 é este planejamento, que fecha hoje, 29 de setembro, na Entrega 1.\nAs Sprints 2 e 3, de 30 de setembro a 3 de novembro, constroem o MVP: primeiro a base do back-end com MySQL e CRUD, depois a interface em React integrada à API. Elas fecham na Entrega 2, em 3 de novembro. A Sprint 4 traz as funcionalidades avançadas e a Sprint 5 a hospedagem, os testes e o relatório final, que fecham na Entrega 3, em 26 de novembro.\nCada requisito vira uma issue no GitHub, para acompanhar o andamento de cada sprint.`);}
 
 /* 16 encerramento */
 {const s=novo(true);
