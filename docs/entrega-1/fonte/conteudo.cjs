@@ -12,7 +12,7 @@ module.exports = {
     ['Curso / Disciplina', P],
     ['Turma / Semestre', P],
     ['Professor(a)', P],
-    ['Integrantes', `${P} nome completo e matrícula de cada integrante. O repositório registra commits das contas GitHub costamaiavitor e caiobholanda; confirmar os nomes e completar a equipe.`],
+    ['Integrantes', 'Back-end: Vitor Custodio e João Vitor · Front-end: Caio e Vitor · Documentação: Christian'],
     ['Cliente / parceiro', `Distribuidora Zero Grau, Fortaleza (CE). ${P} nome do responsável e se a distribuidora participa da validação.`],
     ['Repositório', 'https://github.com/costamaiavitor/Site-Zero-Grau'],
     ['Protótipo publicado', 'https://costamaiavitor.github.io/Site-Zero-Grau/'],
@@ -180,20 +180,21 @@ module.exports = {
     ['CRUD', '/api/cupons', 'Cupons; POST /api/cupons/validar para o cliente (RF09)', 'Admin / Cliente'],
   ],
 
+  equipe: 'Vitor Custodio, João Vitor, Caio, Vitor e Christian',
   papeis: [
-    ['Gerente de Projeto', P, 'Coordena a equipe, mantém o cronograma e o quadro de tarefas, integra front-end e back-end, conduz as apresentações e escreve os relatórios.'],
-    ['Desenvolvedor Front-end', P, 'Implementa a interface em React + Bootstrap (porta, lojas, carrinho, fechamento, painel) e consome a API.'],
-    ['Desenvolvedor Back-end', P, 'Configura o servidor Node/Express, modela o MySQL, escreve as rotas, a autenticação e as regras de preço, frete e estoque.'],
-    ['Designer UX/UI', P, 'Mantém wireframes e protótipo, a identidade visual, a acessibilidade e os testes de usabilidade.'],
+    ['Back-end', 'Vitor Custodio e João Vitor', 'Servidor Node.js + Express, banco MySQL (modelos, migrações e carga do catálogo), rotas da API, autenticação com JWT e as regras de preço, frete e estoque.'],
+    ['Front-end', 'Caio e Vitor', 'Interface em React + Bootstrap (porta, lojas, carrinho, fechamento e painel), consumo da API e responsividade. Vitor cuida também dos diagramas (casos de uso, ER e arquitetura) e dos wireframes.'],
+    ['Documentação', 'Christian', 'Plano de Trabalho, relatórios das Entregas 2 e 3, checklist de conformidade, registro do andamento de cada sprint e roteiro das apresentações.'],
   ],
 
+
   sprints: [
-    ['Sprint 0 — Protótipo', '02/09 a 25/09/2026', 'Protótipo navegável das duas lojas e do painel; padrão de fotos; Pix, CEP e WhatsApp; testes automáticos; publicação no GitHub Pages.', 'Designer UX/UI, Front-end', 'Protótipo publicado (concluída)'],
-    ['Sprint 1 — Planejamento', '26/09 a 29/09/2026', 'Escopo, casos de uso, requisitos, wireframes, modelo ER, arquitetura, cronograma e apresentação.', 'Todos; Gerente de Projeto consolida', 'ENTREGA 1 — Plano de Trabalho (29/09)'],
-    ['Sprint 2 — Base do back-end', '30/09 a 15/10/2026', 'Estrutura do repositório (frontend/ e backend/), Express, MySQL, modelos e migrações, carga dos 15 produtos do protótipo, CRUD de produtos e categorias, cadastro de usuário.', 'Back-end; Gerente de Projeto', 'API respondendo com o catálogo do banco'],
-    ['Sprint 3 — Interface e MVP', '16/10 a 03/11/2026', 'React + Bootstrap: porta, catálogo, carrinho, fechamento; painel com CRUD de produtos e lista de pedidos; pedido gravado no banco e enviado ao WhatsApp; relatório do sistema.', 'Front-end, Designer UX/UI; Back-end integra', 'ENTREGA 2 — MVP (03/11)'],
-    ['Sprint 4 — Funcionalidades avançadas', '04/11 a 17/11/2026', 'Login com JWT e perfil admin, busca e filtro, atacado por caixa, Pix, cupom, histórico e pedir de novo, horário, baixa de estoque.', 'Back-end, Front-end', 'Funcionalidades avançadas integradas'],
-    ['Sprint 5 — Integração e entrega final', '18/11 a 26/11/2026', 'Hospedagem (Vercel + API e banco), testes de ponta a ponta, teste de usabilidade, ajustes, relatório final e apresentação.', 'Todos; Gerente de Projeto consolida', 'ENTREGA 3 — Apresentação final com relatório (26/11)'],
+    ['Sprint 0 — Protótipo', '02/09 a 25/09/2026', 'Protótipo navegável das duas lojas e do painel; padrão de fotos; Pix, CEP e WhatsApp; testes automáticos; publicação no GitHub Pages.', 'Equipe', 'Protótipo publicado (concluída)'],
+    ['Sprint 1 — Planejamento', '26/09 a 29/09/2026', 'Escopo, casos de uso, requisitos, wireframes, modelo ER, arquitetura, cronograma e apresentação.', 'Todos; Documentação (Christian) consolida', 'ENTREGA 1 — Plano de Trabalho (29/09)'],
+    ['Sprint 2 — Base do back-end', '30/09 a 15/10/2026', 'Estrutura do repositório (frontend/ e backend/), Express, MySQL, modelos e migrações, carga dos 15 produtos do protótipo, CRUD de produtos e categorias, cadastro de usuário.', 'Back-end (Vitor Custodio, João Vitor)', 'API respondendo com o catálogo do banco'],
+    ['Sprint 3 — Interface e MVP', '16/10 a 03/11/2026', 'React + Bootstrap: porta, catálogo, carrinho, fechamento; painel com CRUD de produtos e lista de pedidos; pedido gravado no banco e enviado ao WhatsApp; relatório do sistema.', 'Front-end (Caio, Vitor); Back-end integra', 'ENTREGA 2 — MVP (03/11)'],
+    ['Sprint 4 — Funcionalidades avançadas', '04/11 a 17/11/2026', 'Login com JWT e perfil admin, busca e filtro, atacado por caixa, Pix, cupom, histórico e pedir de novo, horário, baixa de estoque.', 'Back-end e Front-end', 'Funcionalidades avançadas integradas'],
+    ['Sprint 5 — Integração e entrega final', '18/11 a 26/11/2026', 'Hospedagem (Vercel + API e banco), testes de ponta a ponta, teste de usabilidade, ajustes, relatório final e apresentação.', 'Todos; Documentação (Christian) consolida o relatório', 'ENTREGA 3 — Apresentação final com relatório (26/11)'],
   ],
   calendario: [
     ['04/08/2026 (ter)', 'Acolhida do semestre e apresentação da disciplina'],

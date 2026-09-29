@@ -54,7 +54,7 @@ const capa=[
   new Paragraph({spacing:{after:600},children:[new TextRun({text:'Etapa 1 — Projeto Inicial',size:30,color:GREY})]}),
   new Paragraph({spacing:{after:100},children:[new TextRun({text:'Zero Grau',bold:true,size:40,color:NAVY})]}),
   new Paragraph({spacing:{after:900},children:[new TextRun({text:'Sistema web de pedidos para distribuidora de bebidas — varejo e atacado',size:26,color:NAVY})]}),
-  ...[['Instituição',C.P],['Curso / Disciplina',C.P],['Professor(a)',C.P],['Equipe',C.P],['Local e data','Fortaleza (CE), 29/09/2026']].map(([k,v])=>new Paragraph({spacing:{after:80},children:[new TextRun({text:k+': ',bold:true,size:22}),...runs(v,{size:22})]})),
+  ...[['Instituição',C.P],['Curso / Disciplina',C.P],['Professor(a)',C.P],['Equipe',C.equipe],['Local e data','Fortaleza (CE), 29/09/2026']].map(([k,v])=>new Paragraph({spacing:{after:80},children:[new TextRun({text:k+': ',bold:true,size:22}),...runs(v,{size:22})]})),
   new Paragraph({children:[new PageBreak()]}),
   new Paragraph({children:[new TextRun({text:'Sumário',bold:true,size:32,color:NAVY})],spacing:{after:200}}),
   ...['1. Identificação','2. Escopo do Sistema','3. Diagramas de Caso de Uso (Principais Fluxos)','4. Requisitos Funcionais','5. Requisitos Não Funcionais','6. Wireframes/Protótipos das Telas Principais','7. Estrutura do Banco de Dados','8. Arquitetura Adotada','9. Divisão da Equipe','10. Cronograma de Execução','11. Funcionalidades Básicas previstas para o desenvolvimento inicial'].map(t=>new Paragraph({spacing:{after:140},children:[new TextRun({text:t,size:24})]})),
@@ -127,8 +127,8 @@ const s8=[h1('8. Arquitetura Adotada'),
 
 /* ---------------- 9 ---------------- */
 const s9=[h1('9. Divisão da Equipe'),
-  p('A equipe segue os quatro papéis sugeridos no enunciado. O nome de cada integrante será definido pela equipe.'),
-  tituloTab('Papéis e responsabilidades'),tabela(['Papel','Integrante','Responsabilidades'],C.papeis,[2300,1800,W-4100],{boldCol:0})];
+  p('A equipe tem cinco integrantes, divididos em três frentes. O enunciado sugere quatro funções (Front-end, Back-end, Designer UX/UI e Gerente de Projeto) e deixa a divisão a critério do grupo. Aqui, o trabalho de Designer UX/UI (wireframes e diagramas) fica com Vitor, na frente de Front-end, e o acompanhamento do cronograma fica com a Documentação, que registra o andamento de cada sprint.'),
+  tituloTab('Frentes, integrantes e responsabilidades'),tabela(['Frente','Integrantes','Responsabilidades'],C.papeis,[1700,2300,W-4000],{boldCol:0})];
 
 /* ---------------- 10 ---------------- */
 const s10=[h1('10. Cronograma de Execução'),

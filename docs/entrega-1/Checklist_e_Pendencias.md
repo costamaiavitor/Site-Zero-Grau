@@ -4,7 +4,7 @@
 
 | Item exigido | Seção do documento | Slide(s) | Status |
 |---|---|---|---|
-| Identificação | 1 (e capa) | 1, 16 | [PREENCHER] instituição, disciplina, professor(a), integrantes (data da Entrega 1 preenchida: 29/09/2026) |
+| Identificação | 1 (e capa) | 1, 16 | [PREENCHER] instituição, disciplina, professor(a). Equipe e data preenchidas |
 | Escopo: problema real | 2.1 | 2 | ✅ (falta 1 dado da distribuidora, ver pendência 7) |
 | Escopo: funcionalidade principal | 2.2 | 2 | ✅ |
 | Escopo: público-alvo | 2.3 | 3 | ✅ |
@@ -17,22 +17,22 @@
 | Diagrama ER (entidades, atributos, PK/FK, cardinalidades) | 7 (Figura 12) | 11 | ✅ |
 | Dicionário de dados resumido | 7 (Tabela 7) | — | ✅ |
 | Arquitetura: front-end ↔ API ↔ banco | 8 (Figura 13 e rotas) | 12 | ✅ |
-| Divisão da equipe (4 papéis) | 9 | 13 | [PREENCHER] nome de cada papel |
+| Divisão da equipe | 9 | 13 | ✅ três frentes: Back-end (Vitor Custodio, João Vitor), Front-end (Caio, Vitor), Documentação (Christian) |
 | Cronograma: sprints, atividades, responsáveis e marcos das Entregas 1, 2 e 3 | 10 (com as datas da disciplina) | 15 | ✅ Entregas em 29/09, 03/11 e 26/11/2026 |
 | Funcionalidades básicas do desenvolvimento inicial | 11 | 14 | ✅ |
-| Notas do apresentador (quem fala o quê) | — | 1–16 | ✅ (o nome de quem fala está como [PREENCHER]) |
+| Notas do apresentador (quem fala o quê) | — | 1–16 | ✅ com o nome de quem fala em cada slide |
 
 ## Pendências [PREENCHER]
 
 1. **Instituição, curso/disciplina e turma/semestre.** Documento: capa e seção 1. Slide 1.
 2. **Professor(a).** Documento: capa e seção 1. Slide 1.
-3. **Nome e matrícula dos integrantes.** Documento: capa e seção 1. Slides 1 e 16. O repositório tem commits das contas costamaiavitor e caiobholanda; confirme se as duas são da equipe e quem mais participa.
-4. **Quem ocupa cada papel** (Gerente, Front-end, Back-end, UX/UI). Documento: seção 9. Slide 13 e a primeira linha das notas de todos os slides.
-5. **Como a distribuidora recebe pedidos hoje** (telefone, WhatsApp, balcão) **e volume aproximado por semana.** Documento: seção 2.1.
-6. **Responsável na distribuidora e se ela participa da validação.** Documento: seção 1.
-7. **Dia e horário da reunião de acompanhamento.** Documento: seção 10.
+3. **Como a distribuidora recebe pedidos hoje** (telefone, WhatsApp, balcão) **e volume aproximado por semana.** Documento: seção 2.1.
+4. **Responsável na distribuidora e se ela participa da validação.** Documento: seção 1.
+5. **Dia e horário da reunião de acompanhamento.** Documento: seção 10.
 
 ## Decisões tomadas no plano (confirmar com a equipe)
+
+- A equipe foi dividida em três frentes em vez dos quatro papéis que o enunciado sugere. O trabalho de Designer UX/UI (wireframes e diagramas) ficou com Vitor, no Front-end, e o acompanhamento do cronograma com a Documentação (Christian).
 
 - Banco **MySQL 8 com Sequelize**, API **Node.js + Express**, **React (Vite) + Bootstrap 5**, login com **bcrypt + JWT**.
 - Front-end na **Vercel**; o provedor da API e do banco fica para a Sprint 5.

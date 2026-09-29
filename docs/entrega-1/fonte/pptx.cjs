@@ -25,7 +25,7 @@ const card=(s,x,y,w,h,fill=LIGHT)=>s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x,y
 const txt=(s,t,o)=>s.addText(t,{fontFace:F,margin:0,isTextBox:true,valign:'top',...o});
 const img=(s,f,x,y,w,h)=>{s.addImage({path:IMG(f),x,y,w,h});};
 const fit=(f,maxW,maxH)=>{const [w,h]=pngSize(IMG(f));let W=maxW,H=maxW*h/w;if(H>maxH){H=maxH;W=maxH*w/h;}return [W,H];};
-const quem=p=>`[${p} — nome: ${P}]`;
+const quem=n=>`[${n}]`;
 
 /* 1 capa */
 {const s=novo(true);
@@ -41,9 +41,9 @@ const quem=p=>`[${p} — nome: ${P}]`;
  txt(s,'Plano de Trabalho',{x:0.5,y:1.45,w:4.6,h:0.8,fontSize:36,bold:true,color:WHITE});
  txt(s,'ZERO GRAU',{x:0.5,y:2.35,w:4.6,h:0.45,fontSize:22,bold:true,color:CYAN,charSpacing:2});
  txt(s,'Sistema web de pedidos para distribuidora de bebidas — varejo e atacado',{x:0.5,y:2.85,w:4.4,h:0.7,fontSize:15,color:'DFE0EE'});
- txt(s,[{text:'Disciplina: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Professor(a): ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Equipe: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Data: ',options:{bold:true}},{text:'29/09/2026'}],
+ txt(s,[{text:'Disciplina: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Professor(a): ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Equipe: ',options:{bold:true}},{text:C.equipe,options:{breakLine:true}},{text:'Data: ',options:{bold:true}},{text:'29/09/2026'}],
    {x:0.5,y:4.0,w:4.6,h:1.1,fontSize:11,color:'B8B9CC',paraSpaceAfter:3});
- s.addNotes(`${quem('Gerente de Projeto')}\nBoa noite. Somos a equipe ${P} e vamos apresentar o Plano de Trabalho do nosso trabalho final: o Zero Grau, um sistema web de pedidos para uma distribuidora de bebidas de Fortaleza, que vende tanto para quem consome quanto para quem revende.\nNa apresentação passamos por escopo, casos de uso, requisitos, telas, banco de dados, arquitetura, equipe e cronograma. A imagem ao lado é o protótipo que já está no ar.`);}
+ s.addNotes(`${quem('Christian')}\nBoa noite. Somos ${C.equipe}, e vamos apresentar o Plano de Trabalho do nosso trabalho final: o Zero Grau, um sistema web de pedidos para uma distribuidora de bebidas de Fortaleza, que vende tanto para quem consome quanto para quem revende.\nNa apresentação passamos por escopo, casos de uso, requisitos, telas, banco de dados, arquitetura, equipe e cronograma. A imagem ao lado é o protótipo que já está no ar.`);}
 
 /* 2 problema e escopo */
 {const s=novo();tit(s,'Problema e escopo');
@@ -55,7 +55,7 @@ const quem=p=>`[${p} — nome: ${P}]`;
  txt(s,'Pedido online em duas vitrines: CPF compra no varejo, CNPJ compra no atacado.',{x:5.4,y:1.65,w:3.9,h:0.7,fontSize:15,bold:true,color:NAVY});
  const passos=[['FaUserPlus','Cadastro com CPF ou CNPJ'],['FaListUl','Catálogo e carrinho'],['FaMapMarkerAlt','Entrega calculada pelo CEP'],['FaQrcode','Pix no site ou pagamento na entrega'],['FaWhatsapp','Pedido gravado e enviado ao WhatsApp'],['FaTools','Painel: produtos, regras e pedidos']];
  passos.forEach(([ic,t],i)=>{const y=2.5+i*0.42;circ(s,ic,5.4,y,0.32);txt(s,t,{x:5.85,y:y+0.02,w:3.5,h:0.3,fontSize:12,color:NAVY,valign:'middle'});});
- s.addNotes(`${quem('Gerente de Projeto')}\nO problema real: a distribuidora atende dois públicos com necessidades opostas. O consumidor quer uma unidade gelada entregue rápido; o revendedor quer caixa fechada com preço de atacado. Os dois disputam o mesmo estoque.\nSem sistema, preço, estoque e taxa de entrega são informados à mão e os pedidos não ficam registrados.\nA funcionalidade principal é o pedido online em duas vitrines: quem se cadastra com CPF compra no varejo; com CNPJ, no atacado. O fluxo vai do cadastro ao pedido gravado no banco e enviado ao WhatsApp da loja, e o dono mantém tudo por um painel.`);}
+ s.addNotes(`${quem('Christian')}\nO problema real: a distribuidora atende dois públicos com necessidades opostas. O consumidor quer uma unidade gelada entregue rápido; o revendedor quer caixa fechada com preço de atacado. Os dois disputam o mesmo estoque.\nSem sistema, preço, estoque e taxa de entrega são informados à mão e os pedidos não ficam registrados.\nA funcionalidade principal é o pedido online em duas vitrines: quem se cadastra com CPF compra no varejo; com CNPJ, no atacado. O fluxo vai do cadastro ao pedido gravado no banco e enviado ao WhatsApp da loja, e o dono mantém tudo por um painel.`);}
 
 /* 3 público-alvo */
 {const s=novo();tit(s,'Público-alvo');
@@ -66,7 +66,7 @@ const quem=p=>`[${p} — nome: ${P}]`;
    txt(s,t,{x:x+0.3,y:2.4,w:2.3,h:0.4,fontSize:18,bold:true,color:NAVY});
    txt(s,sub,{x:x+0.3,y:2.82,w:2.3,h:0.3,fontSize:12,bold:true,color:PINKD});
    txt(s,d,{x:x+0.3,y:3.25,w:2.3,h:1.4,fontSize:12.5,color:GREY});});
- s.addNotes(`${quem('Designer UX/UI')}\nSão três públicos. O consumidor final, maior de 18 anos e dentro da área de entrega, que compra por unidade e quase sempre pelo celular; por isso o layout é pensado primeiro para o celular.\nO revendedor, identificado pelo CNPJ, que compra por caixa fechada, com desconto de revenda e um pedido mínimo próprio. Para ele a tela é uma tabela mais sóbria.\nE o administrador, o dono da distribuidora, que precisa mudar preço, estoque e promoção sem depender de programador.`);}
+ s.addNotes(`${quem('Vitor (diagramas)')}\nSão três públicos. O consumidor final, maior de 18 anos e dentro da área de entrega, que compra por unidade e quase sempre pelo celular; por isso o layout é pensado primeiro para o celular.\nO revendedor, identificado pelo CNPJ, que compra por caixa fechada, com desconto de revenda e um pedido mínimo próprio. Para ele a tela é uma tabela mais sóbria.\nE o administrador, o dono da distribuidora, que precisa mudar preço, estoque e promoção sem depender de programador.`);}
 
 /* 4 tecnologias */
 {const s=novo();tit(s,'Tecnologias');
@@ -82,7 +82,7 @@ const quem=p=>`[${p} — nome: ${P}]`;
  card(s,0.5,4.35,9.0,0.8,NAVY);
  txt(s,[{text:'Integrações  ',options:{bold:true,color:CYAN}},{text:'ViaCEP · WhatsApp · Pix BR Code    ',options:{color:WHITE}},{text:'Qualidade  ',options:{bold:true,color:CYAN}},{text:'GitHub Actions · Playwright    ',options:{color:WHITE}},{text:'Hospedagem  ',options:{bold:true,color:CYAN}},{text:'Vercel',options:{color:WHITE}}],
    {x:0.7,y:4.35,w:8.7,h:0.8,fontSize:11,valign:'middle'});
- s.addNotes(`${quem('Desenvolvedor Front-end')} (front-end) e ${quem('Desenvolvedor Back-end')} (back-end e banco)\nFront-end: HTML, JavaScript, React e Bootstrap, exatamente o que o enunciado pede. React porque as duas lojas e o painel repetem componentes, como o card do produto e o carrinho; Bootstrap pela grade responsiva.\nBack-end: Node.js com Express, a mesma linguagem do front. A senha é guardada com bcrypt e a sessão usa token JWT.\nBanco: MySQL. Os dados são relacionais, pedido tem itens e itens apontam para produtos, e precisamos de transação para não vender o que não existe no estoque.\nAs integrações com ViaCEP, WhatsApp e Pix já funcionam no protótipo. Front-end hospedado na Vercel, como sugere o enunciado.`);}
+ s.addNotes(`${quem('Caio')} (front-end) e ${quem('Vitor Custodio')} (back-end e banco)\nFront-end: HTML, JavaScript, React e Bootstrap, exatamente o que o enunciado pede. React porque as duas lojas e o painel repetem componentes, como o card do produto e o carrinho; Bootstrap pela grade responsiva.\nBack-end: Node.js com Express, a mesma linguagem do front. A senha é guardada com bcrypt e a sessão usa token JWT.\nBanco: MySQL. Os dados são relacionais, pedido tem itens e itens apontam para produtos, e precisamos de transação para não vender o que não existe no estoque.\nAs integrações com ViaCEP, WhatsApp e Pix já funcionam no protótipo. Front-end hospedado na Vercel, como sugere o enunciado.`);}
 
 /* 5 e 6 casos de uso */
 {const s=novo();tit(s,'Casos de uso — loja');const [w,h]=fit('uc-loja',6.3,4.5);img(s,'uc-loja',0.4,0.95,w,h);
@@ -90,12 +90,12 @@ const quem=p=>`[${p} — nome: ${P}]`;
    {text:'Sistemas externos',options:{bold:true,color:PINKD,breakLine:true}},{text:'ViaCEP e WhatsApp',options:{breakLine:true}},{text:' ',options:{breakLine:true}},
    {text:'«include»',options:{bold:true,color:PINKD}},{text:' sempre executa',options:{breakLine:true}},{text:'«extend»',options:{bold:true,color:'00897B'}},{text:' opcional'}],
    {x,y:1.3,w:9.6-x,h:3.5,fontSize:12,color:NAVY});
- s.addNotes(`${quem('Designer UX/UI')}\nNa loja o ator é o Cliente, que se especializa em Consumidor, com CPF, e Revendedor, com CNPJ.\nSão seis casos principais: criar conta, entrar, consultar catálogo, montar carrinho, finalizar pedido e consultar meus pedidos.\nFinalizar pedido sempre inclui calcular a entrega pelo CEP, que consulta o ViaCEP, registrar o pedido e enviar ao WhatsApp. Pagar com Pix é uma extensão opcional. Comprar por caixa fechada estende o carrinho, e é o que muda para o revendedor.\nO documento descreve os seis fluxos passo a passo, com fluxos alternativos, como CEP fora do raio e loja fechada.`);}
+ s.addNotes(`${quem('Vitor (diagramas)')}\nNa loja o ator é o Cliente, que se especializa em Consumidor, com CPF, e Revendedor, com CNPJ.\nSão seis casos principais: criar conta, entrar, consultar catálogo, montar carrinho, finalizar pedido e consultar meus pedidos.\nFinalizar pedido sempre inclui calcular a entrega pelo CEP, que consulta o ViaCEP, registrar o pedido e enviar ao WhatsApp. Pagar com Pix é uma extensão opcional. Comprar por caixa fechada estende o carrinho, e é o que muda para o revendedor.\nO documento descreve os seis fluxos passo a passo, com fluxos alternativos, como CEP fora do raio e loja fechada.`);}
 {const s=novo();tit(s,'Casos de uso — painel');const [w,h]=fit('uc-painel',6.3,4.4);img(s,'uc-painel',0.4,1.05,w,h);
  const x=0.4+w+0.3;txt(s,[{text:'Administrador',options:{bold:true,color:PINKD,breakLine:true}},{text:'5 casos principais',options:{breakLine:true}},{text:' ',options:{breakLine:true}},
    {text:'Gerenciar pedidos',options:{bold:true,color:PINKD,breakLine:true}},{text:'recebido → confirmado → em preparo → saiu → entregue',options:{breakLine:true}},{text:' ',options:{breakLine:true}},{text:'Estoque atualizado a cada pedido'}],
    {x,y:1.3,w:9.6-x,h:3.5,fontSize:12,color:NAVY});
- s.addNotes(`${quem('Designer UX/UI')}\nNo painel o ator é o administrador. Ele entra com perfil de administrador e tem cinco casos principais: gerenciar produtos, com envio de foto; configurar as regras de venda do varejo e do atacado, incluindo cupom e faixas por volume; configurar os dados da loja, como chave Pix e horário; e gerenciar pedidos.\nAo gerenciar pedidos ele muda o status, de recebido até entregue, e o estoque é atualizado.`);}
+ s.addNotes(`${quem('Vitor (diagramas)')}\nNo painel o ator é o administrador. Ele entra com perfil de administrador e tem cinco casos principais: gerenciar produtos, com envio de foto; configurar as regras de venda do varejo e do atacado, incluindo cupom e faixas por volume; configurar os dados da loja, como chave Pix e horário; e gerenciar pedidos.\nAo gerenciar pedidos ele muda o status, de recebido até entregue, e o estoque é atualizado.`);}
 
 /* 7 requisitos */
 {const s=novo();tit(s,'Requisitos');
@@ -110,7 +110,7 @@ const quem=p=>`[${p} — nome: ${P}]`;
  card(s,4.2,3.85,5.3,1.3);
  txt(s,'Não funcionais',{x:4.45,y:3.98,w:4.8,h:0.3,fontSize:13,bold:true,color:PINKD});
  txt(s,'Responsivo · Acessível (WCAG AA) · Senha em hash e HTTPS · Total recalculado no servidor · Venda só a maiores de 18 · LGPD · Imagens leves',{x:4.45,y:4.3,w:4.85,h:0.8,fontSize:11.5,color:NAVY});
- s.addNotes(`${quem('Desenvolvedor Back-end')}\nLevantamos ${C.rf.length} requisitos funcionais e ${C.rnf.length} não funcionais; a tabela completa está nas seções 4 e 5 do documento, com prioridade, caso de uso e em qual entrega cada um fica pronto.\nDez entram no MVP da Entrega 2: aviso de maioridade, cadastro, direcionamento pela loja do documento, catálogo lido do banco, carrinho, entrega pelo CEP, finalizar pedido, envio ao WhatsApp, CRUD de produtos e lista de pedidos.\nNos não funcionais destaco dois: o total é sempre recalculado no servidor, porque não se confia no preço que vem do navegador, e a venda de bebida alcoólica só para maiores de 18, exigência do ECA.`);}
+ s.addNotes(`${quem('João Vitor')}\nLevantamos ${C.rf.length} requisitos funcionais e ${C.rnf.length} não funcionais; a tabela completa está nas seções 4 e 5 do documento, com prioridade, caso de uso e em qual entrega cada um fica pronto.\nDez entram no MVP da Entrega 2: aviso de maioridade, cadastro, direcionamento pela loja do documento, catálogo lido do banco, carrinho, entrega pelo CEP, finalizar pedido, envio ao WhatsApp, CRUD de produtos e lista de pedidos.\nNos não funcionais destaco dois: o total é sempre recalculado no servidor, porque não se confia no preço que vem do navegador, e a venda de bebida alcoólica só para maiores de 18, exigência do ECA.`);}
 
 /* 8-10 wireframes */
 const wf=[[0,1,2],[3,4,5],[6,7,8]];
@@ -124,7 +124,7 @@ for(let k=0;k<3;k++){const s=novo();tit(s,`Protótipo das telas (${k+1}/3)`);
    s.addImage({path:IMG(f),x,y:Y,w,h});
    txt(s,t,{x,y:Y+h+0.18,w,h:0.55,fontSize:14,bold:true,color:NAVY});
    txt(s,obj,{x,y:Y+h+0.78,w,h:1.3,fontSize:12,color:GREY});});
- s.addNotes(`${quem('Designer UX/UI')}\n${falas[k]}`);}
+ s.addNotes(`${quem('Caio')}\n${falas[k]}`);}
 
 /* 11 ER */
 {const s=novo();tit(s,'Banco de dados');const [w,h]=fit('er',5.4,4.5);img(s,'er',0.45,0.95,w,h);
@@ -132,23 +132,23 @@ for(let k=0;k<3;k++){const s=novo();tit(s,`Protótipo das telas (${k+1}/3)`);
  txt(s,'12',{x,y:1.05,w:1.2,h:0.8,fontSize:48,bold:true,color:PINKD});txt(s,'entidades · MySQL 8',{x:x+1.1,y:1.3,w:9.5-x-1.1,h:0.4,fontSize:13,color:GREY});
  txt(s,[{text:'Pedido → itens → produto',options:{bullet:true,breakLine:true}},{text:'Pagamento 1:1 com o pedido',options:{bullet:true,breakLine:true}},{text:'Endereço nulo = retirada no balcão',options:{bullet:true,breakLine:true}},{text:'Item guarda o preço do momento da compra',options:{bullet:true,breakLine:true}},{text:'Regras, horário e faixas de atacado no banco, editáveis pelo painel',options:{bullet:true}}],
    {x,y:2.05,w:9.55-x,h:3.0,fontSize:12,color:NAVY,paraSpaceAfter:6});
- s.addNotes(`${quem('Desenvolvedor Back-end')}\nO banco é MySQL, com doze entidades. O núcleo é usuário, pedido, item do pedido e produto. Cada pedido tem pelo menos um item, e o item guarda o preço do momento da compra, para que mudar o preço depois não altere pedidos antigos.\nPagamento é um para um com o pedido. O endereço é opcional no pedido, porque retirada no balcão não tem endereço.\nEmbaixo fica a configuração da loja: horário, regras de venda do varejo e do atacado e as faixas de desconto por volume. Tudo isso é editado pelo painel. O dicionário de dados está na seção 7.`);}
+ s.addNotes(`${quem('João Vitor')}\nO banco é MySQL, com doze entidades. O núcleo é usuário, pedido, item do pedido e produto. Cada pedido tem pelo menos um item, e o item guarda o preço do momento da compra, para que mudar o preço depois não altere pedidos antigos.\nPagamento é um para um com o pedido. O endereço é opcional no pedido, porque retirada no balcão não tem endereço.\nEmbaixo fica a configuração da loja: horário, regras de venda do varejo e do atacado e as faixas de desconto por volume. Tudo isso é editado pelo painel. O dicionário de dados está na seção 7.`);}
 
 /* 12 arquitetura */
 {const s=novo();tit(s,'Arquitetura');const [w,h]=fit('arq',9.0,3.35);img(s,'arq',(10-w)/2,1.0,w,h);
  const y=1.0+h+0.2;
  [['Preço calculado no servidor'],['Pedido e estoque na mesma transação'],['REST + JSON + token JWT']].forEach(([t],i)=>{const x=0.5+i*3.07;card(s,x,y,2.85,0.55,LIGHT);circ(s,'FaCheck',x+0.12,y+0.1,0.35,NAVY);txt(s,t,{x:x+0.55,y,w:2.25,h:0.55,fontSize:11.5,bold:true,color:NAVY,valign:'middle'});});
- s.addNotes(`${quem('Desenvolvedor Back-end')} e ${quem('Gerente de Projeto')}\nA arquitetura tem três camadas. O front-end em React roda no navegador e só conversa com a API. A API em Node e Express concentra as regras de negócio e é a única que acessa o MySQL. A comunicação é REST com JSON, e depois do login cada chamada leva o token JWT.\nDuas decisões importantes: o preço e o frete são recalculados no servidor, e o pedido e a baixa de estoque acontecem na mesma transação.\nViaCEP e WhatsApp são chamados pelo navegador. O front vai para a Vercel; o provedor da API e do banco escolhemos na Sprint 5.`);}
+ s.addNotes(`${quem('Vitor Custodio')}\nA arquitetura tem três camadas. O front-end em React roda no navegador e só conversa com a API. A API em Node e Express concentra as regras de negócio e é a única que acessa o MySQL. A comunicação é REST com JSON, e depois do login cada chamada leva o token JWT.\nDuas decisões importantes: o preço e o frete são recalculados no servidor, e o pedido e a baixa de estoque acontecem na mesma transação.\nViaCEP e WhatsApp são chamados pelo navegador. O front vai para a Vercel; o provedor da API e do banco escolhemos na Sprint 5.`);}
 
 /* 13 equipe */
 {const s=novo();tit(s,'Divisão da equipe');
- const icp={'Gerente de Projeto':'FaClipboardList','Desenvolvedor Front-end':'FaCode','Desenvolvedor Back-end':'FaServer','Designer UX/UI':'FaPalette'};
- const resumo={'Gerente de Projeto':'Cronograma, integração front ↔ back, apresentações e relatórios','Desenvolvedor Front-end':'Interface em React + Bootstrap e consumo da API','Desenvolvedor Back-end':'Servidor Express, MySQL, autenticação e regras de preço e estoque','Designer UX/UI':'Wireframes, identidade visual, acessibilidade e testes de usabilidade'};
- C.papeis.forEach(([papel],i)=>{const col=i%2,row=Math.floor(i/2),x=0.5+col*4.6,y=1.15+row*2.0;card(s,x,y,4.4,1.8);circ(s,icp[papel],x+0.25,y+0.3,0.6,i%2?NAVY:PINKD);
-   txt(s,papel,{x:x+1.05,y:y+0.25,w:3.2,h:0.35,fontSize:15,bold:true,color:NAVY});
-   txt(s,P,{x:x+1.05,y:y+0.62,w:3.2,h:0.3,fontSize:12,bold:true,color:PINKD});
-   txt(s,resumo[papel],{x:x+1.05,y:y+0.97,w:3.2,h:0.7,fontSize:11.5,color:GREY});});
- s.addNotes(`${quem('Gerente de Projeto')}\nSeguimos os quatro papéis do enunciado. ${P} é o gerente de projeto: cuida do cronograma, integra front e back e conduz as apresentações. ${P} é o desenvolvedor front-end, com a interface em React e Bootstrap. ${P} é o desenvolvedor back-end, com o servidor Express, o MySQL, a autenticação e as regras de preço e estoque. ${P} é o designer UX/UI, responsável pelos wireframes, pela identidade visual e pelos testes de usabilidade.`);}
+ const icp={'Back-end':'FaServer','Front-end':'FaCode','Documentação':'FaClipboardList'};
+ const resumo={'Back-end':'Node.js + Express, MySQL, API, login e regras de preço, frete e estoque','Front-end':'React + Bootstrap, telas e consumo da API · Vitor também nos diagramas e wireframes','Documentação':'Plano de Trabalho, relatórios, checklist e andamento das sprints'};
+ C.papeis.forEach(([area,nomes],i)=>{const x=0.5+i*3.07;card(s,x,1.25,2.85,3.0);circ(s,icp[area],x+0.3,1.5,0.7,i===1?NAVY:PINKD);
+   txt(s,area,{x:x+0.3,y:2.4,w:2.3,h:0.4,fontSize:18,bold:true,color:NAVY});
+   txt(s,nomes,{x:x+0.3,y:2.82,w:2.3,h:0.55,fontSize:13,bold:true,color:PINKD});
+   txt(s,resumo[area],{x:x+0.3,y:3.45,w:2.3,h:1.3,fontSize:12,color:GREY});});
+ s.addNotes(`${quem('Christian')}\nSomos cinco, em três frentes. No back-end, Vitor Custodio e João Vitor: servidor Node com Express, banco MySQL, autenticação e as regras de preço, frete e estoque. No front-end, Caio e Vitor: a interface em React com Bootstrap e a ligação com a API; o Vitor também faz os diagramas e os wireframes. Eu, Christian, cuido da documentação: o plano, os relatórios das próximas entregas e o registro do andamento de cada sprint.`);}
 
 /* 14 funcionalidades básicas */
 {const s=novo();tit(s,'Funcionalidades básicas do MVP');
@@ -158,7 +158,7 @@ for(let k=0;k<3;k++){const s=novo();tit(s,`Protótipo das telas (${k+1}/3)`);
    txt(s,nomes[i],{x:x+0.85,y:y+0.1,w:3.4,h:0.32,fontSize:12.5,bold:true,color:NAVY});
    const novoItem=b[2]==='Não';txt(s,(novoItem?'Novo · ':'No protótipo ✓ · ')+b[1],{x:x+0.85,y:y+0.45,w:3.4,h:0.28,fontSize:10.5,bold:true,color:novoItem?PINKD:'00897B'});});
  txt(s,'Depois do MVP (Entrega 3): login com token, busca e filtro, atacado, Pix, cupom, histórico.',{x:5.1,y:4.1,w:4.4,h:0.8,fontSize:11.5,color:GREY,italic:true});
- s.addNotes(`${quem('Desenvolvedor Front-end')}\nPara o desenvolvimento inicial, o MVP da Entrega 2, escolhemos o que o enunciado pede nessa etapa: interface responsiva e CRUD integrado ao banco.\nSão sete funcionalidades: aviso de maioridade e cadastro, catálogo lido do banco, carrinho, entrega pelo CEP, finalizar pedido gravando no banco e enviando ao WhatsApp, CRUD de produtos no painel e a lista de pedidos com status.\nSeis já existem no protótipo; o que muda é que passam a gravar no MySQL pela API. A lista de pedidos é nova. Login com token, busca, atacado e Pix ficam para a Entrega 3, como pede o enunciado da Etapa 3.`);}
+ s.addNotes(`${quem('Caio')}\nPara o desenvolvimento inicial, o MVP da Entrega 2, escolhemos o que o enunciado pede nessa etapa: interface responsiva e CRUD integrado ao banco.\nSão sete funcionalidades: aviso de maioridade e cadastro, catálogo lido do banco, carrinho, entrega pelo CEP, finalizar pedido gravando no banco e enviando ao WhatsApp, CRUD de produtos no painel e a lista de pedidos com status.\nSeis já existem no protótipo; o que muda é que passam a gravar no MySQL pela API. A lista de pedidos é nova. Login com token, busca, atacado e Pix ficam para a Entrega 3, como pede o enunciado da Etapa 3.`);}
 
 /* 15 cronograma */
 {const s=novo();tit(s,'Cronograma');
@@ -174,15 +174,15 @@ for(let k=0;k<3;k++){const s=novo();tit(s,`Protótipo das telas (${k+1}/3)`);
      txt(s,{'ENTREGA 1':'Plano · 29/09','ENTREGA 2':'MVP · 03/11','ENTREGA 3':'Final · 26/11'}[m],{x,y:y+2.6,w,h:0.3,fontSize:10.5,color:NAVY,align:'center'});}
    if(feito){txt(s,'concluída',{x,y:y+2.1,w,h:0.3,fontSize:10.5,bold:true,color:'00897B',align:'center'});}});
  txt(s,'Entregas: 29/09 · 03/11 · 26/11 · uma issue no GitHub por requisito · depois: 2ª chamada 03/12, fim das aulas 08/12',{x:0.5,y:4.85,w:9,h:0.3,fontSize:11,color:GREY});
- s.addNotes(`${quem('Gerente de Projeto')}\nO cronograma segue o calendário da disciplina e tem seis sprints. A Sprint 0, de 2 a 25 de setembro, começou logo depois da definição das equipes e já está concluída: é o protótipo que mostramos. A Sprint 1 é este planejamento, que fecha hoje, 29 de setembro, na Entrega 1.\nAs Sprints 2 e 3, de 30 de setembro a 3 de novembro, constroem o MVP: primeiro a base do back-end com MySQL e CRUD, depois a interface em React integrada à API. Elas fecham na Entrega 2, em 3 de novembro. A Sprint 4 traz as funcionalidades avançadas e a Sprint 5 a hospedagem, os testes e o relatório final, que fecham na Entrega 3, em 26 de novembro.\nCada requisito vira uma issue no GitHub, para acompanhar o andamento de cada sprint.`);}
+ s.addNotes(`${quem('Christian')}\nO cronograma segue o calendário da disciplina e tem seis sprints. A Sprint 0, de 2 a 25 de setembro, começou logo depois da definição das equipes e já está concluída: é o protótipo que mostramos. A Sprint 1 é este planejamento, que fecha hoje, 29 de setembro, na Entrega 1.\nAs Sprints 2 e 3, de 30 de setembro a 3 de novembro, constroem o MVP: primeiro a base do back-end com MySQL e CRUD, depois a interface em React integrada à API. Elas fecham na Entrega 2, em 3 de novembro. A Sprint 4 traz as funcionalidades avançadas e a Sprint 5 a hospedagem, os testes e o relatório final, que fecham na Entrega 3, em 26 de novembro.\nCada requisito vira uma issue no GitHub, para acompanhar o andamento de cada sprint.`);}
 
 /* 16 encerramento */
 {const s=novo(true);
  txt(s,'Obrigado!',{x:0.5,y:1.3,w:9,h:0.9,fontSize:44,bold:true,color:WHITE});
  txt(s,'Perguntas?',{x:0.5,y:2.2,w:9,h:0.5,fontSize:20,color:CYAN});
  txt(s,[{text:'Protótipo  ',options:{bold:true,color:PINK}},{text:C.prototipo,options:{color:WHITE,breakLine:true}},{text:'Repositório  ',options:{bold:true,color:PINK}},{text:C.repo,options:{color:WHITE}}],{x:0.5,y:3.3,w:9,h:0.8,fontSize:13,paraSpaceAfter:6});
- txt(s,'Equipe: '+P,{x:0.5,y:4.6,w:9,h:0.3,fontSize:11,color:'B8B9CC'});
- s.addNotes(`${quem('Gerente de Projeto')}\nEsse é o nosso plano. O protótipo está no ar no endereço do slide e todo o código está no repositório. Obrigado, ficamos à disposição para perguntas.`);}
+ txt(s,'Equipe: '+C.equipe,{x:0.5,y:4.6,w:9,h:0.3,fontSize:11,color:'B8B9CC'});
+ s.addNotes(`${quem('Christian')}\nEsse é o nosso plano. O protótipo está no ar no endereço do slide e todo o código está no repositório. Obrigado, ficamos à disposição para perguntas.`);}
 
 await pres.writeFile({fileName:path.join(__dirname,'..','Entrega1_Apresentacao_ZeroGrau.pptx')});console.log('slides',n);
 })();

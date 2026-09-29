@@ -28,6 +28,14 @@ React + Bootstrap, API em Node.js + Express e banco MySQL.
 | 2 — MVP | 03/11/2026 | a fazer | — |
 | 3 — Apresentação final com relatório | 26/11/2026 | a fazer | — |
 
+### Equipe
+
+| Frente | Integrantes |
+|---|---|
+| Back-end | Vitor Custodio e João Vitor |
+| Front-end | Caio e Vitor (também diagramas e wireframes) |
+| Documentação | Christian |
+
 ## Estrutura do repositório
 
 ```
