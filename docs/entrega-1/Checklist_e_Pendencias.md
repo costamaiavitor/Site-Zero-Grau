@@ -4,8 +4,8 @@
 
 | Item exigido | Seção do documento | Slide(s) | Status |
 |---|---|---|---|
-| Identificação | 1 (e capa) | 1, 16 | [PREENCHER] instituição, disciplina, professor(a). Equipe e data preenchidas |
-| Escopo: problema real | 2.1 | 2 | ✅ (falta 1 dado da distribuidora, ver pendência 7) |
+| Identificação | 1 (e capa) | 1, 16 | ✅ Unifor, Ciência da Computação, Desenvolvimento de Plataformas Web, prof. Francisco Estevão |
+| Escopo: problema real | 2.1 | 2 | ✅ |
 | Escopo: funcionalidade principal | 2.2 | 2 | ✅ |
 | Escopo: público-alvo | 2.3 | 3 | ✅ |
 | Escopo: tecnologias, com justificativa e aderência ao enunciado | 2.4 | 4 | ✅ |
@@ -24,11 +24,7 @@
 
 ## Pendências [PREENCHER]
 
-1. **Instituição, curso/disciplina e turma/semestre.** Documento: capa e seção 1. Slide 1.
-2. **Professor(a).** Documento: capa e seção 1. Slide 1.
-3. **Como a distribuidora recebe pedidos hoje** (telefone, WhatsApp, balcão) **e volume aproximado por semana.** Documento: seção 2.1.
-4. **Responsável na distribuidora e se ela participa da validação.** Documento: seção 1.
-5. **Dia e horário da reunião de acompanhamento.** Documento: seção 10.
+Nenhuma. O documento e a apresentação não têm mais nenhum [PREENCHER].
 
 ## Decisões tomadas no plano (confirmar com a equipe)
 

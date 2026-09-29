@@ -41,8 +41,8 @@ const quem=n=>`[${n}]`;
  txt(s,'Plano de Trabalho',{x:0.5,y:1.45,w:4.6,h:0.8,fontSize:36,bold:true,color:WHITE});
  txt(s,'ZERO GRAU',{x:0.5,y:2.35,w:4.6,h:0.45,fontSize:22,bold:true,color:CYAN,charSpacing:2});
  txt(s,'Sistema web de pedidos para distribuidora de bebidas — varejo e atacado',{x:0.5,y:2.85,w:4.4,h:0.7,fontSize:15,color:'DFE0EE'});
- txt(s,[{text:'Disciplina: ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Professor(a): ',options:{bold:true}},{text:P,options:{breakLine:true}},{text:'Equipe: ',options:{bold:true}},{text:C.equipe,options:{breakLine:true}},{text:'Data: ',options:{bold:true}},{text:'29/09/2026'}],
-   {x:0.5,y:4.0,w:4.6,h:1.1,fontSize:11,color:'B8B9CC',paraSpaceAfter:3});
+ txt(s,[{text:'Disciplina: ',options:{bold:true}},{text:'Desenvolvimento de Plataformas Web',options:{breakLine:true}},{text:'Curso: ',options:{bold:true}},{text:'Ciência da Computação · Unifor',options:{breakLine:true}},{text:'Professor: ',options:{bold:true}},{text:'Francisco Estevão',options:{breakLine:true}},{text:'Equipe: ',options:{bold:true}},{text:C.equipe,options:{breakLine:true}},{text:'Data: ',options:{bold:true}},{text:'29/09/2026'}],
+   {x:0.5,y:3.8,w:4.6,h:1.35,fontSize:11,color:'B8B9CC',paraSpaceAfter:3});
  s.addNotes(`${quem('Christian')}\nBoa noite. Somos ${C.equipe}, e vamos apresentar o Plano de Trabalho do nosso trabalho final: o Zero Grau, um sistema web de pedidos para uma distribuidora de bebidas de Fortaleza, que vende tanto para quem consome quanto para quem revende.\nNa apresentação passamos por escopo, casos de uso, requisitos, telas, banco de dados, arquitetura, equipe e cronograma. A imagem ao lado é o protótipo que já está no ar.`);}
 
 /* 2 problema e escopo */

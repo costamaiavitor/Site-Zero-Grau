@@ -8,12 +8,11 @@ module.exports = {
 
   identificacao: [
     ['Projeto', 'Zero Grau — sistema web de pedidos para distribuidora de bebidas (varejo e atacado)'],
-    ['Instituição', P],
-    ['Curso / Disciplina', P],
-    ['Turma / Semestre', P],
-    ['Professor(a)', P],
+    ['Instituição', 'Universidade de Fortaleza (Unifor)'],
+    ['Curso / Disciplina', 'Ciência da Computação — Desenvolvimento de Plataformas Web'],
+    ['Professor', 'Francisco Estevão'],
     ['Integrantes', 'Back-end: Vitor Custodio e João Vitor · Front-end: Caio e Vitor · Documentação: Christian'],
-    ['Cliente / parceiro', `Distribuidora Zero Grau, Fortaleza (CE). ${P} nome do responsável e se a distribuidora participa da validação.`],
+    ['Cliente / parceiro', 'Distribuidora Zero Grau, Fortaleza (CE)'],
     ['Repositório', 'https://github.com/costamaiavitor/Site-Zero-Grau'],
     ['Protótipo publicado', 'https://costamaiavitor.github.io/Site-Zero-Grau/'],
     ['Data da Entrega 1', '29/09/2026 (terça-feira)'],
@@ -21,9 +20,10 @@ module.exports = {
 
   problema: [
     'A Zero Grau vende bebidas para dois públicos com necessidades opostas. Quem compra para consumo quer a unidade, gelada, entregue rápido em casa. Quem compra para revender quer caixa fechada, preço de atacado e pedido mínimo compatível com o volume. Os dois disputam o mesmo estoque.',
-    'Sem um sistema, cada pedido depende de alguém informar à mão o preço, o estoque, a taxa de entrega do bairro e a chave Pix, e nada fica registrado de forma consultável: não há histórico de pedidos, nem controle de estoque ligado à venda, nem uma forma de o dono mudar preço ou promoção sem depender de programador.',
-    `${P} descrever, com dados da distribuidora, como os pedidos chegam hoje (telefone, WhatsApp, balcão) e o volume aproximado por semana.`,
+    'Hoje os pedidos chegam pelo WhatsApp da loja, nas mensagens que o protótipo do site monta e envia. Só que nada fica registrado fora da conversa: não há histórico de pedidos, o estoque não baixa com a venda, e as contas dos clientes existem só no navegador em que foram criadas, porque o protótipo não tem servidor nem banco de dados.',
+    'O sistema proposto guarda clientes, catálogo e pedidos num banco de dados, mantém o envio pelo WhatsApp que a loja já usa, e dá ao dono um painel para mudar preço, estoque e regras e acompanhar os pedidos.',
   ],
+
   funcionalidadePrincipal: 'Receber pedidos de bebida pela web em duas vitrines sobre o mesmo estoque: o cliente se cadastra com CPF (vai para a loja de varejo, compra por unidade) ou CNPJ (vai para o balcão de atacado, compra por caixa fechada). No fechamento o sistema calcula a entrega pelo CEP, aplica as regras de venda, recebe o pagamento por Pix (QR code) ou na entrega, grava o pedido no banco e envia o resumo ao WhatsApp da loja. Um painel de administração faz o CRUD de produtos, regras e dados da loja e acompanha os pedidos.',
   publico: [
     ['Consumidor final (CPF)', 'Maior de 18 anos, dentro da área de entrega (Fortaleza e região; o raio é configurável no painel). Compra por unidade, pelo celular na maior parte das vezes.'],
@@ -208,7 +208,7 @@ module.exports = {
     ['08/12/2026 (ter)', 'Último dia de aula da disciplina'],
   ],
 
-  acompanhamento: `As tarefas viram issues no GitHub, uma por requisito (RF01…RF21), num quadro com as colunas A fazer, Fazendo, Em revisão e Feito. Cada sprint fecha com uma revisão do que foi entregue. ${P} dia e horário da reunião de acompanhamento.`,
+  acompanhamento: `As tarefas viram issues no GitHub, uma por requisito (RF01…RF21), num quadro com as colunas A fazer, Fazendo, Em revisão e Feito. Cada sprint fecha com uma revisão do que foi entregue. A reunião de acompanhamento acontece no horário da aula.`,
 
   basicas: [
     ['Aviso de maioridade e cadastro de cliente (CPF/CNPJ)', 'RF01, RF02, RF04', 'Sim, com as contas guardadas no navegador', 'Contas gravadas na tabela USUARIO com senha em hash'],
