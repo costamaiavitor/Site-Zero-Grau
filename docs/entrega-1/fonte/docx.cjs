@@ -31,6 +31,18 @@ function figura(nome,titulo,larg=642,objetivo){
     legenda(`Figura ${nFig} — ${titulo}`)];
   return out;
 }
+function grade(itens,cols){
+  const cw=Math.floor(W/cols),px=Math.round(cw/1440*96)-14;const semBorda={style:BorderStyle.NONE,size:0,color:'FFFFFF'};
+  const b={top:semBorda,bottom:semBorda,left:semBorda,right:semBorda};const rows=[];
+  for(let i=0;i<itens.length;i+=cols){const ln=itens.slice(i,i+cols);while(ln.length<cols)ln.push(null);
+    rows.push(new TableRow({cantSplit:true,children:ln.map(it=>new TableCell({width:{size:cw,type:WidthType.DXA},borders:b,margins:{top:60,bottom:120,left:70,right:70},
+      children:it?(()=>{const [img,t,obj,rf]=it;const f=path.join(IMG,img+'.png');const [w,h]=pngSize(f);nFig++;
+        return [new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:40},children:[new ImageRun({type:'png',data:fs.readFileSync(f),transformation:{width:px,height:Math.round(px*h/w)},altText:{title:t,description:t,name:img}})]}),
+          new Paragraph({spacing:{after:30},children:[new TextRun({text:`Figura ${nFig} — ${t}`,bold:true,size:17,color:NAVY})]}),
+          new Paragraph({spacing:{after:20,line:250},children:runs(`**Objetivo:** ${obj}`,{size:16})}),
+          new Paragraph({spacing:{after:0,line:250},children:runs(`**Requisitos:** ${rf}`,{size:16})})];})():[new Paragraph('')]}))}));}
+  return new Table({width:{size:cw*cols,type:WidthType.DXA},columnWidths:Array(cols).fill(cw),rows});
+}
 const borda={style:BorderStyle.SINGLE,size:4,color:'C9C9D6'};
 const bordas={top:borda,bottom:borda,left:borda,right:borda};
 function tabela(cab,linhas,larg,o={}){
@@ -99,8 +111,11 @@ const s5=[h1('5. Requisitos Não Funcionais'),tituloTab('Requisitos não funcion
 /* ---------------- 6 ---------------- */
 const s6=[h1('6. Wireframes/Protótipos das Telas Principais'),
   p(`As telas abaixo são capturas do protótipo navegável já publicado (${C.prototipo}), em 1280 px de largura. Ele serve de protótipo de alta fidelidade: a versão em React + Bootstrap mantém a mesma estrutura, os mesmos campos e a mesma identidade visual. Todas as telas também funcionam no celular.`),
-  p('Os dados das capturas são de teste: a conta "cliente@exemplo.com" e, na tela do Pix, uma chave de exemplo, porque a chave real da loja ainda não foi cadastrada.'),
+  p('Os dados das capturas são de teste: a conta "cliente@exemplo.com", os preços, estoques, tempos e o endereço da loja são valores de exemplo do protótipo, e a tela do Pix usa uma chave de exemplo, porque a chave real da loja ainda não foi cadastrada.'),
   ...C.telas.flatMap(([img,t,obj,rf])=>[h2(t),...figura(img,t,600),p(`**Objetivo:** ${obj}`,{after:40}),p(`**Requisitos atendidos:** ${rf}`,{after:200})]),
+  h2('Mais telas do protótipo'),
+  p('As telas a seguir completam o percurso: as outras vistas do varejo, o atacado com um pedido montado, cada aba do painel e o site no celular.'),
+  ...[['varejo','Varejo',2],['atacado','Atacado',2],['painel','Painel de administração',2],['celular','No celular',4]].flatMap(([g,nome,cols])=>[h3(nome),grade(C.telasExtras.filter(t=>t[4]===g),cols),esp()]),
 ];
 
 /* ---------------- 7 ---------------- */

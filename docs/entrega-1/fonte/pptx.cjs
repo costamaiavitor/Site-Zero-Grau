@@ -112,19 +112,41 @@ const quem=n=>`[${n}]`;
  txt(s,'Responsivo · Acessível (WCAG AA) · Senha em hash e HTTPS · Total recalculado no servidor · Venda só a maiores de 18 · LGPD · Imagens leves',{x:4.45,y:4.3,w:4.85,h:0.8,fontSize:11.5,color:NAVY});
  s.addNotes(`${quem('João Vitor')}\nLevantamos ${C.rf.length} requisitos funcionais e ${C.rnf.length} não funcionais; a tabela completa está nas seções 4 e 5 do documento, com prioridade, caso de uso e em qual entrega cada um fica pronto.\nDez entram no MVP da Entrega 2: aviso de maioridade, cadastro, direcionamento pela loja do documento, catálogo lido do banco, carrinho, entrega pelo CEP, finalizar pedido, envio ao WhatsApp, CRUD de produtos e lista de pedidos.\nNos não funcionais destaco dois: o total é sempre recalculado no servidor, porque não se confia no preço que vem do navegador, e a venda de bebida alcoólica só para maiores de 18, exigência do ECA.`);}
 
-/* 8-10 wireframes */
-const wf=[[0,1,2],[3,4,5],[6,7,8]];
-const falas=[
- `Estas são telas do protótipo navegável que já está no ar, que serve de wireframe de alta fidelidade. A porta pede primeiro a confirmação de maioridade e depois só e-mail e senha; o CPF ou CNPJ é pedido uma vez, em Criar conta, e decide a loja. A tela de início mostra se a loja está aberta, a taxa de entrega e o pedido mínimo antes do catálogo.`,
- `No catálogo o cliente busca, filtra por categoria e adiciona ao carrinho. O carrinho mostra subtotal, cupom e total. No fechamento o CEP preenche a rua pelo ViaCEP, o sistema calcula a entrega e o cliente escolhe entre pagar pelo site ou enviar o pedido pelo WhatsApp e pagar na entrega.`,
- `O Pix gera QR code e copia e cola com o valor exato do pedido. O atacado é uma tabela por caixa fechada, com preço por unidade e por caixa. E o painel edita produtos, fotos e as regras das duas lojas. Na Etapa 2 essas telas são refeitas em React com Bootstrap, com a mesma estrutura.`];
-for(let k=0;k<3;k++){const s=novo();tit(s,`Protótipo das telas (${k+1}/3)`);
- wf[k].forEach((ti,i)=>{const [f,t,obj]=C.telas[ti];const x=0.5+i*3.07,w=2.85,h=w*800/1280,Y=1.35;
-   s.addShape(pres.shapes.RECTANGLE,{x:x-0.02,y:Y-0.02,w:w+0.04,h:h+0.04,fill:{color:NAVY},line:{color:NAVY}});
+/* protótipo: galerias de telas */
+const TELA=Object.fromEntries([...C.telas,...C.telasExtras].map(t=>[t[0],t]));
+const curtoT=f=>TELA[f][1].split(' — ')[1];
+function galeria(titulo,fotos,fala,quemFala){const s=novo();tit(s,titulo);
+  const w=2.85,h=w*800/1280,gx=0.225;const linhas=[fotos.slice(0,3),fotos.slice(3,6)];
+  linhas.forEach((ln,r)=>{const tot=ln.length*w+(ln.length-1)*gx,x0=(10-tot)/2,Y=1.0+r*2.18;
+    ln.forEach((f,i)=>{const x=x0+i*(w+gx);
+      s.addShape(pres.shapes.RECTANGLE,{x:x-0.015,y:Y-0.015,w:w+0.03,h:h+0.03,fill:{color:NAVY},line:{color:NAVY}});
+      s.addImage({path:IMG(f),x,y:Y,w,h});
+      txt(s,curtoT(f),{x,y:Y+h+0.06,w,h:0.26,fontSize:11,bold:true,color:NAVY});});});
+  s.addNotes(`${quem(quemFala)}\n${fala}`);}
+function grandes(titulo,fotos,fala,quemFala){const s=novo();tit(s,titulo);
+  fotos.forEach((f,i)=>{const [,t,obj]=TELA[f];const x=0.5+i*3.07,w=2.85,h=w*800/1280,Y=1.35;
+    s.addShape(pres.shapes.RECTANGLE,{x:x-0.02,y:Y-0.02,w:w+0.04,h:h+0.04,fill:{color:NAVY},line:{color:NAVY}});
+    s.addImage({path:IMG(f),x,y:Y,w,h});
+    txt(s,curtoT(f),{x,y:Y+h+0.18,w,h:0.55,fontSize:14,bold:true,color:NAVY});
+    txt(s,obj,{x,y:Y+h+0.78,w,h:1.3,fontSize:12,color:GREY});});
+  s.addNotes(`${quem(quemFala)}\n${fala}`);}
+galeria('Protótipo — varejo (1/3)',['v01-idade','t1-login','t2-criar-conta','t3-inicio','t4-catalogo','v02-categoria'],
+ 'Estas telas são do protótipo que já está no ar e servem de wireframe de alta fidelidade. Primeiro vem o aviso de maioridade; depois o login só com e-mail e senha. O CPF ou CNPJ é pedido uma vez, em Criar conta, e é ele que decide a loja. O varejo abre na tela de início, que mostra se a loja está aberta, a taxa de entrega e o pedido mínimo. No catálogo, cada aba filtra uma categoria.','Vitor (diagramas)');
+galeria('Protótipo — varejo (2/3)',['v03-busca','v04-como-pedir','v05-cupom','v06-entrega','t5-carrinho','t6-fechamento'],
+ 'A busca filtra por marca ou nome enquanto o cliente digita. As abas Como pedir, Cupom e Entrega explicam o pedido, divulgam o cupom e mostram raio, taxas e horário. O carrinho mostra subtotal, cupom e total, e no fechamento o CEP preenche a rua pelo ViaCEP e o sistema calcula a entrega.','Vitor (diagramas)');
+galeria('Protótipo — varejo (3/3)',['v07-pagamento-entrega','t7-pix','v10-retirada','v08-pedido-enviado','v09-pedir-de-novo'],
+ 'O cliente escolhe como paga: na entrega, com Pix, cartão ou dinheiro com troco, ou pelo site, com QR code e copia e cola no valor exato. Se o CEP fica fora do raio, a entrega vira retirada no balcão. Depois de enviado, o pedido vai para o WhatsApp da loja, e com o carrinho vazio o cliente pode pedir de novo um pedido anterior.','Caio');
+grandes('Protótipo — atacado',['t8-atacado','a01-atacado-pedido','a02-atacado-categoria'],
+ 'O atacado é uma tabela mais sóbria, pensada para quem compra por caixa fechada. O revendedor escolhe a quantidade de caixas, e o resumo ao lado aplica o desconto de revenda e o desconto extra por volume e confere o pedido mínimo. A tabela também filtra por categoria.','Caio');
+galeria('Protótipo — painel de administração',['p01-painel-edicao','p06-previa-loja','p02-painel-varejo','p03-painel-atacado','p04-painel-loja','p05-painel-publicacao'],
+ 'O painel é onde o dono mexe na loja sem programar. Na aba Produtos ele muda preço e promoção direto na tabela, e o campo alterado fica destacado. Antes de publicar, a loja aberta no mesmo navegador mostra o rascunho com um aviso de prévia. As outras abas cuidam das regras do varejo e do atacado, dos dados da loja, como Pix e horário, e da publicação.','Caio');
+{const s=novo();tit(s,'Protótipo — no celular');const fs=['m01-inicio','m02-catalogo','m03-carrinho','m04-atacado'];
+ const h=3.9,w=h*390/844,gx=0.45,tot=fs.length*w+(fs.length-1)*gx,x0=(10-tot)/2,Y=0.98;
+ fs.forEach((f,i)=>{const x=x0+i*(w+gx);
+   s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x:x-0.06,y:Y-0.06,w:w+0.12,h:h+0.12,rectRadius:0.12,fill:{color:NAVY},line:{color:NAVY}});
    s.addImage({path:IMG(f),x,y:Y,w,h});
-   txt(s,t,{x,y:Y+h+0.18,w,h:0.55,fontSize:14,bold:true,color:NAVY});
-   txt(s,obj,{x,y:Y+h+0.78,w,h:1.3,fontSize:12,color:GREY});});
- s.addNotes(`${quem('Caio')}\n${falas[k]}`);}
+   txt(s,curtoT(f),{x:x-0.2,y:Y+h+0.15,w:w+0.4,h:0.3,fontSize:12,bold:true,color:NAVY,align:'center'});});
+ s.addNotes(`${quem('Vitor (diagramas)')}\nO protótipo foi pensado primeiro para o celular, que é onde o consumidor compra. A navegação desce para uma barra fixa ao alcance do polegar, o catálogo vira duas colunas e todo botão tem no mínimo 44 pixels de altura. O carrinho ocupa a tela inteira e avisa quanto falta para o pedido mínimo, e o atacado mostra um produto por linha.`);}
 
 /* 11 ER */
 {const s=novo();tit(s,'Banco de dados');const [w,h]=fit('er',5.4,4.5);img(s,'er',0.45,0.95,w,h);
