@@ -5,7 +5,7 @@ Materiais da Entrega 1 do Trabalho Final.
 | Arquivo | O que é |
 |---|---|
 | `Entrega1_Plano_de_Trabalho_ZeroGrau.docx` | Documento com as 11 seções do enunciado (PDF ao lado, para conferir) |
-| `Entrega1_Apresentacao_ZeroGrau.pptx` | Apresentação de 19 slides, com notas do apresentador (PDF ao lado) |
+| `Entrega1_Apresentacao_ZeroGrau.pptx` | Apresentação de 23 slides, na ordem da Etapa 1 do enunciado, com notas do apresentador (PDF ao lado) |
 | `Checklist_e_Pendencias.md` | Checklist de conformidade com o enunciado |
 | `imagens/` | Diagramas (casos de uso, ER, arquitetura) e capturas das telas do protótipo (31 telas) |
 | `fonte/` | Geradores de tudo acima |

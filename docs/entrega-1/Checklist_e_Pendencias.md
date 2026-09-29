@@ -4,23 +4,24 @@
 
 | Item exigido | Seção do documento | Slide(s) | Status |
 |---|---|---|---|
-| Identificação | 1 (e capa) | 1, 19 | ✅ Unifor, Ciência da Computação, Desenvolvimento de Plataformas Web, prof. Francisco Estevão |
-| Escopo: problema real | 2.1 | 2 | ✅ |
-| Escopo: funcionalidade principal | 2.2 | 2 | ✅ |
-| Escopo: público-alvo | 2.3 | 3 | ✅ |
-| Escopo: tecnologias, com justificativa e aderência ao enunciado | 2.4 | 4 | ✅ |
-| Diagramas de caso de uso (UML, atores, include/extend) | 3 (Figuras 1 e 2) | 5, 6 | ✅ |
-| Descrição textual dos fluxos principais | 3 (6 fluxos) | notas dos slides 5 e 6 | ✅ |
-| Requisitos funcionais (ID, descrição, prioridade) | 4 (RF01–RF21) | 7 | ✅ |
-| Requisitos não funcionais (ID, categoria, descrição) | 5 (RNF01–RNF11) | 7 | ✅ |
-| Wireframes/protótipos: uma imagem por tela, com legenda e objetivo | 6 (31 telas, Figuras 3–33) | 8 a 13 (varejo, atacado, painel e celular) | ✅ |
-| Diagrama ER (entidades, atributos, PK/FK, cardinalidades) | 7 (Figura 34) | 14 | ✅ |
+| Apresentação na ordem da Etapa 1 do enunciado (Planejamento do Projeto → Apresentação) | — | 2 (roteiro) e rodapé de cada slide | ✅ |
+| Identificação | 1 (e capa) | 1, 23 | ✅ Unifor, Ciência da Computação, Desenvolvimento de Plataformas Web, prof. Francisco Estevão |
+| Escopo: problema real | 2.1 | 3 | ✅ |
+| Escopo: funcionalidade principal | 2.2 | 4 | ✅ |
+| Escopo: público-alvo | 2.3 | 5 | ✅ |
+| Escopo: tecnologias, com justificativa e aderência ao enunciado | 2.4 | 6 | ✅ |
+| Diagramas de caso de uso (UML, atores, include/extend) | 3 (Figuras 1 e 2) | 7, 8 | ✅ |
+| Descrição textual dos fluxos principais | 3 (6 fluxos) | 9 | ✅ |
+| Requisitos funcionais (ID, descrição, prioridade) | 4 (RF01–RF21) | 10 | ✅ |
+| Requisitos não funcionais (ID, categoria, descrição) | 5 (RNF01–RNF11) | 11 | ✅ |
+| Wireframes/protótipos: uma imagem por tela, com legenda e objetivo | 6 (31 telas, Figuras 3–33) | 12 a 17 (varejo, atacado, painel e celular) | ✅ |
+| Diagrama ER (entidades, atributos, PK/FK, cardinalidades) | 7 (Figura 34) | 18 | ✅ |
 | Dicionário de dados resumido | 7 (Tabela 7) | — | ✅ |
-| Arquitetura: front-end ↔ API ↔ banco | 8 (Figura 35 e rotas) | 15 | ✅ |
-| Divisão da equipe | 9 | 16 | ✅ três frentes: Back-end (Vitor Custodio, João Vitor), Front-end (Caio, Vitor), Documentação (Christian) |
-| Cronograma: sprints, atividades, responsáveis e marcos das Entregas 1, 2 e 3 | 10 (com as datas da disciplina) | 18 | ✅ Entregas em 29/09, 03/11 e 26/11/2026 |
-| Funcionalidades básicas do desenvolvimento inicial | 11 | 17 | ✅ |
-| Notas do apresentador (quem fala o quê) | — | 1–19 | ✅ com o nome de quem fala em cada slide |
+| Arquitetura: front-end ↔ API ↔ banco | 8 (Figura 35 e rotas) | 22 | ✅ |
+| Divisão da equipe | 9 | 20 | ✅ três frentes: Back-end (Vitor Custodio, João Vitor), Front-end (Caio, Vitor), Documentação (Christian) |
+| Cronograma: sprints, atividades, responsáveis e marcos das Entregas 1, 2 e 3 | 10 (com as datas da disciplina) | 19 | ✅ Entregas em 29/09, 03/11 e 26/11/2026 |
+| Funcionalidades básicas do desenvolvimento inicial | 11 | 21 | ✅ |
+| Notas do apresentador (quem fala o quê) | — | 1–23 | ✅ com o nome de quem fala em cada slide |
 
 ## Pendências [PREENCHER]
 
