@@ -1,0 +1,27 @@
+### 1. Listar todos os produtos
+GET http://localhost:3000/api/produtos
+
+### 2. Cadastrar novo produto (POST)
+POST http://localhost:3000/api/produtos
+Content-Type: application/json
+
+{
+  "sku": "corona-330",
+  "marca": "Corona",
+  "nome": "Cerveja Extra 330 ml",
+  "cat": "cerveja",
+  "preco": 10.50,
+  "estoque": 60
+}
+
+### 3. Atualizar produto (PUT)
+PUT http://localhost:3000/api/produtos/corona-330
+Content-Type: application/json
+
+{
+  "preco": 9.90,
+  "estoque": 45
+}
+
+### 4. Deletar produto (DELETE)
+DELETE http://localhost:3000/api/produtos/corona-330
