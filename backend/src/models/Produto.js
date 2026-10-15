@@ -37,7 +37,7 @@ const Produto = sequelize.define("Produto", {
   },
 
   embalagem: {
-    type: DataTypes.ENUM("lata", "long", "garrafa", "pet")
+    type: DataTypes.ENUM("can", "bottle", "tall", "pet", "saco")
   },
 
   preco: {
