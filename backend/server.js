@@ -1,171 +1,12 @@
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const express = require("express");
+const path = require("path");
+const { Op } = require("sequelize");
+const bcrypt = require("bcrypt");
+const multer = require("multer");
+const fs = require("fs");
+const jwt = require("jsonwebtoken");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-const caminhoFrontend = path.join(__dirname, '..', 'frontend');
-app.use(express.static(caminhoFrontend));
-
-// ==========================================================================
-// DADOS EM MEMÓRIA
-// ==========================================================================
-const CATEGORIAS = [
-  { id: "cerveja",    nome: "Cervejas",        detalhe: "lata de 330 e 500 ml" },
-  { id: "destilado",  nome: "Destilados",      detalhe: "whisky, vodka, gin" },
-  { id: "vinho",      nome: "Vinhos e drinks", detalhe: "vermute, fizz, ice" },
-  { id: "energetico", nome: "Energéticos",     detalhe: "lata e garrafa de 2 L" },
-  { id: "agua",       nome: "Refrigerantes",   detalhe: "garrafa de 2 L" }
-];
-
-// Usamos let para permitir reatribuições (ex: no DELETE)
-let BEBIDAS = [
-  { sku: "estrella-galicia-330", marca: "Estrella Galicia", nome: "Cerveza Especial · lata 330 ml", cat: "cerveja",    foto: "estrella-galicia-330", forma: "can",    vol: "330 ml", teor: "5,5%",  preco: 8.90,   promo: 6.90,  gelada: true,  retornavel: false,               alcoolica: true,  estoque: 240 },
-  { sku: "guinness-draught-500", marca: "Guinness",         nome: "Draught Stout 500 ml",          cat: "cerveja",    foto: "guinness-draught-500", forma: "can",    vol: "500 ml", teor: "4,2%",  preco: 22.90,  promo: null,  gelada: true,  retornavel: false,               alcoolica: true,  estoque: 96 },
-  { sku: "feldschlosschen-500",  marca: "Feldschlösschen",  nome: "Original 500 ml",               cat: "cerveja",    foto: "feldschlosschen-500",  forma: "can",    vol: "500 ml", teor: "4,8%",  preco: 15.90,  promo: null,  gelada: true,  retornavel: false,               alcoolica: true,  estoque: 0 },
-
-  { sku: "jack-daniels-1l",      marca: "Jack Daniel's",    nome: "Old No. 7 · 700 ml",             cat: "destilado", foto: "jack-daniels-1l",      forma: "tall",   vol: "700 ml", teor: "40%",   preco: 149.90, promo: null,  gelada: false, retornavel: false,               alcoolica: true,  estoque: 14 },
-  { sku: "absolut-1l",           marca: "Absolut",          nome: "Vodka Original 700 ml",             cat: "destilado", foto: "absolut-1l",           forma: "tall",   vol: "700 ml", teor: "40%",   preco: 69.90,  promo: 59.90, gelada: true,  retornavel: false,               alcoolica: true,  estoque: 52 },
-  { sku: "absolut-mango-1l",     marca: "Absolut",          nome: "Vodka Mango 750 ml",                cat: "destilado", foto: "absolut-mango-1l",     forma: "tall",   vol: "750 ml", teor: "38%",   preco: 74.90,  promo: 64.90, gelada: true,  retornavel: false,               alcoolica: true,  estoque: 31 },
-  { sku: "tanqueray-750",        marca: "Tanqueray",        nome: "London Dry Gin 700 ml",         cat: "destilado", foto: "tanqueray-750",        forma: "tall",   vol: "700 ml", teor: "47,3%",preco: 129.90, promo: 109.90,gelada: false, retornavel: false,               alcoolica: true,  estoque: 21 },
-  { sku: "no3-gin-700",          marca: "No. 3",            nome: "London Dry Gin 700 ml",         cat: "destilado", foto: "no3-gin-700",          forma: "tall",   vol: "700 ml", teor: "46%",   preco: 189.90, promo: null,  gelada: false, retornavel: false,               alcoolica: true,  estoque: 8 },
-  { sku: "seagrams-gin-700",     marca: "Seagram's",        nome: "Extra Dry Gin 750 ml",          cat: "destilado", foto: "seagrams-gin-700",     forma: "tall",   vol: "750 ml", teor: "40%",   preco: 69.90,  promo: 57.90, gelada: false, retornavel: false,               alcoolica: true,  estoque: 64 },
-
-  { sku: "martini-rosso-1l",     marca: "Martini",          nome: "Rosso 1 L",                     cat: "vinho",     foto: "martini-rosso-1l",     forma: "tall",   vol: "1 L",    teor: "15%",   preco: 64.90,  promo: 52.90, gelada: true,  retornavel: false,               alcoolica: true,  estoque: 26 },
-  { sku: "coventry-fizz-750",    marca: "Coventry",         nome: "Fizz Elderflower 700 ml",       cat: "vinho",     foto: "coventry-fizz-750",    forma: "tall",   vol: "700 ml", teor: "15%",   preco: 39.90,  promo: 32.90, gelada: true,  retornavel: false,               alcoolica: true,  estoque: 37 },
-  { sku: "smirnoff-ice-275",     marca: "Smirnoff",         nome: "Ice Tropical 275 ml",           cat: "vinho",     foto: "smirnoff-ice-275",     forma: "bottle", vol: "275 ml", teor: "5%",    preco: 11.90,  promo: 9.90,  gelada: true,  retornavel: false,               alcoolica: true,  estoque: 210 },
-
-  { sku: "red-bull-250",         marca: "Red Bull",         nome: "Energy Drink 250 ml",           cat: "energetico",foto: "red-bull-250",         forma: "can",    vol: "250 ml", teor: "0%",    preco: 9.90,   promo: 7.90,  gelada: true,  retornavel: false,               alcoolica: false, estoque: 310 },
-  { sku: "baly-melancia-2l",     marca: "Baly",             nome: "Energy Drink Melancia 2 L",     cat: "energetico",foto: "baly-melancia-2l",     forma: "pet",    vol: "2 L",    teor: "0%",    preco: 13.90,  promo: 11.90, gelada: true,  retornavel: false,               alcoolica: false, estoque: 180 },
-
-  { sku: "coca-cola-2l",         marca: "Coca-Cola",        nome: "Sabor Original 2 L",            cat: "agua",       foto: "coca-cola-2l",         forma: "pet",    vol: "2 L",    teor: "0%",    preco: 11.90,  promo: null,  gelada: true,  retornavel: true,  casco: 2.00,  alcoolica: false, estoque: 150 }
-];
-
-// ==========================================================================
-// ROTAS DE CATEGORIAS
-// ==========================================================================
-app.get('/api/categorias', (req, res) => {
-  res.status(200).json(CATEGORIAS);
-});
-
-// ==========================================================================
-// ROTAS DE PRODUTOS (CRUD)
-// ==========================================================================
-
-// 1. GET ALL: Listar produtos (com filtro opcional por categoria e busca)
-app.get('/api/produtos', (req, res) => {
-  const { cat, busca } = req.query;
-  let resultado = [...BEBIDAS];
-
-  if (cat && cat !== 'all') {
-    resultado = resultado.filter(item => item.cat === cat);
-  }
-
-  if (busca) {
-    const termo = busca.toLowerCase();
-    resultado = resultado.filter(item =>
-      item.nome.toLowerCase().includes(termo) ||
-      item.marca.toLowerCase().includes(termo)
-    );
-  }
-
-  res.status(200).json(resultado);
-});
-
-// 2. GET BY SKU: Buscar produto específico
-app.get('/api/produtos/:sku', (req, res) => {
-  const produto = BEBIDAS.find(p => p.sku === req.params.sku);
-  if (!produto) {
-    return res.status(404).json({ erro: 'Produto não encontrado.' });
-  }
-  res.status(200).json(produto);
-});
-
-// 3. POST: Criar novo produto
-app.post('/api/produtos', (req, res) => {
-  const { sku, marca, nome, cat, preco, estoque, forma, vol, teor, foto, promo, gelada, retornavel, alcoolica } = req.body;
-
-  // Validação simples de campos obrigatórios
-  if (!sku || !marca || !nome || !cat || preco === undefined || estoque === undefined) {
-    return res.status(400).json({ erro: 'Campos obrigatórios: sku, marca, nome, cat, preco, estoque.' });
-  }
-
-  // Verificar se o SKU já existe
-  const produtoExistente = BEBIDAS.find(p => p.sku === sku);
-  if (produtoExistente) {
-    return res.status(409).json({ erro: 'Já existe um produto cadastrado com este SKU.' });
-  }
-
-  const novoProduto = {
-    sku,
-    marca,
-    nome,
-    cat,
-    foto: foto || sku,
-    forma: forma || 'can',
-    vol: vol || '—',
-    teor: teor || '—',
-    preco: Number(preco),
-    promo: promo !== undefined ? Number(promo) : null,
-    gelada: Boolean(gelada),
-    retornavel: Boolean(retornavel),
-    alcoolica: Boolean(alcoolica),
-    estoque: Number(estoque)
-  };
-
-  BEBIDAS.push(novoProduto);
-  res.status(201).json({ mensagem: 'Produto criado com sucesso!', produto: novoProduto });
-});
-
-// 4. PUT: Atualizar produto existente por SKU
-app.put('/api/produtos/:sku', (req, res) => {
-  const { sku } = req.params;
-  const index = BEBIDAS.findIndex(p => p.sku === sku);
-
-  if (index === -1) {
-    return res.status(404).json({ erro: 'Produto não encontrado para atualização.' });
-  }
-
-  // Mescla os dados existentes com os novos enviados no body
-  BEBIDAS[index] = {
-    ...BEBIDAS[index],
-    ...req.body,
-    sku: BEBIDAS[index].sku // Impede que o SKU original seja alterado pela URL
-  };
-
-  res.status(200).json({ mensagem: 'Produto atualizado com sucesso!', produto: BEBIDAS[index] });
-});
-
-// 5. DELETE: Remover produto por SKU
-app.delete('/api/produtos/:sku', (req, res) => {
-  const { sku } = req.params;
-  const index = BEBIDAS.findIndex(p => p.sku === sku);
-
-  if (index === -1) {
-    return res.status(404).json({ erro: 'Produto não encontrado para remoção.' });
-  }
-
-  const [produtoRemovido] = BEBIDAS.splice(index, 1);
-  res.status(200).json({ mensagem: 'Produto removido com sucesso!', produto: produtoRemovido });
-});
-
-// ==========================================================================
-// ROTA PRINCIPAL E INICIALIZAÇÃO
-// ==========================================================================
-app.get('/', (req, res) => {
-  res.sendFile(path.join(caminhoFrontend, 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});const express = require("express");
+// Conexão e Models do Sequelize (MySQL 8)
 const sequelize = require("./src/config/database");
 const Categoria = require("./src/models/Categoria");
 const Produto = require("./src/models/Produto");
@@ -179,81 +20,49 @@ const Loja = require("./src/models/Loja");
 const Horario = require("./src/models/Horario");
 const RegraVenda = require("./src/models/RegraVenda");
 const FaixaAtacado = require("./src/models/FaixaAtacado");
-const bcrypt = require("bcrypt");
 
-// Carrega os relacionamentos entre os models
+// Carrega associações/relacionamentos entre os models
 require("./src/models/relacionamentos");
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares para JSON e arquivos estáticos do frontend
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.send("Backend da Zero Grau funcionando!");
-});
+const caminhoFrontend = path.join(__dirname, "..", "frontend");
+app.use(express.static(caminhoFrontend));
 
-
+// ==========================================================================
+// 1. ROTA DE CADASTRO
+// ==========================================================================
 app.post("/api/auth/cadastro", async (req, res) => {
   try {
-    const {
-      nome,
-      email,
-      senha,
-      documento,
-      tipo_documento
-    } = req.body;
+    const { nome, email, senha, documento, tipo_documento } = req.body;
 
-    // Campos obrigatórios
     if (!nome || !email || !senha || !documento || !tipo_documento) {
-      return res.status(400).json({
-        erro: "Preencha todos os campos obrigatórios."
-      });
+      return res.status(400).json({ erro: "Todos os campos são obrigatórios." });
     }
 
-    // Só aceita CPF ou CNPJ
-    if (!["cpf", "cnpj"].includes(tipo_documento)) {
-      return res.status(400).json({
-        erro: "Tipo de documento inválido."
-      });
+    const usuarioExistente = await Usuario.findOne({ where: { email } });
+    if (usuarioExistente) {
+      return res.status(400).json({ erro: "E-mail já cadastrado." });
     }
 
-    // Verifica e-mail existente
-    const emailExistente = await Usuario.findOne({
-      where: { email }
-    });
+    const salt = await bcrypt.genSalt(10);
+    const senha_hash = await bcrypt.hash(senha, salt);
 
-    if (emailExistente) {
-      return res.status(409).json({
-        erro: "E-mail já cadastrado."
-      });
-    }
-
-    // Verifica documento existente
-    const documentoExistente = await Usuario.findOne({
-      where: { documento }
-    });
-
-    if (documentoExistente) {
-      return res.status(409).json({
-        erro: "Documento já cadastrado."
-      });
-    }
-
-    // Criptografa a senha
-    const senha_hash = await bcrypt.hash(senha, 10);
-
-    // Usuário comum; admin é outro tipo de perfil
     const usuario = await Usuario.create({
       nome,
       email,
       senha_hash,
       documento,
-      tipo_documento,
+      tipo_documento: tipo_documento.toLowerCase(),
       perfil: "cliente"
     });
 
-    // RF04: CPF = varejo / CNPJ = atacado
-    const loja = tipo_documento === "cpf"
-      ? "varejo"
-      : "atacado";
+    const loja = tipo_documento.toLowerCase() === "cpf" ? "varejo" : "atacado";
 
     return res.status(201).json({
       mensagem: "Usuário cadastrado com sucesso.",
@@ -266,31 +75,302 @@ app.post("/api/auth/cadastro", async (req, res) => {
         loja
       }
     });
-
   } catch (erro) {
     console.error("Erro no cadastro:", erro);
+    return res.status(500).json({ erro: "Erro interno ao cadastrar usuário." });
+  }
+});
 
-    return res.status(500).json({
-      erro: "Erro interno ao cadastrar usuário."
+// ==========================================================================
+// 2. ROTA DE LOGIN COM JWT (RF03 / RNF03)
+// ==========================================================================
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+      return res.status(400).json({ erro: "E-mail e senha são obrigatórios." });
+    }
+
+    const usuario = await Usuario.findOne({ where: { email } });
+    if (!usuario) {
+      return res.status(401).json({ erro: "Credenciais inválidas." });
+    }
+
+    const senhaCorreta = await bcrypt.compare(senha, usuario.senha_hash);
+    if (!senhaCorreta) {
+      return res.status(401).json({ erro: "Credenciais inválidas." });
+    }
+
+    const loja = usuario.tipo_documento === "cpf" ? "varejo" : "atacado";
+
+    const segredoJwt = process.env.JWT_SECRET || "zero_grau_segredo_padrao";
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        email: usuario.email,
+        perfil: usuario.perfil,
+        tipo_documento: usuario.tipo_documento,
+        loja
+      },
+      segredoJwt,
+      { expiresIn: "24h" }
+    );
+
+    return res.status(200).json({
+      mensagem: "Login realizado com sucesso!",
+      token,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        perfil: usuario.perfil,
+        documento: usuario.documento,
+        tipo_documento: usuario.tipo_documento,
+        loja
+      }
+    });
+  } catch (erro) {
+    console.error("Erro no login:", erro);
+    return res.status(500).json({ erro: "Erro interno no servidor ao realizar login." });
+  }
+});
+
+// ==========================================================================
+// 2. ROTAS DE CATEGORIAS (MYSQL)
+// ==========================================================================
+// Listar categorias cadastradas
+app.get("/api/categorias", async (req, res) => {
+  try {
+    const categorias = await Categoria.findAll();
+    return res.status(200).json(categorias);
+  } catch (erro) {
+    console.error("Erro ao listar categorias:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// Criar nova categoria
+app.post("/api/categorias", async (req, res) => {
+  try {
+    const categoria = await Categoria.create(req.body);
+    return res.status(201).json(categoria);
+  } catch (erro) {
+    console.error("Erro ao criar categoria:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 3. ROTAS DE PRODUTOS - CRUD COMPLETO (RF05, RF06, RF16)
+// ==========================================================================
+
+// GET /api/produtos: Listar com suporte a filtro de busca e categoria
+app.get("/api/produtos", async (req, res) => {
+  try {
+    const { cat, busca } = req.query;
+    const condicoes = {};
+
+    if (cat && cat !== "all") {
+      condicoes.cat = cat;
+    }
+
+    if (busca) {
+      condicoes[Op.or] = [
+        { nome: { [Op.like]: `%${busca}%` } },
+        { marca: { [Op.like]: `%${busca}%` } }
+      ];
+    }
+
+    const produtos = await Produto.findAll({ where: condicoes });
+    return res.status(200).json(produtos);
+  } catch (erro) {
+    console.error("Erro ao listar produtos:", erro);
+    return res.status(500).json({ erro: "Erro ao buscar produtos no banco de dados." });
+  }
+});
+
+// GET /api/produtos/:sku: Buscar produto específico
+app.get("/api/produtos/:sku", async (req, res) => {
+  try {
+    const produto = await Produto.findOne({ where: { sku: req.params.sku } });
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado." });
+    }
+    return res.status(200).json(produto);
+  } catch (erro) {
+    console.error("Erro ao buscar produto:", erro);
+    return res.status(500).json({ erro: "Erro interno ao buscar produto." });
+  }
+});
+
+// POST /api/produtos: Criar produto no banco
+app.post("/api/produtos", async (req, res) => {
+  try {
+    const { sku, marca, nome, cat, preco, estoque } = req.body;
+
+    if (!sku || !marca || !nome || !cat || preco === undefined || estoque === undefined) {
+      return res.status(400).json({ erro: "Campos obrigatórios: sku, marca, nome, cat, preco, estoque." });
+    }
+
+    const produtoExistente = await Produto.findOne({ where: { sku } });
+    if (produtoExistente) {
+      return res.status(409).json({ erro: "Já existe um produto com este SKU no banco de dados." });
+    }
+
+    const novoProduto = await Produto.create(req.body);
+    return res.status(201).json({ mensagem: "Produto cadastrado com sucesso!", produto: novoProduto });
+  // Substitua o catch atual por:
+  } catch (erro) {
+    console.error("Erro ao criar produto:", erro);
+    return res.status(500).json({ 
+      erro: "Erro ao salvar produto no banco de dados.",
+      detalhes: erro.message,
+      errosValidacao: erro.errors ? erro.errors.map(e => e.message) : undefined
     });
   }
 });
 
+// PUT /api/produtos/:sku: Atualizar produto no banco
+app.put("/api/produtos/:sku", async (req, res) => {
+  try {
+    const produto = await Produto.findOne({ where: { sku: req.params.sku } });
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado para atualização." });
+    }
+
+    // Não permite alterar o SKU via body
+    delete req.body.sku;
+
+    await produto.update(req.body);
+    return res.status(200).json({ mensagem: "Produto atualizado com sucesso!", produto });
+  } catch (erro) {
+    console.error("Erro ao atualizar produto:", erro);
+    return res.status(500).json({ erro: "Erro ao atualizar produto no banco de dados." });
+  }
+});
+
+// DELETE /api/produtos/:sku: Remover produto do banco
+app.delete("/api/produtos/:sku", async (req, res) => {
+  try {
+    const produto = await Produto.findOne({ where: { sku: req.params.sku } });
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado para exclusão." });
+    }
+
+    await produto.destroy();
+    return res.status(200).json({ mensagem: "Produto removido com sucesso!" });
+  } catch (erro) {
+    console.error("Erro ao excluir produto:", erro);
+    return res.status(500).json({ erro: "Erro ao remover produto do banco de dados." });
+  }
+});
+
+// ==========================================================================
+// 4. ROTA RAIZ (SPA FRONTEND)
+// ==========================================================================
+app.get("/", (req, res) => {
+  res.sendFile(path.join(caminhoFrontend, "index.html"));
+});
+
+// ==========================================================================
+// 5. INICIALIZAÇÃO E SINCRONIZAÇÃO COM O BANCO DE DADOS
+// ==========================================================================
 async function iniciarServidor() {
   try {
     await sequelize.authenticate();
     console.log("Conexão com MySQL realizada com sucesso!");
 
-    await sequelize.sync();
-    console.log("Tabelas sincronizadas!");
+    await sequelize.sync({ alter: true });
+    console.log("Tabelas sincronizadas no MySQL 8!");
 
-    app.listen(3000, () => {
-      console.log("Servidor rodando em http://localhost:3000");
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando em http://localhost:${PORT}`);
     });
-
   } catch (erro) {
-    console.error("Erro ao conectar com MySQL:", erro);
+    console.error("Erro ao inicializar conexão com o MySQL:", erro);
   }
+}
+// Garante que a pasta de uploads existe
+const pastaUploads = path.join(__dirname, "..", "frontend", "img", "produtos");
+if (!fs.existsSync(pastaUploads)) {
+  fs.mkdirSync(pastaUploads, { recursive: true });
+}
+
+// Configuração de destino e nome do ficheiro
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, pastaUploads);
+  },
+  filename: (req, file, cb) => {
+    // Mantém a extensão original (ex: .png, .jpg)
+    const extensao = path.extname(file.originalname);
+    const nomeArquivo = `produto-${req.params.id}-${Date.now()}${extensao}`;
+    cb(null, nomeArquivo);
+  }
+});
+
+// Filtro para aceitar apenas imagens
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limite de 5 MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Formato de ficheiro inválido. Apenas imagens são permitidas."));
+    }
+  }
+});
+
+// Rota de Upload da Imagem do Produto (RF16)
+app.post("/api/produtos/:id/foto", upload.single("foto"), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ erro: "Nenhum ficheiro de imagem foi enviado." });
+    }
+
+    // Procura o produto por ID no MySQL
+    const produto = await Produto.findByPk(id);
+    if (!produto) {
+      // Remove o ficheiro enviado caso o produto não exista
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ erro: "Produto não encontrado." });
+    }
+
+    // Caminho relativo da imagem gravada para o frontend aceder
+    const fotoUrl = `/img/produtos/${req.file.filename}`;
+
+    // Atualiza o campo foto_url no MySQL
+    await produto.update({ foto_url: fotoUrl });
+
+    return res.status(200).json({
+      mensagem: "Foto do produto enviada e guardada com sucesso!",
+      foto_url: fotoUrl,
+      produto
+    });
+  } catch (erro) {
+    console.error("Erro no upload da foto:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+function autenticarToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
+
+  if (!token) {
+    return res.status(401).json({ erro: "Acesso negado. Token não fornecido." });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET || "zero_grau_segredo_padrao", (err, usuario) => {
+    if (err) {
+      return res.status(403).json({ erro: "Token inválido ou expirado." });
+    }
+    req.usuario = usuario;
+    next();
+  });
 }
 
 iniciarServidor();

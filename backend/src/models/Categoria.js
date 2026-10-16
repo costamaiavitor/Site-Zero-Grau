@@ -22,6 +22,10 @@ const Categoria = sequelize.define("Categoria", {
   }
 }, {
   timestamps: false
-});
+}, {
+    tableName: "categorias", // Garante o nome exato da tabela no MySQL
+    timestamps: true,
+  }
+);
 
 module.exports = Categoria;

@@ -1,20 +1,46 @@
-### 1. Listar todos os produtos
+### Criar Categoria Cerveja (POST)
+POST http://localhost:3000/api/categorias
+Content-Type: application/json
+
+{
+  "nome": "Cervejas",
+  "detalhe": "lata e garrafa"
+}
+
+### 1. Listar categorias existentes (para conferir o id da categoria)
+GET http://localhost:3000/api/categorias
+
+### 2. Listar todos os produtos
 GET http://localhost:3000/api/produtos
 
-### 2. Cadastrar novo produto (POST)
+### 3. Cadastrar novo produto no MySQL (POST)
 POST http://localhost:3000/api/produtos
 Content-Type: application/json
 
 {
   "sku": "corona-330",
+  "categoria_id": 1,
+  "cat": "cerveja",
   "marca": "Corona",
   "nome": "Cerveja Extra 330 ml",
-  "cat": "cerveja",
+  "volume": "330 ml",
+  "teor_alcoolico": "4,5%",
+  "embalagem": "bottle",
+  "forma": "bottle",
   "preco": 10.50,
-  "estoque": 60
+  "preco_promo": null,
+  "unidades_caixa": 24,
+  "estoque": 60,
+  "gelada": true,
+  "retornavel": false,
+  "alcoolica": true,
+  "ativo": true
 }
 
-### 3. Atualizar produto (PUT)
+### 4. Buscar produto recém-criado por SKU
+GET http://localhost:3000/api/produtos/corona-330
+
+### 5. Atualizar produto existente (PUT)
 PUT http://localhost:3000/api/produtos/corona-330
 Content-Type: application/json
 
@@ -23,5 +49,37 @@ Content-Type: application/json
   "estoque": 45
 }
 
-### 4. Deletar produto (DELETE)
+### 6. Deletar produto (DELETE)
 DELETE http://localhost:3000/api/produtos/corona-330
+
+### Upload de Imagem do Produto (POST)
+POST http://localhost:3000/api/produtos/1/foto
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="foto"; filename="corona.png"
+Content-Type: image/png
+
+< ./teste.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 1. Cadastrar Usuário para Teste (POST)
+POST http://localhost:3000/api/auth/cadastro
+Content-Type: application/json
+
+{
+  "nome": "Cliente Teste",
+  "email": "cliente@zerograu.com",
+  "senha": "senhaSegura123",
+  "documento": "12345678901",
+  "tipo_documento": "cpf"
+}
+
+### 2. Realizar Login com JWT (POST)
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "cliente@zerograu.com",
+  "senha": "senhaSegura123"
+}

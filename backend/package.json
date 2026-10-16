@@ -1,20 +1,22 @@
 {
-  "name": "site-zero-grau",
+  "name": "site-zero-grau-backend",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "description": "Site de pedidos da Zero Grau Distribuidora de Bebidas (varejo e atacado) e trabalho final da disciplina.",
   "scripts": {
-  "start": "node server.js",
-  "server:dev": "node --watch server.js",
-  "dev": "npx --yes http-server ZeroGrau -p 8080 -c-1 -o",
-  "test": "node tests/smoke.mjs"
-},
-  "devDependencies": {
-    "playwright": "^1.56.1"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node tests/smoke.mjs"
   },
   "dependencies": {
-    "express": "^5.3.0",
-    "mysql2": "^3.24.6"
+    "bcrypt": "^5.1.1",
+    "dotenv": "^18.0.8",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "mysql2": "^3.9.0",
+    "sequelize": "^6.37.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
   }
 }
