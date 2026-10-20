@@ -1,10 +1,10 @@
 # Fotos de produto
 
-> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`ZeroGrau/`](../../ZeroGrau), que é o site.
+> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`frontend/`](../../frontend), que é o site.
 
 As fotos de produto vêm do Open Food Facts, sob CC BY-SA. A atribuição exigida
-pela licença está em `ZeroGrau/creditos.html`, com link no rodapé do site, e o
-detalhamento técnico em `ZeroGrau/img/CREDITOS.md`.
+pela licença está em `frontend/creditos.html`, com link no rodapé do site, e o
+detalhamento técnico em `frontend/img/CREDITOS.md`.
 
 São servidas em WebP em dois tamanhos, escolhidos pelo navegador conforme a
 densidade da tela (`srcset` com descritores `x`, porque o card exibe a foto

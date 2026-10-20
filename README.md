@@ -39,7 +39,7 @@ React + Bootstrap, API em Node.js + Express e banco MySQL.
 ## Estrutura do repositório
 
 ```
-ZeroGrau/            o site, publicado no GitHub Pages a cada push na main
+frontend/            o site, publicado no GitHub Pages a cada push na main
   index.html           loja de varejo
   atacado.html         balcão de atacado
   admin.html           painel do dono
@@ -69,7 +69,7 @@ topo desta página fica vermelho.
 
 ## Onde mexer
 
-Os caminhos abaixo são dentro de `ZeroGrau/`.
+Os caminhos abaixo são dentro de `frontend/`.
 
 | Para mudar | Vá em |
 |---|---|

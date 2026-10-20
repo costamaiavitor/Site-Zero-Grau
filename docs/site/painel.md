@@ -1,6 +1,6 @@
 # Painel de administração
 
-> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`ZeroGrau/`](../../ZeroGrau), que é o site.
+> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`frontend/`](../../frontend), que é o site.
 
 Abas: **Produtos**, **Varejo**, **Atacado**, **Loja** (contato, chave Pix,
 horário, estatística) e **Publicação** (chave do GitHub e histórico).
@@ -46,7 +46,7 @@ Para publicar, há dois caminhos:
   ar em um ou dois minutos. A chave fica só no `localStorage` daquele
   navegador; há um botão para esquecê-la.
 - **À mão.** Sem chave, **Publicar** baixa o `ajustes.js`; no GitHub, abra
-  `ZeroGrau/js/`, **Add file → Upload files**, solte o arquivo e confirme na
+  `frontend/js/`, **Add file → Upload files**, solte o arquivo e confirme na
   `main`.
 
 Quando o arquivo estiver no ar, o painel percebe que o rascunho ficou igual

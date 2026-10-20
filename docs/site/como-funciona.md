@@ -1,6 +1,6 @@
 # Como o site funciona
 
-> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`ZeroGrau/`](../../ZeroGrau), que é o site.
+> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`frontend/`](../../frontend), que é o site.
 
 ## As duas lojas e a porta
 
@@ -55,7 +55,7 @@ fumaça percorre as cinco vistas e as duas lojas medindo isso.
 ## O que tem em cada arquivo
 
 ```
-ZeroGrau/
+frontend/
   index.html        varejo: vitrine em quatro vistas
   atacado.html      atacado: tabela por caixa fechada
   admin.html        painel: produtos e regras das duas lojas

@@ -756,7 +756,7 @@ function baixar(texto){
    grava um arquivo com um PUT: conteúdo em base64 e o `sha` da versão que
    está lá, que é a trava contra sobrescrever o trabalho de outra pessoa. O
    commit na main dispara o workflow do Pages, e o site se atualiza sozinho. */
-const GITHUB = {dono: "costamaiavitor", repo: "Site-Zero-Grau", ramo: "main", caminho: "ZeroGrau/js/ajustes.js"};
+const GITHUB = {dono: "costamaiavitor", repo: "Site-Zero-Grau", ramo: "main", caminho: "frontend/js/ajustes.js"};
 const API_GH = `https://api.github.com/repos/${GITHUB.dono}/${GITHUB.repo}`;
 
 const CHAVE_GH = {
@@ -857,7 +857,7 @@ async function publicar(){
     for(const [nome, f] of fotosParaPublicar()){
       const b = estado.bebidas.find(x => x.foto === nome);
       for(const h of [400, 200])
-        await gravarArquivo(`ZeroGrau/img/${nome}-${h}.webp`, f[h].split(",")[1],
+        await gravarArquivo(`frontend/img/${nome}-${h}.webp`, f[h].split(",")[1],
           `Painel: foto de ${b.marca} ${b.nome} (${h} px)`);
     }
     await gravarNoGitHub(texto, n);
@@ -890,7 +890,7 @@ const fotosParaPublicar = () => Object.entries(estado.fotosNovas || {})
   .filter(([nome]) => estado.bebidas.some(b => b.foto === nome));
 
 /* Sem chave, as fotos novas também descem, com o nome que o repositório
-   espera — vão para ZeroGrau/img/, e o ajustes.js para ZeroGrau/js/. */
+   espera — vão para frontend/img/, e o ajustes.js para frontend/js/. */
 function baixarTudo(){
   for(const [nome, f] of fotosParaPublicar())
     for(const h of [400, 200]){

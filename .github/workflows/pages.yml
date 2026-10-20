@@ -1,4 +1,4 @@
-# Publica a pasta ZeroGrau/ no GitHub Pages, que passa a ser a raiz do site.
+# Publica a pasta frontend/ no GitHub Pages, que passa a ser a raiz do site.
 #
 # Duas condições, ambas fora deste arquivo:
 #   1. repositório público (no plano gratuito o Pages não atende repo privado);
@@ -35,6 +35,6 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ZeroGrau
+          path: frontend
       - id: deploy
         uses: actions/deploy-pages@v4

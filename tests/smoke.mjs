@@ -18,7 +18,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const RAIZ    = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ZeroGrau');
+const RAIZ    = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'frontend');
 const FONTES  = process.env.FONTES_DIR || '';
 const LARGURAS = [320, 390, 600, 900, 1024, 1280, 1440, 1600, 1920];
 
@@ -1254,7 +1254,7 @@ secao('Painel de administração');
   const put = pedidos.find(p => p.metodo === 'PUT');
   ok('Publicar grava no GitHub em vez de baixar', !!put && !baixou);
   ok('com a chave no cabeçalho', put?.auth === 'Bearer github_pat_CHAVEDETESTE9876');
-  ok('no arquivo certo, na main', /\/contents\/ZeroGrau\/js\/ajustes\.js$/.test(new URL(put.url).pathname) && put.corpo.branch === 'main');
+  ok('no arquivo certo, na main', /\/contents\/frontend\/js\/ajustes\.js$/.test(new URL(put.url).pathname) && put.corpo.branch === 'main');
   ok('usando o sha lido antes, que protege o trabalho alheio', put.corpo.sha === 'sha-1');
   const conteudo = Buffer.from(put.corpo.content, 'base64').toString('utf8');
   ok('o conteúdo é o ajustes.js com o preço novo',
@@ -1415,7 +1415,7 @@ secao('Painel: loja, foto e histórico');
   await adm.waitForTimeout(800);
   const puts = pedidos.filter(p => p.metodo === 'PUT').map(p => p.caminho.split('/contents/')[1]);
   ok('publicar sobe as duas fotos e depois o ajustes.js',
-     puts.length === 3 && puts[0] === `ZeroGrau/img/${foto.nome}-400.webp` && puts[1] === `ZeroGrau/img/${foto.nome}-200.webp` && puts[2] === 'ZeroGrau/js/ajustes.js', puts.join(' · '));
+     puts.length === 3 && puts[0] === `frontend/img/${foto.nome}-400.webp` && puts[1] === `frontend/img/${foto.nome}-200.webp` && puts[2] === 'frontend/js/ajustes.js', puts.join(' · '));
   const put400 = pedidos.find(p => p.metodo === 'PUT' && p.caminho.endsWith('-400.webp'));
   const bytes = Buffer.from(put400.corpo.content, 'base64');
   ok('o arquivo da foto é WebP de verdade', bytes.slice(0, 4).toString() === 'RIFF' && bytes.slice(8, 12).toString() === 'WEBP');
