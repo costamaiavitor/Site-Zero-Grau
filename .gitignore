@@ -4,3 +4,5 @@ node_modules_pw
 *.log
 __pycache__/
 .env
+test-results/
+playwright-report/

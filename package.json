@@ -1,0 +1,15 @@
+{
+  "name": "site-zero-grau",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tests/servidor.mjs",
+    "test": "playwright test",
+    "test:atualizar": "playwright test --update-snapshots",
+    "test:fumaca": "node tests/smoke.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "playwright": "1.63.0"
+  }
+}
