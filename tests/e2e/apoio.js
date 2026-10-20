@@ -49,7 +49,8 @@ export const test = base.extend({
   hora: [HORA_ABERTA, { option: true }],
   pix: [null, { option: true }],
   cep: ['meireles', { option: true }],
-  page: async ({ page, hora, pix, cep }, use) => {
+  api: [false, { option: true }],
+  page: async ({ page, hora, pix, cep, api }, use) => {
     await page.clock.setFixedTime(new Date(hora));
     await page.addInitScript(() => {
       Math.random = () => 0;
@@ -57,6 +58,12 @@ export const test = base.extend({
       window.open = url => { window.__abertos.push(String(url)); return null; };
       try { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window.__copiado = t; return Promise.resolve(); } }, configurable: true }); } catch {}
     });
+    if (api) {
+      await page.route(/\/js\/config\.js/, r => r.fulfill({
+        contentType: 'text/javascript; charset=utf-8',
+        body: 'const ZG_CONFIG = { apiBase: location.origin + "/api", usarMock: false };'
+      }));
+    }
     if (pix) {
       await page.route(/\/js\/ajustes\.js/, r => r.fulfill({
         contentType: 'text/javascript; charset=utf-8',
