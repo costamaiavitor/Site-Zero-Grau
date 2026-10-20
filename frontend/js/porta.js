@@ -267,9 +267,20 @@ async function autenticar({email, senha}){
 }
 
 async function cadastrar({nome, email, senha, doc, tipo}){
-  if(CONTAS.achar(email)) return false;
+  if(!API.usarMock){
+    try{
+      await API.post("/auth/cadastro", {nome, email: email.trim().toLowerCase(), senha, documento: doc, tipo_documento: tipo}, {token: null});
+    }catch(e){
+      if(e.status === 400 && /e-mail/i.test(e.message) && /cadastrad/i.test(e.message)) return {ok: false, campo: "email"};
+      return {ok: false, erro: e.message};
+    }
+    const {conta, erro} = await autenticar({email, senha});
+    if(!conta) return {ok: false, erro: erro || "A conta foi criada, mas não deu para entrar agora. Entre com o e-mail e a senha."};
+    return {ok: true, conta};
+  }
+  if(CONTAS.achar(email)) return {ok: false, campo: "email"};
   const senhaHash = await hashSenha(email, senha);
-  return CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo, senhaHash});
+  return {ok: CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo, senhaHash})};
 }
 
 /* Entrar ou criar conta terminam igual: grava quem é, grava a loja e vai
@@ -317,12 +328,21 @@ async function criar(){
     return r(cConfInput, "As duas senhas não são iguais.");
 
   const tipo = destino === "atacado" ? "cnpj" : "cpf";
-  let ok;
-  try{ ok = await cadastrar({nome, email, senha: cSenhaInput.value, doc: mascarar(cDocInput.value), tipo}) }
-  catch{ return r(cSenhaInput, "Este navegador não deixa guardar a senha com segurança aqui. Abra o site pelo endereço https.") }
+  const botao = $id("criarBtn");
+  botao.disabled = true;
+  let resultado;
+  try{ resultado = await cadastrar({nome, email, senha: cSenhaInput.value, doc: mascarar(cDocInput.value), tipo}) }
+  catch{ resultado = {ok: false, erro: "Este navegador não deixa guardar a senha com segurança aqui. Abra o site pelo endereço https.", campo: "senha"} }
+  finally{ botao.disabled = false }
+  if(!resultado.ok){
+    if(resultado.campo === "email"){ cSenhaInput.value = cConfInput.value = ""; return r(cEmailInput, "Já existe uma conta com esse e-mail. Entre com ela."); }
+    return r(resultado.campo === "senha" ? cSenhaInput : cDocInput, resultado.erro);
+  }
   cSenhaInput.value = cConfInput.value = "";
-  if(!ok) return r(cEmailInput, "Já existe uma conta com esse e-mail. Entre com ela.");
-  concluir(destino, {doc: mascarar(cDocInput.value), email: email.toLowerCase(), nome});
+  const c = resultado.conta;
+  concluir(destino, c
+    ? {doc: c.doc, email: c.email, nome: c.nome, id: c.id, perfil: c.perfil}
+    : {doc: mascarar(cDocInput.value), email: email.toLowerCase(), nome});
 }
 
 /* Trocar de painel leva junto o que já foi digitado no outro — quem escreveu
