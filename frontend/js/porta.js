@@ -60,6 +60,32 @@ const LOJA = {
 
 const DESTINO = {varejo: "index.html", atacado: "atacado.html"};
 
+const CHAVES_SEM_CONTA = ["zg-carrinho", "zg-atacado", "zg-pedidos", "zg-endereco", "zg-entrega"];
+try{ for(const k of CHAVES_SEM_CONTA) localStorage.removeItem(k) }catch{}
+
+function idConta(p){
+  if(!p) return null;
+  if(p.id !== undefined && p.id !== null) return `id-${p.id}`;
+  return p.email ? String(p.email).toLowerCase() : null;
+}
+
+function chaveDaConta(base){
+  const id = idConta(PERFIL.ler());
+  return id ? `${base}:${id}` : null;
+}
+
+function lerDaConta(base, padrao){
+  const chave = chaveDaConta(base);
+  if(!chave) return padrao;
+  try{ const v = JSON.parse(localStorage.getItem(chave) || "null"); return v ?? padrao }catch{ return padrao }
+}
+
+function gravarNaConta(base, valor){
+  const chave = chaveDaConta(base);
+  if(!chave) return;
+  try{ localStorage.setItem(chave, JSON.stringify(valor)) }catch{}
+}
+
 /* ---------- dígito verificador ----------
    Os dois algoritmos são o mesmo esqueleto: soma ponderada dos dígitos,
    resto por 11, e o dígito é 0 quando o resto dá menos que 2. Só mudam os

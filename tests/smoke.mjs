@@ -953,8 +953,8 @@ secao('Fechamento do pedido');
   await p.click('[data-denovo="0"]');
   await p.waitForTimeout(200);
   ok('"Pedir de novo" devolve os itens ao carrinho', +(await p.textContent('#cartCount')) === 6);
-  const guardado = await p.evaluate(() => localStorage.getItem('zg-pedidos'));
-  ok('o histórico não guarda endereço nem pagamento', !/Silva Paulet|Dinheiro|Maria/.test(guardado));
+  const guardado = await p.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('zg-pedidos:')).map(k => localStorage.getItem(k)).join('') || null);
+  ok('o histórico não guarda endereço nem pagamento', !!guardado && !/Silva Paulet|Dinheiro|Maria/.test(guardado));
 
   /* o endereço fica para a próxima */
   await p.click('#finalizar');

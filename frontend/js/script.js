@@ -200,11 +200,8 @@ const cartVazio   = $("cartVazio");
 const cartPe      = $("cartPe");
 
 const guardar = {
-  ler:   () => { try{ return JSON.parse(localStorage.getItem("zg-carrinho") || "[]") }catch{ return [] } },
-  salvar:() => { try{
-      localStorage.setItem("zg-carrinho", JSON.stringify(
-        [...carrinho.values()].map(l => [l.item.sku, l.qtd])));
-    }catch{ /* segue sem lembrar */ } }
+  ler:   () => { const l = lerDaConta("zg-carrinho", []); return Array.isArray(l) ? l : [] },
+  salvar:() => gravarNaConta("zg-carrinho", [...carrinho.values()].map(l => [l.item.sku, l.qtd]))
 };
 
 const precoDe = b => b.promo ?? b.preco;
@@ -452,8 +449,8 @@ $("feitoFechar").addEventListener("click", () => { abrirCarrinho(false); irEtapa
 /* O endereço fica no aparelho para o próximo pedido — só aqui, e só se o
    navegador deixar. */
 const ENDERECO = {
-  ler(){ try{ return JSON.parse(localStorage.getItem("zg-endereco") || "null") || {} }catch{ return {} } },
-  gravar(e){ try{ localStorage.setItem("zg-endereco", JSON.stringify(e)) }catch{} }
+  ler(){ const e = lerDaConta("zg-endereco", {}); return e && typeof e === "object" ? e : {} },
+  gravar(e){ gravarNaConta("zg-endereco", e) }
 };
 
 const temPix = () => !!chavePix(PIX.chave);
@@ -678,8 +675,8 @@ $("pixPaguei").addEventListener("click", () => { if(pedidoPix) enviarPedido(pedi
    tudo de volta — respeitando o estoque de hoje e pulando o que saiu do
    catálogo. */
 const PEDIDOS = {
-  ler(){ try{ const l = JSON.parse(localStorage.getItem("zg-pedidos") || "[]"); return Array.isArray(l) ? l : [] }catch{ return [] } },
-  guardar(p){ try{ localStorage.setItem("zg-pedidos", JSON.stringify([p, ...this.ler()].slice(0, 5))) }catch{} }
+  ler(){ const l = lerDaConta("zg-pedidos", []); return Array.isArray(l) ? l : [] },
+  guardar(p){ gravarNaConta("zg-pedidos", [p, ...this.ler()].slice(0, 5)) }
 };
 
 function pintarPedidosAntigos(){
@@ -718,17 +715,29 @@ cartEl.addEventListener("click", e => {
       : faltou ? "Pedido de volta no carrinho — alguns itens mudaram, confira." : "Pedido de volta no carrinho.");
 });
 
-/* restaura carrinho e endereço da última visita */
-try{
-  const e = JSON.parse(localStorage.getItem("zg-entrega") || "null");
-  if(e && typeof e.taxa === "number") entrega = e;
-}catch{ /* segue sem endereço */ }
+let contaDoCarrinho = idConta(PERFIL.ler());
 
-for(const [sku,qtd] of guardar.ler()){
-  const item = BEBIDAS.find(b => b.sku === sku);
-  if(item && qtd > 0) carrinho.set(sku, {item, qtd: Math.min(qtd, item.estoque)});
+function carregarDaConta(){
+  carrinho.clear();
+  cupomAtivo = false;
+  entrega = null;
+  const e = lerDaConta("zg-entrega", null);
+  if(e && typeof e.taxa === "number") entrega = e;
+  for(const [sku,qtd] of guardar.ler()){
+    const item = BEBIDAS.find(b => b.sku === sku);
+    if(item && qtd > 0) carrinho.set(sku, {item, qtd: Math.min(qtd, item.estoque)});
+  }
+  pintarCarrinho();
 }
-pintarCarrinho();
+carregarDaConta();
+
+document.addEventListener("zg:entrou", e => {
+  const id = idConta(e.detail);
+  if(id === contaDoCarrinho) return;
+  contaDoCarrinho = id;
+  $("cupomInput").value = ""; $("cupomMsg").textContent = "";
+  carregarDaConta();
+});
 
 /* ---------- 7. TOAST ---------- */
 let toastTimer;
@@ -763,7 +772,7 @@ function distanciaDe(lugar){
 
 function guardarEntrega(e){
   entrega = e;
-  try{ localStorage.setItem("zg-entrega", JSON.stringify(e)) }catch{ /* segue sem lembrar */ }
+  gravarNaConta("zg-entrega", e);
   pintarCarrinho();
   document.dispatchEvent(new CustomEvent("zg:entrega", {detail: e}));
 }
