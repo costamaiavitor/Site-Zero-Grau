@@ -15,7 +15,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   timeout: 45_000,
   expect: {
-    toHaveScreenshot: { maxDiffPixelRatio: 0.002, animations: 'disabled', caret: 'hide', scale: 'css' }
+    toHaveScreenshot: { maxDiffPixels: 20, animations: 'disabled', caret: 'hide', scale: 'css' }
   },
   use: {
     baseURL: `http://127.0.0.1:${PORTA}`,

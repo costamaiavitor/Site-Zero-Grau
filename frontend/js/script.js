@@ -94,7 +94,10 @@ const REGRA_VALOR = {
   taxaBase: () => TAXA_BASE,           taxaKm: () => TAXA_KM,
   minimo: () => REGRAS.minimo,         freteGratis: () => REGRAS.freteGratis,
   cupomDesconto: () => REGRAS.cupom.desconto, cupomMinimo: () => REGRAS.cupom.minimo,
-  cupomCodigo: () => REGRAS.cupom.codigo,     raio: () => RAIO_MAX
+  cupomCodigo: () => REGRAS.cupom.codigo,     raio: () => RAIO_MAX,
+  cupomTetoTexto: () => REGRAS.cupom.teto > 0 ? `Desconto de até R$ ${brl(REGRAS.cupom.teto)}` : "Sem teto de desconto",
+  cupomValidadeTexto: () => !REGRAS.cupom.validade ? "Sem prazo de validade"
+    : `${cupomVencido() ? "Venceu em" : "Válido até"} ${dataCurta(REGRAS.cupom.validade)}`
 };
 const REGRA_FORMATO = {
   brl:   v => brl(v),
@@ -209,7 +212,7 @@ const precoDe = b => b.promo ?? b.preco;
 function contas(){
   let itens = 0, sub = 0;
   for(const {item,qtd} of carrinho.values()){ itens += qtd; sub += precoDe(item) * qtd; }
-  const desconto = (cupomAtivo && sub >= REGRAS.cupom.minimo) ? sub * REGRAS.cupom.desconto : 0;
+  const desconto = cupomAtivo ? descontoCupom(sub) : 0;
   const base = sub - desconto;
   /* o frete grátis olha o valor já com desconto — é o que o cliente paga */
   const taxa = entrega ? (base >= REGRAS.freteGratis ? 0 : entrega.taxa) : null;
@@ -396,6 +399,19 @@ grid.addEventListener("click", e => {
   toast(`${item.marca} ${item.nome} no carrinho`);
 });
 
+const CUPONS_USADOS = {
+  todos(){ try{ const t = JSON.parse(localStorage.getItem("zg-cupons-usados") || "{}"); return t && typeof t === "object" ? t : {} }catch{ return {} } },
+  doc(){ return String(PERFIL.ler()?.doc || "").replace(/\D/g, "") },
+  usou(codigo){ const d = this.doc(); return !!d && (this.todos()[d] || []).includes(codigo) },
+  marcar(codigo){
+    const d = this.doc();
+    if(!d) return;
+    const todos = this.todos();
+    todos[d] = [...new Set([...(todos[d] || []), codigo])];
+    try{ localStorage.setItem("zg-cupons-usados", JSON.stringify(todos)) }catch{}
+  }
+};
+
 /* cupom aplicado dentro do carrinho */
 $("cupomBtn").addEventListener("click", () => {
   const campo  = $("cupomInput");
@@ -409,6 +425,16 @@ $("cupomBtn").addEventListener("click", () => {
     msg.textContent = codigo ? "Cupom inválido." : "Digite o código do cupom.";
     return;
   }
+  if(cupomVencido()){
+    msg.classList.add("bad");
+    msg.textContent = `Este cupom venceu em ${dataCurta(REGRAS.cupom.validade)}.`;
+    return;
+  }
+  if(CUPONS_USADOS.usou(codigo)){
+    msg.classList.add("bad");
+    msg.textContent = "Este cupom já foi usado neste CPF.";
+    return;
+  }
   if(sub < REGRAS.cupom.minimo){
     msg.classList.add("bad");
     msg.textContent = `O cupom vale a partir de R$ ${brl(REGRAS.cupom.minimo)} em produtos.`;
@@ -416,7 +442,8 @@ $("cupomBtn").addEventListener("click", () => {
   }
   cupomAtivo = true;
   msg.classList.add("ok");
-  msg.textContent = `Cupom aplicado: ${REGRA_FORMATO.pct(REGRAS.cupom.desconto)}% de desconto.`;
+  msg.textContent = `Cupom aplicado: ${REGRA_FORMATO.pct(REGRAS.cupom.desconto)}% de desconto`
+    + (REGRAS.cupom.teto > 0 ? `, até R$ ${brl(REGRAS.cupom.teto)}.` : ".");
   campo.value = REGRAS.cupom.codigo;
   pintarCarrinho();
 });
@@ -603,6 +630,7 @@ function enviarPedido(d){
     em: Date.now(), total: c.total,
     itens: [...carrinho.values()].map(({item, qtd}) => [item.sku, qtd, `${item.marca} ${item.nome}`])
   });
+  if(c.desconto > 0) CUPONS_USADOS.marcar(REGRAS.cupom.codigo);
   if(typeof registrarEvento === "function") registrarEvento("pedido", {forma: d.fechar === "pix-site" ? "pix-site" : "whatsapp"});
 
   open(url, "_blank", "noopener");

@@ -20,7 +20,7 @@ test.describe('painel do dono', () => {
     await abrir(page, '/admin.html');
     await expect(page.locator('#linhasProdutos tr')).toHaveCount(15);
     await expect(page.locator('#estado')).toHaveText('Sem alterações · igual ao que está no ar');
-    await expect(page.locator('[data-regra="varejo.cupom.codigo"]')).toHaveValue('DANGATINHO');
+    await expect(page.locator('[data-regra="varejo.cupom.codigo"]')).toHaveValue('ZEROGRAU10');
   });
 
   test('setas trocam de aba', async ({ page }) => {

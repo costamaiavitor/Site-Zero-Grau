@@ -196,8 +196,20 @@ function fotoAttrs(foto){
 const REGRAS = {
   minimo: 30,          /* pedido mínimo, em reais */
   freteGratis: 120,    /* acima disso a entrega sai de graça */
-  cupom: {codigo:"PRIMEIRAGELADA", desconto:.15, minimo:60}
+  cupom: {codigo:"ZEROGRAU10", desconto:.10, teto:30, minimo:100, validade:"2026-12-31"}
 };
+
+const DATA_OK = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const hojeNaLoja = (quando = new Date()) => new Intl.DateTimeFormat("en-CA", {timeZone: HORARIO.fuso, year: "numeric", month: "2-digit", day: "2-digit"}).format(quando);
+const dataCurta = iso => iso ? iso.split("-").reverse().join("/") : "";
+const cupomVencido = () => !!REGRAS.cupom.validade && hojeNaLoja() > REGRAS.cupom.validade;
+
+function descontoCupom(sub){
+  const c = REGRAS.cupom;
+  if(sub < c.minimo || cupomVencido()) return 0;
+  const bruto = sub * c.desconto;
+  return c.teto > 0 ? Math.min(bruto, c.teto) : bruto;
+}
 
 
 /* ---------- ATACADO ----------
@@ -364,6 +376,9 @@ function aplicarAjustes(a){
     if(textoOk(v.cupom.codigo))            REGRAS.cupom.codigo = v.cupom.codigo.trim().toUpperCase();
     if(numOk(v.cupom.desconto, 0.01, 0.9)) REGRAS.cupom.desconto = v.cupom.desconto;
     if(numOk(v.cupom.minimo))              REGRAS.cupom.minimo = v.cupom.minimo;
+    if(numOk(v.cupom.teto))                REGRAS.cupom.teto = v.cupom.teto;
+    if(v.cupom.validade === "" || (typeof v.cupom.validade === "string" && DATA_OK.test(v.cupom.validade)))
+      REGRAS.cupom.validade = v.cupom.validade;
   }
   if(numOk(v.taxaBase))        TAXA_BASE = v.taxaBase;
   if(numOk(v.taxaKm))          TAXA_KM = v.taxaKm;

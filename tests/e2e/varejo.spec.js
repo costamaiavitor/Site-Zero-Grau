@@ -31,8 +31,11 @@ test.describe('vitrine de varejo', () => {
 
   test('aba Cupom', async ({ page }) => {
     await irVista(page, 'cupom');
-    await expect(page.locator('#code')).toHaveText('DANGATINHO');
-    await expect(page.locator('#v-cupom [data-regra="cupomDesconto"]')).toHaveText('67');
+    await expect(page.locator('#code')).toHaveText('ZEROGRAU10');
+    await expect(page.locator('#v-cupom [data-regra="cupomDesconto"]')).toHaveText('10');
+    await expect(page.locator('#v-cupom [data-regra="cupomTetoTexto"]')).toHaveText('Desconto de até R$ 30,00');
+    await expect(page.locator('#v-cupom [data-regra="cupomMinimo"]')).toHaveText('100,00');
+    await expect(page.locator('#v-cupom [data-regra="cupomValidadeTexto"]')).toHaveText('Válido até 31/12/2026');
     await semRolagemLateral(page);
     await expect(page).toHaveScreenshot('varejo-cupom.png');
   });
@@ -82,7 +85,7 @@ test.describe('vitrine de varejo', () => {
     await irVista(page, 'cupom');
     await page.click('#code');
     await expect(page.locator('#codeHint')).toHaveText('Copiado');
-    await expect(page.locator('#cupomInput')).toHaveValue('DANGATINHO');
+    await expect(page.locator('#cupomInput')).toHaveValue('ZEROGRAU10');
   });
 
   test('CEP na aba Início calcula a taxa pelo ViaCEP', async ({ page }) => {

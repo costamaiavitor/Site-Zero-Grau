@@ -278,11 +278,11 @@ secao('Carrinho');
   await p.evaluate(() => document.querySelector('.card:not(.hide) .add').click());
   await p.click('#cartBtn');
   await p.waitForTimeout(300);
-  await p.fill('#cupomInput', 'PRIMEIRAGELADA');
+  await p.fill('#cupomInput', 'ZEROGRAU10');
   await p.click('#cupomBtn');
   ok('cupom abaixo do mínimo é recusado', /a partir de/.test(await p.textContent('#cupomMsg')));
 
-  await p.evaluate(() => { for(let i=0;i<9;i++) document.querySelector('.card:not(.hide) .add').click(); });
+  await p.evaluate(() => { for(let i=0;i<14;i++) document.querySelector('.card:not(.hide) .add').click(); });
   await p.click('#cupomBtn');
   await p.waitForTimeout(150);
   ok('cupom acima do mínimo é aceito', /aplicado/.test(await p.textContent('#cupomMsg')));

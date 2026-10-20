@@ -65,13 +65,13 @@ test.describe('carrinho', () => {
     await calcularCep(page);
     await expect(page.locator('#cepMsg')).toHaveClass(/ok/);
     await abrirCarrinho(page);
-    await page.fill('#cupomInput', 'dangatinho');
+    await page.fill('#cupomInput', 'zerograu10');
     await page.click('#cupomBtn');
-    await expect(page.locator('#cupomMsg')).toHaveText('Cupom aplicado: 67% de desconto.');
+    await expect(page.locator('#cupomMsg')).toHaveText('Cupom aplicado: 10% de desconto, até R$ 30,00.');
     await expect(page.locator('#rSub')).toHaveText('R$ 119,80');
-    await expect(page.locator('#rDesc')).toHaveText('− R$ 80,27');
+    await expect(page.locator('#rDesc')).toHaveText('− R$ 11,98');
     await expect(page.locator('#rEntrega')).toHaveText('R$ 6,82');
-    await expect(page.locator('#rTotal')).toHaveText('R$ 46,35');
+    await expect(page.locator('#rTotal')).toHaveText('R$ 114,64');
     await pronto(page);
     await semRolagemLateral(page);
     await expect(page).toHaveScreenshot('carrinho-itens.png');
@@ -85,7 +85,7 @@ test.describe('carrinho', () => {
     await page.fill('#cupomInput', 'NAOEXISTE');
     await page.click('#cupomBtn');
     await expect(page.locator('#cupomMsg')).toHaveText('Cupom inválido.');
-    await page.fill('#cupomInput', 'DANGATINHO');
+    await page.fill('#cupomInput', 'ZEROGRAU10');
     await page.press('#cupomInput', 'Enter');
     await expect(page.locator('#cupomMsg')).toHaveText('O cupom vale a partir de R$ 100,00 em produtos.');
   });

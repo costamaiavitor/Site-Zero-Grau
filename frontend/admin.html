@@ -107,6 +107,8 @@
         <label class="adm-campo"><span>Código</span><input data-regra="varejo.cupom.codigo" data-tipo="codigo" autocapitalize="characters" spellcheck="false"></label>
         <label class="adm-campo"><span>Desconto (%)</span><input data-regra="varejo.cupom.desconto" data-tipo="pct" inputmode="decimal"></label>
         <label class="adm-campo"><span>Vale a partir de (R$)</span><input data-regra="varejo.cupom.minimo" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Desconto máximo (R$, 0 = sem teto)</span><input data-regra="varejo.cupom.teto" data-tipo="brl" inputmode="decimal"></label>
+        <label class="adm-campo"><span>Válido até (vazio = sem prazo)</span><input data-regra="varejo.cupom.validade" data-tipo="data" inputmode="numeric" placeholder="dd/mm/aaaa"></label>
       </fieldset>
     </div>
   </section>
@@ -277,9 +279,9 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span></div>
 
-<script src="js/ajustes.js?v=15"></script>
-<script src="js/dados.js?v=15"></script>
+<script src="js/ajustes.js?v=16"></script>
+<script src="js/dados.js?v=16"></script>
 <script src="js/pix.js?v=15"></script>
-<script src="js/admin.js?v=16"></script>
+<script src="js/admin.js?v=17"></script>
 </body>
 </html>
