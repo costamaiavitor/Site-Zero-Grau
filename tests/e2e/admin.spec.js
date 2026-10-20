@@ -1,8 +1,9 @@
-import { test, expect, abrir, pronto, semRolagemLateral, entrarVarejo, irVista } from './apoio.js';
+import { test, expect, abrir, pronto, semRolagemLateral, esperarLoja, irVista } from './apoio.js';
 
 const ABAS = ['produtos', 'varejo', 'atacado', 'loja', 'publicacao'];
 
 test.describe('painel do dono', () => {
+  test.use({ admin: 'simulado' });
   for (const aba of ABAS) {
     test(`aba ${aba}`, async ({ page }) => {
       await abrir(page, '/admin.html');
@@ -37,7 +38,8 @@ test.describe('painel do dono', () => {
     await preco.blur();
     await expect(page.locator('#estado')).toHaveText('Rascunho · 1 alteração · só neste navegador');
     await expect.poll(() => page.evaluate(() => !!localStorage.getItem('zg-admin-rascunho'))).toBe(true);
-    await entrarVarejo(page);
+    await abrir(page, '/index.html');
+    await esperarLoja(page);
     await expect(page.locator('.previa')).toBeVisible();
     await irVista(page, 'catalogo');
     await expect(page.locator('.card', { hasText: 'Red Bull' }).locator('.price s')).toHaveText('R$ 10,50');

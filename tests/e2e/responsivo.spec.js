@@ -22,10 +22,17 @@ test.describe('sem rolagem lateral', () => {
     await semRolagemLateral(page);
   });
 
-  for (const caminho of ['/admin.html', '/creditos.html']) {
-    test(`página ${caminho}`, async ({ page }) => {
-      await abrir(page, caminho);
-      await semRolagemLateral(page);
-    });
-  }
+  test('página /creditos.html', async ({ page }) => {
+    await abrir(page, '/creditos.html');
+    await semRolagemLateral(page);
+  });
+});
+
+test.describe('sem rolagem lateral no painel', () => {
+  test.use({ admin: 'simulado' });
+  test('página /admin.html', async ({ page }) => {
+    await abrir(page, '/admin.html');
+    await expect(page.locator('#a-produtos')).toBeVisible();
+    await semRolagemLateral(page);
+  });
 });

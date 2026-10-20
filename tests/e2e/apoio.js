@@ -19,6 +19,13 @@ export const VIACEP = {
   inexistente: { erro: true }
 };
 
+export const EMAIL_ADMIN = 'dono@exemplo.com';
+
+export function tokenDeTeste(perfil, segundos, agora = Date.now()) {
+  const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ id: 1, email: EMAIL_ADMIN, perfil, exp: Math.floor(agora / 1000) + segundos })}.assinatura`;
+}
+
 export const PIX_TESTE = { chave: '11222333000181', nome: 'ZERO GRAU', cidade: 'FORTALEZA' };
 
 const CACHE_FONTES = path.resolve(RAIZ, '..', 'node_modules', '.cache', 'fontes-teste');
@@ -50,7 +57,8 @@ export const test = base.extend({
   pix: [null, { option: true }],
   cep: ['meireles', { option: true }],
   api: [false, { option: true }],
-  page: async ({ page, hora, pix, cep, api }, use) => {
+  admin: [false, { option: true }],
+  page: async ({ page, hora, pix, cep, api, admin }, use) => {
     await page.clock.setFixedTime(new Date(hora));
     await page.addInitScript(() => {
       Math.random = () => 0;
@@ -58,11 +66,21 @@ export const test = base.extend({
       window.open = url => { window.__abertos.push(String(url)); return null; };
       try { Object.defineProperty(navigator, 'clipboard', { value: { writeText: t => { window.__copiado = t; return Promise.resolve(); } }, configurable: true }); } catch {}
     });
-    if (api) {
+    if (api || admin) {
+      const config = { usarMock: !api, adminsSimulados: [EMAIL_ADMIN] };
       await page.route(/\/js\/config\.js/, r => r.fulfill({
         contentType: 'text/javascript; charset=utf-8',
-        body: 'const ZG_CONFIG = { apiBase: location.origin + "/api", usarMock: false };'
+        body: `const ZG_CONFIG = Object.assign(${JSON.stringify(config)}, { apiBase: location.origin + "/api" });`
       }));
+    }
+    if (admin) {
+      const token = tokenDeTeste(admin === 'api-cliente' ? 'cliente' : 'admin', admin === 'api-vencido' ? -60 : 3600, Date.parse(hora));
+      await page.addInitScript(([email, token, comToken]) => {
+        if (!location.pathname.endsWith('/admin.html')) return;
+        sessionStorage.setItem('zg-idade', 'ok');
+        sessionStorage.setItem('zg-perfil', JSON.stringify({ tipo: 'cpf', email, nome: 'Dono de Teste', doc: '111.444.777-35', perfil: 'admin' }));
+        if (comToken) sessionStorage.setItem('zg-token', token);
+      }, [EMAIL_ADMIN, token, admin !== 'simulado']);
     }
     if (pix) {
       await page.route(/\/js\/ajustes\.js/, r => r.fulfill({

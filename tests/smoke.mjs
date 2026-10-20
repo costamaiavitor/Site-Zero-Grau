@@ -35,6 +35,7 @@ const CNPJ_QUALQUER = '12345678000100';
 /* Conta de teste para o login. Não há servidor: a porta só confere o formato. */
 const EMAIL = 'cliente@exemplo.com';
 const SENHA = 'gelada123';
+const EMAIL_ADMIN = 'dono@exemplo.com';
 
 /* Os dois slogans que o sorteio pode trazer. O teste força os dois em vez de
    aceitar o da vez: medir só o sorteado escondia falha de layout em metade
@@ -93,6 +94,12 @@ async function contexto({ js = true, largura = 1280, altura = 900, celular = fal
     isMobile:celular, hasTouch:celular,
     serviceWorkers: sw ? 'allow' : 'block'
   });
+  await ctx.route(/\/js\/config\.js/, r =>
+    r.fulfill({ contentType:'text/javascript', body:`const ZG_CONFIG = { apiBase: "", usarMock: true, adminsSimulados: ["${EMAIL_ADMIN}"] };` }));
+  await ctx.addInitScript(email => {
+    if(location.pathname.endsWith('/admin.html') && !sessionStorage.getItem('zg-perfil'))
+      sessionStorage.setItem('zg-perfil', JSON.stringify({ tipo:'cpf', email, nome:'Dono de Teste', doc:'111.444.777-35' }));
+  }, EMAIL_ADMIN);
   if(!publicado)
     await ctx.route(/\/js\/ajustes\.js/, r =>
       r.fulfill({ contentType:'text/javascript', body:'const AJUSTES_PUBLICADOS = null;' }));

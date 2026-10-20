@@ -31,6 +31,21 @@ test.describe('service worker', () => {
   });
 });
 
+test.describe('carga limpa do painel', () => {
+  test.use({ admin: 'simulado' });
+  test('sem erro de console e sem 404 no painel', async ({ page }) => {
+    const erros = [];
+    const quebrados = [];
+    page.on('pageerror', e => erros.push(e.message));
+    page.on('console', m => { if (m.type() === 'error' && !/fonts\.(googleapis|gstatic)/.test(m.text())) erros.push(m.text()); });
+    page.on('response', r => { if (r.status() === 404) quebrados.push(r.url()); });
+    await abrir(page, '/admin.html');
+    await expect(page.locator('#a-produtos')).toBeVisible();
+    expect(erros).toEqual([]);
+    expect(quebrados).toEqual([]);
+  });
+});
+
 test.describe('carga limpa', () => {
   test('sem erro de console e sem 404 nas três páginas', async ({ page }) => {
     const erros = [];
@@ -43,7 +58,6 @@ test.describe('carga limpa', () => {
     await pronto(page);
     await page.evaluate(() => sessionStorage.clear());
     await entrarAtacado(page);
-    await abrir(page, '/admin.html');
     await abrir(page, '/creditos.html');
     expect(erros).toEqual([]);
     expect(quebrados).toEqual([]);
