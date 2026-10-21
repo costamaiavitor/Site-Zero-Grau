@@ -55,10 +55,11 @@ const AJUSTES_ORIGINAIS = readFileSync(path.join(RAIZ, 'js', 'ajustes.js'), 'utf
 export const test = base.extend({
   hora: [HORA_ABERTA, { option: true }],
   pix: [null, { option: true }],
+  ajustes: [null, { option: true }],
   cep: ['meireles', { option: true }],
   api: [false, { option: true }],
   admin: [false, { option: true }],
-  page: async ({ page, hora, pix, cep, api, admin }, use) => {
+  page: async ({ page, hora, pix, ajustes, cep, api, admin }, use) => {
     await page.clock.setFixedTime(new Date(hora));
     await page.addInitScript(() => {
       Math.random = () => 0;
@@ -82,10 +83,11 @@ export const test = base.extend({
         if (comToken) sessionStorage.setItem('zg-token', token);
       }, [EMAIL_ADMIN, token, admin !== 'simulado']);
     }
-    if (pix) {
+    if (pix || ajustes) {
+      const extra = { ...(ajustes || {}), ...(pix ? { pix } : {}) };
       await page.route(/\/js\/ajustes\.js/, r => r.fulfill({
         contentType: 'text/javascript; charset=utf-8',
-        body: `${AJUSTES_ORIGINAIS}\nAJUSTES_PUBLICADOS.pix = ${JSON.stringify(pix)};`
+        body: `${AJUSTES_ORIGINAIS}\nObject.assign(AJUSTES_PUBLICADOS, ${JSON.stringify(extra)});`
       }));
     }
     await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, servirFonte);

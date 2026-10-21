@@ -884,18 +884,6 @@ function pintarHorario(){
 }
 pintarHorario();
 setInterval(pintarHorario, 60_000);
-const semMovimento = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-if(!semMovimento){
-  const oscila = (el, base, amplitude) => {
-    const v = base + (Math.random() * 2 - 1) * amplitude;
-    el.textContent = `−${Math.abs(v).toFixed(1).replace(".", ",")} °C`;
-  };
-  setInterval(() => {
-    oscila($("t1"), -2.0, 0.4);
-    $("rotas").textContent = 4 + Math.floor(Math.random() * 5);
-  }, 4200);
-}
 
 /* ---------- 14. MANCHETE: AJUSTE À LARGURA DA COLUNA ----------
    Mede cada linha com um corpo de referência e calcula o corpo real para que
