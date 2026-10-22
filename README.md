@@ -60,9 +60,28 @@ npm run dev          # abre o site em http://localhost:8080
 
 ```bash
 npm install
+npm install --prefix frontend-react
 npx playwright install chromium
-npm test             # passa o Chromium pelas duas lojas e pelo painel
+npm test             # monta a página React e passa o Chromium pelas lojas, pelo painel e pela Minha conta
 ```
+
+### Minha conta (React + Bootstrap)
+
+A página `/conta/` é feita em React (Vite) com Bootstrap 5 e o tema neon do site por cima. Mostra a conta
+que entrou na loja e os últimos pedidos, com "Pedir de novo" (RF14). O código fica em `frontend-react/`:
+
+```
+frontend-react/src/
+  components/   Cabecalho, Rodape, CartaoPerfil, ListaPedidos, AvisoSemConta
+  pages/        PaginaMinhaConta
+  context/      ContaContext (conta e pedidos da sessão)
+  services/     armazenamento (mesmas chaves por conta que a loja usa)
+  utils/        formato (R$, datas)
+  styles/       tema.css (Bootstrap com as cores da marca), conta.css
+```
+
+`npm run build` gera a página em `frontend/conta/` (fora do git). O GitHub Actions monta a página antes de
+testar e antes de publicar no Pages. Para mexer com recarga ao vivo: `npm run dev --prefix frontend-react`.
 
 Os testes rodam sozinhos a cada push. Se algum falhar, o selo "Testes" no
 topo desta página fica vermelho.
