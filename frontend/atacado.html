@@ -13,17 +13,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
-<!-- ?v= é selo de versão contra cache. O GitHub Pages serve CSS e JS com
-     max-age=600, então uma mudança recém-publicada continua chegando velha
-     no navegador de quem esteve aqui nos últimos dez minutos — e o site
-     parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
-<link rel="stylesheet" href="css/style.css?v=15">
-<link rel="stylesheet" href="css/temas.css?v=15">
+<link rel="stylesheet" href="css/style.css?v=19">
+<link rel="stylesheet" href="css/temas.css?v=19">
 <script>document.documentElement.classList.add("js")</script>
 </head>
 <body data-publico="atacado">
 
-<!-- ============ SPRITE: silhuetas de reserva ============ -->
 <svg class="sprite" aria-hidden="true" focusable="false">
   <defs>
     <symbol id="s-bottle" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
@@ -49,8 +44,6 @@
   </defs>
 </svg>
 
-<!-- ============ AVISO DE IDADE ============
-     Nasce fechado; quem abre é o script. Ver o cabeçalho de js/porta.js. -->
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
   <div class="gate-card">
     <div class="logo">
@@ -67,7 +60,6 @@
   </div>
 </div>
 
-<!-- ============ IDENTIFICAÇÃO ============ -->
 <div class="gate porta" id="porta" role="dialog" aria-modal="true" aria-labelledby="portaTitle" aria-hidden="true">
   <div class="gate-card">
     <div class="logo">
@@ -75,13 +67,9 @@
       <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
     </div>
 
-    <!-- dois painéis na mesma caixa: o script mostra um e esconde o outro, e
-         aponta o aria-labelledby do diálogo para o título que está à vista -->
     <section class="porta-painel" id="painelEntrar">
       <h2 id="portaTitle">Entrar</h2>
       <p>Entre com o e-mail e a senha da sua conta. Conta de CPF compra na vitrine de varejo; conta de CNPJ, no balcão de atacado, por caixa fechada.</p>
-      <!-- novalidate: a conferência é do script, que diz o que falta em português
-           e num lugar só, em vez do balão de cada navegador -->
       <form class="login" id="loginForm" novalidate>
         <label class="doc-campo">
           <span class="tag">E-mail</span>
@@ -142,7 +130,6 @@
   </div>
 </div>
 
-<!-- ============ TOPO ============ -->
 <header class="bal-topo">
   <a href="atacado.html" class="logo" aria-label="Zero Grau, atacado">
     <div class="logo-mark" aria-hidden="true">0°</div>
@@ -156,7 +143,6 @@
 
   <div class="bal-acoes">
     <a class="link bal-varejo" href="index.html" data-loja="varejo">Ver a loja de varejo</a>
-    <!-- trocar de conta: limpa o documento desta aba e reabre a porta -->
     <button class="conta-btn" data-trocar title="Trocar de conta">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M4 8h13l-3-3M20 16H7l3 3"/>
@@ -173,7 +159,6 @@
   </div>
 </header>
 
-<!-- ============ FILTROS ============ -->
 <div class="bal-filtros">
   <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
     <button class="tab active" data-cat="all" role="tab" aria-selected="true" aria-controls="tabela">Tudo</button>
@@ -184,7 +169,6 @@
   </div>
 </div>
 
-<!-- ============ TABELA E PEDIDO ============ -->
 <main class="bal-corpo">
   <div class="bal-lista">
     <table class="tabela-atacado" id="tabela">
@@ -228,7 +212,6 @@
   </aside>
 </main>
 
-<!-- ============ RODAPÉ DE OPERAÇÃO ============ -->
 <footer class="bal-pe">
   <span><b data-total="itens">15</b> itens em tabela</span>
   <span>Pedido mínimo <b class="num" data-reg="minimo"></b></span>
@@ -250,12 +233,12 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/ajustes.js?v=16"></script>
-<script src="js/dados.js?v=16"></script>
-<script src="js/config.js?v=16"></script>
-<script src="js/api.js?v=16"></script>
-<script src="js/porta.js?v=16"></script>
-<script src="js/app.js?v=15"></script>
-<script src="js/atacado.js?v=16"></script>
+<script src="js/ajustes.js?v=19"></script>
+<script src="js/dados.js?v=19"></script>
+<script src="js/config.js?v=19"></script>
+<script src="js/api.js?v=19"></script>
+<script src="js/porta.js?v=19"></script>
+<script src="js/app.js?v=19"></script>
+<script src="js/atacado.js?v=19"></script>
 </body>
 </html>

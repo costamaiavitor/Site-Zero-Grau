@@ -1,532 +1,636 @@
-/* ==========================================================================
-   ZERO GRAU · a porta
-
-   Duas perguntas antes do catálogo, nesta ordem:
-
-   1. Idade. Exigência da Lei nº 13.106/2015 para bebida alcoólica.
-   2. Login, só com e-mail e senha — ou criar conta, que pede também o CPF
-      ou CNPJ e o nome ou razão social. O documento fica na conta, e é ele
-      que decide para qual das duas lojas a pessoa vai: CPF vai para a
-      vitrine de varejo, CNPJ vai para o balcão de atacado, que vende por
-      caixa fechada e com preço de revenda.
-
-   Login e cadastro passam por `autenticar()` e `cadastrar()`, na seção 2.
-   Com a API ligada (js/config.js), os dois falam com /api/auth e guardam o
-   token JWT na sessão. No modo simulado as contas ficam neste navegador e
-   a senha é guardada só como hash SHA-256, conferido a cada login.
-
-   ⚠ A conferência do dígito verificador está DESLIGADA (CONFERE_DIGITO, logo
-   abaixo). Neste momento qualquer número passa, desde que tenha 11 dígitos
-   para CPF ou 14 para CNPJ — o que ainda decide a loja é a contagem. O
-   algoritmo continua aqui, testado, e volta a valer trocando a chave para
-   true.
-
-   As duas caixas nascem fechadas no CSS e é o script que as abre. Sem
-   JavaScript não há parede: o visitante cai na vitrine de varejo, que é a
-   escolha segura — o atacado exige aprovação de cadastro de qualquer jeito.
-   ========================================================================== */
-
-const PUBLICO = document.body.dataset.publico;          /* "varejo" | "atacado" */
-
-/* A chave do dígito verificador. Desligada por ora, a pedido: qualquer número
-   com a contagem certa entra. Ligar é trocar para true — nada mais muda, e os
-   dois algoritmos abaixo continuam cobertos por teste. */
+const PUBLICO = document.body.dataset.publico;
 const CONFERE_DIGITO = false;
+const SENHA_MIN = 6;
+const NOME_MIN = 3;
 
 const PERFIL = {
-  ler(){
-    try{ return JSON.parse(sessionStorage.getItem("zg-perfil") || "null") }
-    catch{ return null }
+  ler() {
+    try {
+      return JSON.parse(sessionStorage.getItem("zg-perfil") || "null");
+    } catch {
+      return null;
+    }
   },
-  gravar(p){
-    try{ sessionStorage.setItem("zg-perfil", JSON.stringify(p)) }catch{ /* segue sem lembrar */ }
+  gravar(perfil) {
+    try {
+      sessionStorage.setItem("zg-perfil", JSON.stringify(perfil));
+    } catch {}
   },
-  limpar(){
-    try{ sessionStorage.removeItem("zg-perfil") }catch{}
+  limpar() {
+    try {
+      sessionStorage.removeItem("zg-perfil");
+    } catch {}
   }
 };
 
-/* Quem a pessoa é e onde ela escolheu ficar são duas coisas.
-
-   Na primeira versão eram uma só, e o link "ver a loja de varejo" do atacado
-   virava um pingue-pongue: index.html via o CNPJ guardado e devolvia a pessoa
-   para atacado.html, que devolvia de novo. O documento define o destino
-   padrão; a escolha explícita, quando existe, manda mais que ele. */
 const LOJA = {
-  ler(){ try{ return sessionStorage.getItem("zg-loja") }catch{ return null } },
-  gravar(v){ try{ sessionStorage.setItem("zg-loja", v) }catch{} },
-  limpar(){ try{ sessionStorage.removeItem("zg-loja") }catch{} }
+  ler() {
+    try {
+      return sessionStorage.getItem("zg-loja");
+    } catch {
+      return null;
+    }
+  },
+  gravar(loja) {
+    try {
+      sessionStorage.setItem("zg-loja", loja);
+    } catch {}
+  },
+  limpar() {
+    try {
+      sessionStorage.removeItem("zg-loja");
+    } catch {}
+  }
 };
 
-const DESTINO = {varejo: "index.html", atacado: "atacado.html"};
+const PAGINA_DA_LOJA = {varejo: "index.html", atacado: "atacado.html"};
 
 const CHAVES_SEM_CONTA = ["zg-carrinho", "zg-atacado", "zg-pedidos", "zg-endereco", "zg-entrega"];
-try{ for(const k of CHAVES_SEM_CONTA) localStorage.removeItem(k) }catch{}
+try {
+  for (const chave of CHAVES_SEM_CONTA) localStorage.removeItem(chave);
+} catch {}
 
-function idConta(p){
-  if(!p) return null;
-  if(p.id !== undefined && p.id !== null) return `id-${p.id}`;
-  return p.email ? String(p.email).toLowerCase() : null;
-}
 
-function chaveDaConta(base){
-  const id = idConta(PERFIL.ler());
-  return id ? `${base}:${id}` : null;
-}
-
-function lerDaConta(base, padrao){
-  const chave = chaveDaConta(base);
-  if(!chave) return padrao;
-  try{ const v = JSON.parse(localStorage.getItem(chave) || "null"); return v ?? padrao }catch{ return padrao }
-}
-
-function gravarNaConta(base, valor){
-  const chave = chaveDaConta(base);
-  if(!chave) return;
-  try{ localStorage.setItem(chave, JSON.stringify(valor)) }catch{}
-}
-
-/* ---------- dígito verificador ----------
-   Os dois algoritmos são o mesmo esqueleto: soma ponderada dos dígitos,
-   resto por 11, e o dígito é 0 quando o resto dá menos que 2. Só mudam os
-   pesos. Rejeitar os repetidos (111.111.111-11) é necessário porque eles
-   passam na conta — é o buraco clássico de quem implementa só a fórmula.
-
-   Quem chama é `aceitaCPF` / `aceitaCNPJ`, que olham a chave antes. */
-function digitos(v){ return v.replace(/\D/g, "") }
-
-function cpfValido(v){
-  const n = digitos(v);
-  if(n.length !== 11 || /^(\d)\1{10}$/.test(n)) return false;
-  for(const [tam, ini] of [[9, 10], [10, 11]]){
-    let soma = 0;
-    for(let i = 0; i < tam; i++) soma += +n[i] * (ini - i);
-    const d = (soma * 10) % 11 % 10;
-    if(d !== +n[tam]) return false;
-  }
-  return true;
-}
-
-function cnpjValido(v){
-  const n = digitos(v);
-  if(n.length !== 14 || /^(\d)\1{13}$/.test(n)) return false;
-  for(const tam of [12, 13]){
-    let soma = 0, peso = tam - 7;
-    for(let i = 0; i < tam; i++){
-      soma += +n[i] * peso;
-      peso = --peso < 2 ? 9 : peso;
-    }
-    const resto = soma % 11;
-    if((resto < 2 ? 0 : 11 - resto) !== +n[tam]) return false;
-  }
-  return true;
-}
-
-/* o que a porta de fato exige hoje: contagem, e o dígito só se a chave mandar */
-const aceitaCPF  = v => !CONFERE_DIGITO || cpfValido(v);
-const aceitaCNPJ = v => !CONFERE_DIGITO || cnpjValido(v);
-
-function mascarar(v){
-  const n = digitos(v).slice(0, 14);
-  if(n.length <= 11){
-    return n.replace(/^(\d{3})(\d)/, "$1.$2")
-            .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-            .replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
-  }
-  return n.replace(/^(\d{2})(\d)/, "$1.$2")
-          .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-          .replace(/\.(\d{3})(\d)/, ".$1/$2")
-          .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
-}
-
-/* ---------- foco preso ----------
-   Um diálogo que cobre a tela mas deixa o Tab passear pelo conteúdo atrás não
-   é um diálogo. Vale para o aviso de idade, para a identificação e para o
-   carrinho — por isso mora aqui, que as três páginas carregam. */
-const FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
-
-function prenderFoco(caixa){
-  return e => {
-    if(e.key !== "Tab") return;
-    const alvos = [...caixa.querySelectorAll(FOCAVEIS)].filter(el => el.offsetParent !== null);
-    if(!alvos.length) return;
-    const primeiro = alvos[0], ultimo = alvos[alvos.length - 1];
-    if(e.shiftKey && document.activeElement === primeiro){ e.preventDefault(); ultimo.focus(); }
-    else if(!e.shiftKey && document.activeElement === ultimo){ e.preventDefault(); primeiro.focus(); }
-  };
-}
-
-/* ---------- abrir e fechar ---------- */
-function abrirCaixa(caixa, abrir, foco){
-  caixa.classList.toggle("aberto", abrir);
-  caixa.setAttribute("aria-hidden", String(!abrir));
-  document.body.classList.toggle("locked", abrir);
-  caixa[abrir ? "addEventListener" : "removeEventListener"]("keydown", foco);
-}
-
-/* ---------- 1. idade ---------- */
-const gate = document.getElementById("gate");
-const focoGate = prenderFoco(gate);
-const idadeOk = () => { try{ return sessionStorage.getItem("zg-idade") === "ok" }catch{ return false } };
-
-/* ---------- 2. login e cadastro ---------- */
-const $id = id => document.getElementById(id);
-const porta     = $id("porta");
-const focoPorta = prenderFoco(porta);
-const paineis   = {entrar: $id("painelEntrar"), criar: $id("painelCriar")};
-const tituloDe  = {entrar: "portaTitle", criar: "criarTitle"};
-
-/* entrar */
-const loginForm  = $id("loginForm");
-const emailInput = $id("emailInput");
-const senhaInput = $id("senhaInput");
-const docMsg     = $id("docMsg");
-
-/* criar conta */
-const criarForm   = $id("criarForm");
-const cDocInput   = $id("cDocInput");
-const cDocTipo    = $id("cDocTipo");
-const nomeInput   = $id("nomeInput");
-const nomeTag     = $id("nomeTag");
-const cEmailInput = $id("cEmailInput");
-const cSenhaInput = $id("cSenhaInput");
-const cConfInput  = $id("cConfInput");
-const criarMsg    = $id("criarMsg");
-
-const SENHA_MIN = 6;
-const NOME_MIN  = 3;
-
-function tipoDe(v){
-  const n = digitos(v);
-  if(n.length === 11) return aceitaCPF(v)  ? "varejo"  : null;
-  if(n.length === 14) return aceitaCNPJ(v) ? "atacado" : null;
+function idConta(perfil) {
+  if (!perfil) return null;
+  if (perfil.id !== undefined && perfil.id !== null) return `id-${perfil.id}`;
+  if (perfil.email) return String(perfil.email).toLowerCase();
   return null;
 }
 
-/* A dica muda enquanto a pessoa digita: ela sabe para onde vai antes de
-   apertar o botão, em vez de descobrir com uma troca de página. Serve aos
-   dois formulários, cada um com o seu campo e a sua linha de dica. */
-function dica(campo, saida){
-  const n = digitos(campo.value);
-  saida.className = "doc-tipo";
-  if(!n.length){ saida.textContent = ""; return; }
-  if(n.length < 11){ saida.textContent = "CPF tem 11 dígitos, CNPJ tem 14."; return; }
-  if(n.length === 11){
-    const ok = aceitaCPF(n);
-    saida.classList.add(ok ? "ok" : "bad");
-    saida.textContent = ok ? "CPF · você compra no varejo" : "CPF inválido — confira os dígitos.";
-    return;
-  }
-  if(n.length < 14){ saida.textContent = "Faltam dígitos para um CNPJ."; return; }
-  const ok = aceitaCNPJ(n);
-  saida.classList.add(ok ? "ok" : "bad");
-  saida.textContent = ok ? "CNPJ · você compra no atacado, por caixa fechada"
-                         : "CNPJ inválido — confira os dígitos.";
+function chaveDaConta(nomeBase) {
+  const id = idConta(PERFIL.ler());
+  if (!id) return null;
+  return `${nomeBase}:${id}`;
 }
 
-/* Formato, não existência: algo@algo.algo, sem espaço. Conferir se a caixa de
-   e-mail existe é trabalho de servidor. */
-const emailValido = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+function lerDaConta(nomeBase, valorPadrao) {
+  const chave = chaveDaConta(nomeBase);
+  if (!chave) return valorPadrao;
+  try {
+    const salvo = JSON.parse(localStorage.getItem(chave) || "null");
+    return salvo ?? valorPadrao;
+  } catch {
+    return valorPadrao;
+  }
+}
 
-/* Um erro de cada vez, na ordem em que os campos aparecem: a mensagem diz o
-   que falta e o foco vai para o campo, que ganha aria-invalid para o leitor
-   de tela anunciar junto. Vale para os dois formulários. */
-function recusar(form, saida, campo, texto){
-  for(const c of form.querySelectorAll("input")) c.removeAttribute("aria-invalid");
+function gravarNaConta(nomeBase, valor) {
+  const chave = chaveDaConta(nomeBase);
+  if (!chave) return;
+  try {
+    localStorage.setItem(chave, JSON.stringify(valor));
+  } catch {}
+}
+
+
+function soNumeros(texto) {
+  return texto.replace(/\D/g, "");
+}
+
+function cpfValido(cpf) {
+  const numeros = soNumeros(cpf);
+  if (numeros.length !== 11 || /^(\d)\1{10}$/.test(numeros)) return false;
+  for (const [tamanho, pesoInicial] of [[9, 10], [10, 11]]) {
+    let soma = 0;
+    for (let i = 0; i < tamanho; i++) {
+      soma += Number(numeros[i]) * (pesoInicial - i);
+    }
+    const digito = (soma * 10) % 11 % 10;
+    if (digito !== Number(numeros[tamanho])) return false;
+  }
+  return true;
+}
+
+function cnpjValido(cnpj) {
+  const numeros = soNumeros(cnpj);
+  if (numeros.length !== 14 || /^(\d)\1{13}$/.test(numeros)) return false;
+  for (const tamanho of [12, 13]) {
+    let soma = 0;
+    let peso = tamanho - 7;
+    for (let i = 0; i < tamanho; i++) {
+      soma += Number(numeros[i]) * peso;
+      peso--;
+      if (peso < 2) peso = 9;
+    }
+    const resto = soma % 11;
+    const digito = resto < 2 ? 0 : 11 - resto;
+    if (digito !== Number(numeros[tamanho])) return false;
+  }
+  return true;
+}
+
+function aceitaCPF(cpf) {
+  return !CONFERE_DIGITO || cpfValido(cpf);
+}
+
+function aceitaCNPJ(cnpj) {
+  return !CONFERE_DIGITO || cnpjValido(cnpj);
+}
+
+function mascararDocumento(texto) {
+  const numeros = soNumeros(texto).slice(0, 14);
+  if (numeros.length <= 11) {
+    return numeros
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d{1,2})$/, ".$1-$2");
+  }
+  return numeros
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+}
+
+function lojaDoDocumento(documento) {
+  const numeros = soNumeros(documento);
+  if (numeros.length === 11) return aceitaCPF(documento) ? "varejo" : null;
+  if (numeros.length === 14) return aceitaCNPJ(documento) ? "atacado" : null;
+  return null;
+}
+
+function emailValido(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+}
+
+
+const ELEMENTOS_FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
+
+function prenderFoco(caixa) {
+  return evento => {
+    if (evento.key !== "Tab") return;
+    const focaveis = [...caixa.querySelectorAll(ELEMENTOS_FOCAVEIS)].filter(elemento => elemento.offsetParent !== null);
+    if (!focaveis.length) return;
+    const primeiro = focaveis[0];
+    const ultimo = focaveis[focaveis.length - 1];
+    if (evento.shiftKey && document.activeElement === primeiro) {
+      evento.preventDefault();
+      ultimo.focus();
+    } else if (!evento.shiftKey && document.activeElement === ultimo) {
+      evento.preventDefault();
+      primeiro.focus();
+    }
+  };
+}
+
+function abrirCaixa(caixa, abrir, prenderTeclado) {
+  caixa.classList.toggle("aberto", abrir);
+  caixa.setAttribute("aria-hidden", String(!abrir));
+  document.body.classList.toggle("locked", abrir);
+  if (abrir) {
+    caixa.addEventListener("keydown", prenderTeclado);
+  } else {
+    caixa.removeEventListener("keydown", prenderTeclado);
+  }
+}
+
+
+const avisoDeIdade = document.getElementById("gate");
+const botaoTenhoIdade = document.getElementById("gateYes");
+const focoAvisoDeIdade = prenderFoco(avisoDeIdade);
+
+const porta = document.getElementById("porta");
+const focoPorta = prenderFoco(porta);
+const paineisDaPorta = {entrar: document.getElementById("painelEntrar"), criar: document.getElementById("painelCriar")};
+const tituloDoPainel = {entrar: "portaTitle", criar: "criarTitle"};
+
+const formLogin = document.getElementById("loginForm");
+const campoEmailLogin = document.getElementById("emailInput");
+const campoSenhaLogin = document.getElementById("senhaInput");
+const mensagemLogin = document.getElementById("docMsg");
+const botaoEntrar = document.getElementById("docBtn");
+
+const formCadastro = document.getElementById("criarForm");
+const campoDocumento = document.getElementById("cDocInput");
+const dicaDocumento = document.getElementById("cDocTipo");
+const campoNome = document.getElementById("nomeInput");
+const rotuloNome = document.getElementById("nomeTag");
+const campoEmailCadastro = document.getElementById("cEmailInput");
+const campoSenhaCadastro = document.getElementById("cSenhaInput");
+const campoConfirmaSenha = document.getElementById("cConfInput");
+const mensagemCadastro = document.getElementById("criarMsg");
+const botaoCriarConta = document.getElementById("criarBtn");
+
+function idadeConfirmada() {
+  try {
+    return sessionStorage.getItem("zg-idade") === "ok";
+  } catch {
+    return false;
+  }
+}
+
+function mostrarDicaDocumento() {
+  const numeros = soNumeros(campoDocumento.value);
+  dicaDocumento.className = "doc-tipo";
+
+  if (!numeros.length) {
+    dicaDocumento.textContent = "";
+    return;
+  }
+  if (numeros.length < 11) {
+    dicaDocumento.textContent = "CPF tem 11 dígitos, CNPJ tem 14.";
+    return;
+  }
+  if (numeros.length === 11) {
+    const cpfAceito = aceitaCPF(numeros);
+    dicaDocumento.classList.add(cpfAceito ? "ok" : "bad");
+    dicaDocumento.textContent = cpfAceito ? "CPF · você compra no varejo" : "CPF inválido — confira os dígitos.";
+    return;
+  }
+  if (numeros.length < 14) {
+    dicaDocumento.textContent = "Faltam dígitos para um CNPJ.";
+    return;
+  }
+  const cnpjAceito = aceitaCNPJ(numeros);
+  dicaDocumento.classList.add(cnpjAceito ? "ok" : "bad");
+  dicaDocumento.textContent = cnpjAceito
+    ? "CNPJ · você compra no atacado, por caixa fechada"
+    : "CNPJ inválido — confira os dígitos.";
+}
+
+function ajustarRotuloNome() {
+  const empresa = soNumeros(campoDocumento.value).length > 11;
+  rotuloNome.textContent = empresa ? "Razão social" : "Nome completo";
+  campoNome.autocomplete = empresa ? "organization" : "name";
+  campoNome.placeholder = empresa ? "como está no CNPJ" : "como está no documento";
+}
+
+function mostrarErro(form, mensagem, campo, texto) {
+  for (const input of form.querySelectorAll("input")) {
+    input.removeAttribute("aria-invalid");
+  }
   campo.setAttribute("aria-invalid", "true");
-  saida.className = "doc-msg bad";
-  saida.textContent = texto;
+  mensagem.className = "doc-msg bad";
+  mensagem.textContent = texto;
   campo.focus();
   return null;
 }
 
-/* As mensagens de documento são as mesmas nos dois lados. */
-function textoDoc(v){
-  return !CONFERE_DIGITO || digitos(v).length < 11
-    ? "Digite um CPF (11 dígitos) ou um CNPJ (14)."
-    : "Esse número não fecha no dígito verificador. Confira e tente de novo.";
+function erroNoLogin(campo, texto) {
+  return mostrarErro(formLogin, mensagemLogin, campo, texto);
 }
 
-/* ---------- contas ----------
-   O documento é pedido só ao criar a conta; no login bastam e-mail e senha,
-   e é a conta que diz se a pessoa é CPF (varejo) ou CNPJ (atacado). */
+function erroNoCadastro(campo, texto) {
+  return mostrarErro(formCadastro, mensagemCadastro, campo, texto);
+}
+
+function textoDocumentoInvalido(documento) {
+  if (!CONFERE_DIGITO || soNumeros(documento).length < 11) {
+    return "Digite um CPF (11 dígitos) ou um CNPJ (14).";
+  }
+  return "Esse número não fecha no dígito verificador. Confira e tente de novo.";
+}
+
+
 const CONTAS = {
-  todas(){ try{ return JSON.parse(localStorage.getItem("zg-contas") || "{}") || {} }catch{ return {} } },
-  achar(email){ return this.todas()[email.toLowerCase()] || null },
-  gravar(conta){
-    try{
-      const todas = this.todas();
-      todas[conta.email.toLowerCase()] = conta;
-      localStorage.setItem("zg-contas", JSON.stringify(todas));
+  todas() {
+    try {
+      return JSON.parse(localStorage.getItem("zg-contas") || "{}") || {};
+    } catch {
+      return {};
+    }
+  },
+  achar(email) {
+    return this.todas()[email.toLowerCase()] || null;
+  },
+  gravar(conta) {
+    try {
+      const contas = this.todas();
+      contas[conta.email.toLowerCase()] = conta;
+      localStorage.setItem("zg-contas", JSON.stringify(contas));
       return true;
-    }catch{ return false }
+    } catch {
+      return false;
+    }
   }
 };
 
-function contaDaApi(u){
-  return {id: u.id, email: String(u.email).toLowerCase(), nome: u.nome, doc: u.documento, tipo: u.tipo_documento, perfil: u.perfil || "cliente"};
+function contaDaApi(usuario) {
+  return {
+    id: usuario.id,
+    email: String(usuario.email).toLowerCase(),
+    nome: usuario.nome,
+    doc: usuario.documento,
+    tipo: usuario.tipo_documento,
+    perfil: usuario.perfil || "cliente"
+  };
 }
 
-async function autenticar({email, senha}){
-  if(!API.usarMock){
-    try{
-      const r = await API.post("/auth/login", {email: email.trim().toLowerCase(), senha}, {token: null});
-      if(!r?.token || !r.usuario) return {erro: "O servidor não devolveu a sessão. Tente de novo."};
-      API.token.gravar(r.token);
-      return {conta: contaDaApi(r.usuario)};
-    }catch(e){
-      if(e.status === 401) return {erro: "E-mail ou senha incorretos.", campo: "senha"};
-      return {erro: e.message};
+async function autenticar({email, senha}) {
+  if (!API.usarMock) {
+    try {
+      const resposta = await API.post("/auth/login", {email: email.trim().toLowerCase(), senha}, {token: null});
+      if (!resposta?.token || !resposta.usuario) {
+        return {erro: "O servidor não devolveu a sessão. Tente de novo."};
+      }
+      API.token.gravar(resposta.token);
+      return {conta: contaDaApi(resposta.usuario)};
+    } catch (erro) {
+      if (erro.status === 401) return {erro: "E-mail ou senha incorretos.", campo: "senha"};
+      return {erro: erro.message};
     }
   }
+
   const conta = CONTAS.achar(email);
-  if(!conta) return {erro: "Não encontramos uma conta com esse e-mail. Confira o endereço ou crie uma conta.", campo: "email"};
+  if (!conta) {
+    return {erro: "Não encontramos uma conta com esse e-mail. Confira o endereço ou crie uma conta.", campo: "email"};
+  }
+
   let hash;
-  try{ hash = await hashSenha(email, senha) }
-  catch{ return {erro: "Este navegador não deixa conferir a senha com segurança aqui. Abra o site pelo endereço https."} }
-  if(!conta.senhaHash){
+  try {
+    hash = await hashSenha(email, senha);
+  } catch {
+    return {erro: "Este navegador não deixa conferir a senha com segurança aqui. Abra o site pelo endereço https."};
+  }
+
+  if (!conta.senhaHash) {
     CONTAS.gravar({...conta, senhaHash: hash});
     return {conta};
   }
-  if(conta.senhaHash !== hash) return {erro: "Senha incorreta. Confira e tente de novo.", campo: "senha"};
+  if (conta.senhaHash !== hash) {
+    return {erro: "Senha incorreta. Confira e tente de novo.", campo: "senha"};
+  }
   return {conta};
 }
 
-async function cadastrar({nome, email, senha, doc, tipo}){
-  if(!API.usarMock){
-    try{
+async function cadastrar({nome, email, senha, doc, tipo}) {
+  if (!API.usarMock) {
+    try {
       await API.post("/auth/cadastro", {nome, email: email.trim().toLowerCase(), senha, documento: doc, tipo_documento: tipo}, {token: null});
-    }catch(e){
-      if(e.status === 400 && /e-mail/i.test(e.message) && /cadastrad/i.test(e.message)) return {ok: false, campo: "email"};
-      return {ok: false, erro: e.message};
+    } catch (erro) {
+      if (erro.status === 400 && /e-mail/i.test(erro.message) && /cadastrad/i.test(erro.message)) {
+        return {ok: false, campo: "email"};
+      }
+      return {ok: false, erro: erro.message};
     }
-    const {conta, erro} = await autenticar({email, senha});
-    if(!conta) return {ok: false, erro: erro || "A conta foi criada, mas não deu para entrar agora. Entre com o e-mail e a senha."};
-    return {ok: true, conta};
+    const login = await autenticar({email, senha});
+    if (!login.conta) {
+      return {ok: false, erro: login.erro || "A conta foi criada, mas não deu para entrar agora. Entre com o e-mail e a senha."};
+    }
+    return {ok: true, conta: login.conta};
   }
-  if(CONTAS.achar(email)) return {ok: false, campo: "email"};
+
+  if (CONTAS.achar(email)) return {ok: false, campo: "email"};
   const senhaHash = await hashSenha(email, senha);
   return {ok: CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo, senhaHash})};
 }
 
-/* Entrar ou criar conta terminam igual: grava quem é, grava a loja e vai
-   para ela. A senha nunca entra no perfil. */
-function concluir(destino, dados){
-  PERFIL.gravar({tipo: destino === "varejo" ? "cpf" : "cnpj", ...dados});
-  LOJA.gravar(destino);
-  if(destino === PUBLICO) fecharPorta();
-  else location.href = DESTINO[destino];
-}
-
-async function entrar(){
-  const r = (campo, texto) => recusar(loginForm, docMsg, campo, texto);
-  const email = emailInput.value.trim();
-  if(!email)              return r(emailInput, "Digite seu e-mail.");
-  if(!emailValido(email)) return r(emailInput, "Esse e-mail não parece completo — confira o @ e o domínio.");
-  if(!senhaInput.value)   return r(senhaInput, "Digite sua senha.");
-  if(senhaInput.value.length < SENHA_MIN)
-    return r(senhaInput, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
-  const botao = $id("docBtn");
-  botao.disabled = true;
-  const {conta, erro, campo} = await autenticar({email, senha: senhaInput.value});
-  botao.disabled = false;
-  senhaInput.value = "";
-  if(!conta) return r(campo === "email" ? emailInput : senhaInput, erro);
-  concluir(conta.tipo === "cnpj" ? "atacado" : "varejo", {doc: conta.doc, email: conta.email, nome: conta.nome, ...(conta.id !== undefined ? {id: conta.id} : {}), ...(conta.perfil ? {perfil: conta.perfil} : {})});
-}
-
-async function criar(){
-  const r = (campo, texto) => recusar(criarForm, criarMsg, campo, texto);
-  const destino = tipoDe(cDocInput.value);
-  if(!destino) return r(cDocInput, textoDoc(cDocInput.value));
-  const nome = nomeInput.value.trim().replace(/\s+/g, " ");
-  const [oQue, completo] = destino === "atacado" ? ["a razão social", "completa"] : ["seu nome", "completo"];
-  if(!nome)                  return r(nomeInput, `Digite ${oQue}.`);
-  if(nome.length < NOME_MIN) return r(nomeInput, `Digite ${oQue} ${completo}.`);
-  const email = cEmailInput.value.trim();
-  if(!email)              return r(cEmailInput, "Digite seu e-mail.");
-  if(!emailValido(email)) return r(cEmailInput, "Esse e-mail não parece completo — confira o @ e o domínio.");
-  if(!cSenhaInput.value)  return r(cSenhaInput, "Crie uma senha.");
-  if(cSenhaInput.value.length < SENHA_MIN)
-    return r(cSenhaInput, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
-  if(!cConfInput.value)   return r(cConfInput, "Repita a senha para confirmar.");
-  if(cConfInput.value !== cSenhaInput.value)
-    return r(cConfInput, "As duas senhas não são iguais.");
-
-  const tipo = destino === "atacado" ? "cnpj" : "cpf";
-  const botao = $id("criarBtn");
-  botao.disabled = true;
-  let resultado;
-  try{ resultado = await cadastrar({nome, email, senha: cSenhaInput.value, doc: mascarar(cDocInput.value), tipo}) }
-  catch{ resultado = {ok: false, erro: "Este navegador não deixa guardar a senha com segurança aqui. Abra o site pelo endereço https.", campo: "senha"} }
-  finally{ botao.disabled = false }
-  if(!resultado.ok){
-    if(resultado.campo === "email"){ cSenhaInput.value = cConfInput.value = ""; return r(cEmailInput, "Já existe uma conta com esse e-mail. Entre com ela."); }
-    return r(resultado.campo === "senha" ? cSenhaInput : cDocInput, resultado.erro);
+function irParaLoja(loja, dadosDoPerfil) {
+  PERFIL.gravar({tipo: loja === "varejo" ? "cpf" : "cnpj", ...dadosDoPerfil});
+  LOJA.gravar(loja);
+  if (loja === PUBLICO) {
+    fecharPorta();
+  } else {
+    location.href = PAGINA_DA_LOJA[loja];
   }
-  cSenhaInput.value = cConfInput.value = "";
-  const c = resultado.conta;
-  concluir(destino, c
-    ? {doc: c.doc, email: c.email, nome: c.nome, id: c.id, perfil: c.perfil}
-    : {doc: mascarar(cDocInput.value), email: email.toLowerCase(), nome});
 }
 
-/* Trocar de painel leva junto o que já foi digitado no outro — quem escreveu
-   o e-mail para entrar e descobriu que não tem conta não digita de novo. */
-function mostrarPainel(qual){
-  const outro = qual === "entrar" ? "criar" : "entrar";
-  const [de, para] = qual === "criar" ? [emailInput, cEmailInput] : [cEmailInput, emailInput];
-  if(de.value && !para.value) para.value = de.value;
-  dica(cDocInput, cDocTipo); rotularNome();
+async function entrar() {
+  const email = campoEmailLogin.value.trim();
+  if (!email) return erroNoLogin(campoEmailLogin, "Digite seu e-mail.");
+  if (!emailValido(email)) return erroNoLogin(campoEmailLogin, "Esse e-mail não parece completo — confira o @ e o domínio.");
+  if (!campoSenhaLogin.value) return erroNoLogin(campoSenhaLogin, "Digite sua senha.");
+  if (campoSenhaLogin.value.length < SENHA_MIN) {
+    return erroNoLogin(campoSenhaLogin, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
+  }
 
-  paineis[qual].hidden = false;
-  paineis[outro].hidden = true;
-  porta.setAttribute("aria-labelledby", tituloDe[qual]);
-  for(const m of [docMsg, criarMsg]){ m.textContent = ""; m.className = "doc-msg"; }
-  for(const c of porta.querySelectorAll("input")) c.removeAttribute("aria-invalid");
+  botaoEntrar.disabled = true;
+  const {conta, erro, campo} = await autenticar({email, senha: campoSenhaLogin.value});
+  botaoEntrar.disabled = false;
+  campoSenhaLogin.value = "";
 
-  const form = qual === "entrar" ? loginForm : criarForm;
-  const vazio = [...form.querySelectorAll("input")].find(c => !c.value);
-  focarDoTopo(vazio || form.querySelector("input"));
+  if (!conta) {
+    return erroNoLogin(campo === "email" ? campoEmailLogin : campoSenhaLogin, erro);
+  }
+
+  const dadosDoPerfil = {doc: conta.doc, email: conta.email, nome: conta.nome};
+  if (conta.id !== undefined) dadosDoPerfil.id = conta.id;
+  if (conta.perfil) dadosDoPerfil.perfil = conta.perfil;
+  irParaLoja(conta.tipo === "cnpj" ? "atacado" : "varejo", dadosDoPerfil);
 }
 
-/* Focar um campo faz o navegador rolar até ele, e no celular isso tirava da
-   tela o título do painel que acabou de abrir — a pessoa tocava em "Criar
-   conta" e não via "Criar conta". A caixa volta ao topo e o campo recebe o
-   foco sem rolar; os primeiros campos já estão à vista. */
-function focarDoTopo(campo){
+async function criarConta() {
+  const loja = lojaDoDocumento(campoDocumento.value);
+  if (!loja) return erroNoCadastro(campoDocumento, textoDocumentoInvalido(campoDocumento.value));
+
+  const nome = campoNome.value.trim().replace(/\s+/g, " ");
+  const oQuePedir = loja === "atacado" ? "a razão social" : "seu nome";
+  const completo = loja === "atacado" ? "completa" : "completo";
+  if (!nome) return erroNoCadastro(campoNome, `Digite ${oQuePedir}.`);
+  if (nome.length < NOME_MIN) return erroNoCadastro(campoNome, `Digite ${oQuePedir} ${completo}.`);
+
+  const email = campoEmailCadastro.value.trim();
+  if (!email) return erroNoCadastro(campoEmailCadastro, "Digite seu e-mail.");
+  if (!emailValido(email)) return erroNoCadastro(campoEmailCadastro, "Esse e-mail não parece completo — confira o @ e o domínio.");
+  if (!campoSenhaCadastro.value) return erroNoCadastro(campoSenhaCadastro, "Crie uma senha.");
+  if (campoSenhaCadastro.value.length < SENHA_MIN) {
+    return erroNoCadastro(campoSenhaCadastro, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
+  }
+  if (!campoConfirmaSenha.value) return erroNoCadastro(campoConfirmaSenha, "Repita a senha para confirmar.");
+  if (campoConfirmaSenha.value !== campoSenhaCadastro.value) {
+    return erroNoCadastro(campoConfirmaSenha, "As duas senhas não são iguais.");
+  }
+
+  const tipo = loja === "atacado" ? "cnpj" : "cpf";
+  botaoCriarConta.disabled = true;
+  let cadastro;
+  try {
+    cadastro = await cadastrar({nome, email, senha: campoSenhaCadastro.value, doc: mascararDocumento(campoDocumento.value), tipo});
+  } catch {
+    cadastro = {ok: false, erro: "Este navegador não deixa guardar a senha com segurança aqui. Abra o site pelo endereço https.", campo: "senha"};
+  } finally {
+    botaoCriarConta.disabled = false;
+  }
+
+  if (!cadastro.ok) {
+    if (cadastro.campo === "email") {
+      campoSenhaCadastro.value = campoConfirmaSenha.value = "";
+      return erroNoCadastro(campoEmailCadastro, "Já existe uma conta com esse e-mail. Entre com ela.");
+    }
+    return erroNoCadastro(cadastro.campo === "senha" ? campoSenhaCadastro : campoDocumento, cadastro.erro);
+  }
+
+  campoSenhaCadastro.value = campoConfirmaSenha.value = "";
+  const conta = cadastro.conta;
+  if (conta) {
+    irParaLoja(loja, {doc: conta.doc, email: conta.email, nome: conta.nome, id: conta.id, perfil: conta.perfil});
+  } else {
+    irParaLoja(loja, {doc: mascararDocumento(campoDocumento.value), email: email.toLowerCase(), nome});
+  }
+}
+
+function focarDoTopo(campo) {
   porta.scrollTop = 0;
   campo.focus({preventScroll: true});
 }
 
-/* "Nome completo" para quem é pessoa, "Razão social" para quem é empresa:
-   o documento vem antes justamente para o rótulo já saber o que pedir. */
-function rotularNome(){
-  const empresa = digitos(cDocInput.value).length > 11;
-  nomeTag.textContent = empresa ? "Razão social" : "Nome completo";
-  nomeInput.autocomplete = empresa ? "organization" : "name";
-  nomeInput.placeholder = empresa ? "como está no CNPJ" : "como está no documento";
+function mostrarPainel(painel) {
+  const outroPainel = painel === "entrar" ? "criar" : "entrar";
+  const origem = painel === "criar" ? campoEmailLogin : campoEmailCadastro;
+  const destino = painel === "criar" ? campoEmailCadastro : campoEmailLogin;
+  if (origem.value && !destino.value) destino.value = origem.value;
+  mostrarDicaDocumento();
+  ajustarRotuloNome();
+
+  paineisDaPorta[painel].hidden = false;
+  paineisDaPorta[outroPainel].hidden = true;
+  porta.setAttribute("aria-labelledby", tituloDoPainel[painel]);
+
+  for (const mensagem of [mensagemLogin, mensagemCadastro]) {
+    mensagem.textContent = "";
+    mensagem.className = "doc-msg";
+  }
+  for (const input of porta.querySelectorAll("input")) {
+    input.removeAttribute("aria-invalid");
+  }
+
+  const form = painel === "entrar" ? formLogin : formCadastro;
+  const primeiroVazio = [...form.querySelectorAll("input")].find(input => !input.value);
+  focarDoTopo(primeiroVazio || form.querySelector("input"));
 }
 
-function fecharPorta(){
+function ligarBotaoVerSenha(idDoBotao, campos) {
+  const botao = document.getElementById(idDoBotao);
+  const mostrarSenha = ver => {
+    for (const campo of campos) {
+      campo.type = ver ? "text" : "password";
+    }
+    botao.setAttribute("aria-pressed", String(ver));
+    botao.textContent = ver ? "Ocultar" : "Mostrar";
+  };
+  botao.addEventListener("click", () => {
+    mostrarSenha(campos[0].type === "password");
+    campos[0].focus();
+  });
+  return mostrarSenha;
+}
+
+const mostrarSenhas = [
+  ligarBotaoVerSenha("senhaVer", [campoSenhaLogin]),
+  ligarBotaoVerSenha("cSenhaVer", [campoSenhaCadastro, campoConfirmaSenha])
+];
+
+function fecharPorta() {
   abrirCaixa(porta, false, focoPorta);
   document.dispatchEvent(new CustomEvent("zg:entrou", {detail: PERFIL.ler()}));
 }
 
-/* `email` vem preenchido quando a pessoa já entrou e só o documento não
-   serve nesta loja: pedir o e-mail de novo seria castigo. */
-function abrirPorta(nota, email = ""){
+function abrirPorta(aviso, email = "") {
   abrirCaixa(porta, true, focoPorta);
-  loginForm.reset(); criarForm.reset();
-  for(const b of verSenha) b.mostrar(false);
+  formLogin.reset();
+  formCadastro.reset();
+  for (const mostrarSenha of mostrarSenhas) mostrarSenha(false);
   mostrarPainel("entrar");
-  emailInput.value = email;
-  docMsg.textContent = nota || "";
-  docMsg.className = nota ? "doc-msg bad" : "doc-msg";
-  focarDoTopo(email ? senhaInput : emailInput);
+  campoEmailLogin.value = email;
+  mensagemLogin.textContent = aviso || "";
+  mensagemLogin.className = aviso ? "doc-msg bad" : "doc-msg";
+  focarDoTopo(email ? campoSenhaLogin : campoEmailLogin);
 }
 
-function fecharGate(){
-  abrirCaixa(gate, false, focoGate);
-  try{ sessionStorage.setItem("zg-idade", "ok") }catch{ /* segue sem lembrar */ }
-  seguir();
+function confirmarIdade() {
+  abrirCaixa(avisoDeIdade, false, focoAvisoDeIdade);
+  try {
+    sessionStorage.setItem("zg-idade", "ok");
+  } catch {}
+  decidirEntrada();
 }
 
-/* Decide o que fazer depois da idade: quem já se identificou entra direto, e
-   quem se identificou como o outro público é mandado para a loja dele. */
-function seguir(){
-  const p = PERFIL.ler();
-  if(!p){ abrirPorta(); return; }
+function decidirEntrada() {
+  const perfil = PERFIL.ler();
+  if (!perfil) {
+    abrirPorta();
+    return;
+  }
 
-  const loja = LOJA.ler() || (p.tipo === "cnpj" ? "atacado" : "varejo");
-  if(loja !== PUBLICO){ location.href = DESTINO[loja]; return; }
+  const lojaEscolhida = LOJA.ler() || (perfil.tipo === "cnpj" ? "atacado" : "varejo");
+  if (lojaEscolhida !== PUBLICO) {
+    location.href = PAGINA_DA_LOJA[lojaEscolhida];
+    return;
+  }
 
-  /* Escolher vir para o atacado não basta: o balcão vende com preço de
-     revenda e nota, então aqui o documento tem de ser CNPJ. O caminho de
-     volta é o mesmo campo — digitar um CPF manda para o varejo. */
-  if(PUBLICO === "atacado" && p.tipo !== "cnpj"){
+  if (PUBLICO === "atacado" && perfil.tipo !== "cnpj") {
     abrirPorta("O balcão de atacado é para conta de CNPJ. Entre com uma, ou crie uma conta com o CNPJ da empresa.", "");
     return;
   }
-  document.dispatchEvent(new CustomEvent("zg:entrou", {detail: p}));
+  document.dispatchEvent(new CustomEvent("zg:entrou", {detail: perfil}));
 }
 
-/* Mostrar a senha: no celular, digitar às cegas é onde mais se erra. O botão
-   troca o tipo do campo e diz o próprio estado com aria-pressed. No cadastro
-   ele revela as duas de uma vez — é comparando as duas que se acha o erro. */
-const verSenha = [["senhaVer", [senhaInput]], ["cSenhaVer", [cSenhaInput, cConfInput]]].map(([id, campos]) => {
-  const botao = $id(id);
-  const mostrar = ver => {
-    for(const c of campos) c.type = ver ? "text" : "password";
-    botao.setAttribute("aria-pressed", String(ver));
-    botao.textContent = ver ? "Ocultar" : "Mostrar";
-  };
-  botao.addEventListener("click", () => { mostrar(campos[0].type === "password"); campos[0].focus(); });
-  return {mostrar};
-});
-
-/* Corrigir o campo apaga a queixa sobre ele. */
-function ligarQueixa(form, saida){
-  for(const c of form.querySelectorAll("input")){
-    c.addEventListener("input", () => {
-      if(c.getAttribute("aria-invalid") !== "true") return;
-      c.removeAttribute("aria-invalid");
-      saida.textContent = "";
-      saida.className = "doc-msg";
+function limparErroAoDigitar(form, mensagem) {
+  for (const input of form.querySelectorAll("input")) {
+    input.addEventListener("input", () => {
+      if (input.getAttribute("aria-invalid") !== "true") return;
+      input.removeAttribute("aria-invalid");
+      mensagem.textContent = "";
+      mensagem.className = "doc-msg";
     });
   }
 }
-ligarQueixa(loginForm, docMsg);
-ligarQueixa(criarForm, criarMsg);
 
-cDocInput.addEventListener("input", () => {
-  cDocInput.value = mascarar(cDocInput.value);
-  dica(cDocInput, cDocTipo);
-  rotularNome();
+limparErroAoDigitar(formLogin, mensagemLogin);
+limparErroAoDigitar(formCadastro, mensagemCadastro);
+
+campoDocumento.addEventListener("input", () => {
+  campoDocumento.value = mascararDocumento(campoDocumento.value);
+  mostrarDicaDocumento();
+  ajustarRotuloNome();
 });
 
-for(const b of porta.querySelectorAll("[data-painel]"))
-  b.addEventListener("click", () => mostrarPainel(b.dataset.painel));
+for (const botao of porta.querySelectorAll("[data-painel]")) {
+  botao.addEventListener("click", () => mostrarPainel(botao.dataset.painel));
+}
 
-/* O formulário cuida do Enter em qualquer campo e deixa o gerenciador de
-   senhas do navegador reconhecer o login e oferecer para salvar a conta nova. */
-loginForm.addEventListener("submit", e => { e.preventDefault(); entrar(); });
-criarForm.addEventListener("submit", e => { e.preventDefault(); criar(); });
-document.getElementById("gateYes").addEventListener("click", fecharGate);
+formLogin.addEventListener("submit", evento => {
+  evento.preventDefault();
+  entrar();
+});
 
-/* trocar de documento: volta à pergunta sem perder o aviso de idade */
-for(const el of document.querySelectorAll("[data-trocar]")){
-  el.addEventListener("click", e => {
-    e.preventDefault();
-    PERFIL.limpar(); LOJA.limpar(); API.token.limpar();
+formCadastro.addEventListener("submit", evento => {
+  evento.preventDefault();
+  criarConta();
+});
+
+botaoTenhoIdade.addEventListener("click", confirmarIdade);
+
+for (const botao of document.querySelectorAll("[data-trocar]")) {
+  botao.addEventListener("click", evento => {
+    evento.preventDefault();
+    PERFIL.limpar();
+    LOJA.limpar();
+    API.token.limpar();
     abrirPorta();
   });
 }
 
-/* atravessar de uma loja para a outra é uma escolha, e fica registrada antes
-   de a navegação acontecer — senão a outra página devolve a pessoa para cá */
-for(const el of document.querySelectorAll("[data-loja]")){
-  el.addEventListener("click", () => LOJA.gravar(el.dataset.loja));
+for (const link of document.querySelectorAll("[data-loja]")) {
+  link.addEventListener("click", () => LOJA.gravar(link.dataset.loja));
 }
 
-/* escreve o documento identificado onde a página pedir, e o e-mail da conta
-   na dica do botão de trocar */
-document.addEventListener("zg:entrou", e => {
-  for(const el of document.querySelectorAll("[data-doc]")) el.textContent = e.detail?.doc || "";
-  for(const el of document.querySelectorAll("[data-trocar]"))
-    el.title = e.detail?.email
-      ? `Conectado como ${e.detail.nome ? `${e.detail.nome} (${e.detail.email})` : e.detail.email} · trocar de conta`
-      : "Trocar de conta";
+document.addEventListener("zg:entrou", evento => {
+  const perfil = evento.detail;
+  for (const elemento of document.querySelectorAll("[data-doc]")) {
+    elemento.textContent = perfil?.doc || "";
+  }
+  for (const botao of document.querySelectorAll("[data-trocar]")) {
+    if (perfil?.email) {
+      const quem = perfil.nome ? `${perfil.nome} (${perfil.email})` : perfil.email;
+      botao.title = `Conectado como ${quem} · trocar de conta`;
+    } else {
+      botao.title = "Trocar de conta";
+    }
+  }
 });
 
-const avisoPorta = porta.querySelector(".gate-legal");
-if(avisoPorta) avisoPorta.textContent = API.usarMock
-  ? "Os dados ficam só neste navegador, e a senha é guardada só como hash, nunca como texto. O cadastro de revenda é aprovado depois, quando o pedido chega."
-  : "A senha é conferida no servidor da loja e não fica guardada neste navegador. O cadastro de revenda é aprovado depois, quando o pedido chega.";
+const avisoDaPorta = porta.querySelector(".gate-legal");
+if (avisoDaPorta) {
+  avisoDaPorta.textContent = API.usarMock
+    ? "Os dados ficam só neste navegador, e a senha é guardada só como hash, nunca como texto. O cadastro de revenda é aprovado depois, quando o pedido chega."
+    : "A senha é conferida no servidor da loja e não fica guardada neste navegador. O cadastro de revenda é aprovado depois, quando o pedido chega.";
+}
 
-if(!idadeOk()){
-  abrirCaixa(gate, true, focoGate);
-  document.getElementById("gateYes").focus();
-}else{
-  seguir();
+if (!idadeConfirmada()) {
+  abrirCaixa(avisoDeIdade, true, focoAvisoDeIdade);
+  botaoTenhoIdade.focus();
+} else {
+  decidirEntrada();
 }
