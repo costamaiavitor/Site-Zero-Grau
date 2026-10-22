@@ -104,8 +104,8 @@ $("limparBusca").addEventListener("click", () => {
 const pedido = new Map();      /* sku -> caixas */
 
 const guardar = {
-  ler:   () => { try{ return JSON.parse(localStorage.getItem("zg-atacado") || "[]") }catch{ return [] } },
-  salvar:() => { try{ localStorage.setItem("zg-atacado", JSON.stringify([...pedido])) }catch{} }
+  ler:   () => { const l = lerDaConta("zg-atacado", []); return Array.isArray(l) ? l : [] },
+  salvar:() => gravarNaConta("zg-atacado", [...pedido])
 };
 
 function contas(){
@@ -284,8 +284,21 @@ $("enviar").addEventListener("click", () => {
 });
 
 /* ---------- 7. RETOMAR ---------- */
-for(const [sku, n] of guardar.ler()){
-  const b = BEBIDAS.find(x => x.sku === sku);
-  if(b && n > 0) pedido.set(sku, Math.min(n, caixasDe(b)));
+let contaDoPedido = idConta(PERFIL.ler());
+
+function carregarDaConta(){
+  pedido.clear();
+  for(const [sku, n] of guardar.ler()){
+    const b = BEBIDAS.find(x => x.sku === sku);
+    if(b && n > 0) pedido.set(sku, Math.min(n, caixasDe(b)));
+  }
+  pintar();
 }
-pintar();
+carregarDaConta();
+
+document.addEventListener("zg:entrou", e => {
+  const id = idConta(e.detail);
+  if(id === contaDoPedido) return;
+  contaDoPedido = id;
+  carregarDaConta();
+});

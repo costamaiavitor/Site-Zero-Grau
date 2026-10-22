@@ -78,6 +78,9 @@ const TIPO = {
             ler: t => { let d = t.replace(/\D/g, ""); if(d.length === 12 || d.length === 13) d = d.replace(/^55/, "");
                         return d.length === 10 || d.length === 11 ? `https://wa.me/55${d}` : (t.trim() ? NaN : null); } },
   link:   { mostrar: v => v === "#" ? "" : v ?? "", ler: t => t.trim() || "#" },
+  data:   { mostrar: v => v ? dataCurta(v) : "",
+            ler: t => { const m = t.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if(!t.trim()) return "";
+                        const iso = m ? `${m[3]}-${m[2]}-${m[1]}` : ""; return DATA_OK.test(iso) ? iso : NaN; } },
   pixchave: { mostrar: v => v ?? "", ler: t => { const c = t.trim(); return c ? (chavePix(c) || NaN) : ""; } }
 };
 
@@ -94,6 +97,8 @@ const CONFERE = {
   "varejo.cupom.codigo":   v => !/^[A-Z0-9]{3,24}$/.test(v) ? "3 a 24 letras ou números, sem espaço." : "",
   "varejo.cupom.desconto": v => v === null || !(v >= 0.01) || v > 0.9 ? "Entre 1% e 90%." : "",
   "varejo.cupom.minimo":   v => v === null || !(v >= 0) ? "Valor em reais, 0 ou mais." : "",
+  "varejo.cupom.teto":     v => v === null || !(v >= 0) ? "Valor em reais; 0 = sem teto." : "",
+  "varejo.cupom.validade": v => Number.isNaN(v) ? "Data como 31/12/2026, ou vazio." : "",
   "atacado.desconto":      v => v === null || !(v >= 0) || v > 0.9 ? "Entre 0% e 90%." : "",
   "atacado.minimo":        v => v === null || !(v >= 0) ? "Valor em reais, 0 ou mais." : "",
   "atacado.freteGratis":   v => v === null || !(v >= 0) ? "Valor em reais, 0 ou mais." : "",
@@ -756,7 +761,7 @@ function baixar(texto){
    grava um arquivo com um PUT: conteúdo em base64 e o `sha` da versão que
    está lá, que é a trava contra sobrescrever o trabalho de outra pessoa. O
    commit na main dispara o workflow do Pages, e o site se atualiza sozinho. */
-const GITHUB = {dono: "costamaiavitor", repo: "Site-Zero-Grau", ramo: "main", caminho: "ZeroGrau/js/ajustes.js"};
+const GITHUB = {dono: "costamaiavitor", repo: "Site-Zero-Grau", ramo: "main", caminho: "frontend/js/ajustes.js"};
 const API_GH = `https://api.github.com/repos/${GITHUB.dono}/${GITHUB.repo}`;
 
 const CHAVE_GH = {
@@ -857,7 +862,7 @@ async function publicar(){
     for(const [nome, f] of fotosParaPublicar()){
       const b = estado.bebidas.find(x => x.foto === nome);
       for(const h of [400, 200])
-        await gravarArquivo(`ZeroGrau/img/${nome}-${h}.webp`, f[h].split(",")[1],
+        await gravarArquivo(`frontend/img/${nome}-${h}.webp`, f[h].split(",")[1],
           `Painel: foto de ${b.marca} ${b.nome} (${h} px)`);
     }
     await gravarNoGitHub(texto, n);
@@ -890,7 +895,7 @@ const fotosParaPublicar = () => Object.entries(estado.fotosNovas || {})
   .filter(([nome]) => estado.bebidas.some(b => b.foto === nome));
 
 /* Sem chave, as fotos novas também descem, com o nome que o repositório
-   espera — vão para ZeroGrau/img/, e o ajustes.js para ZeroGrau/js/. */
+   espera — vão para frontend/img/, e o ajustes.js para frontend/js/. */
 function baixarTudo(){
   for(const [nome, f] of fotosParaPublicar())
     for(const h of [400, 200]){

@@ -10,16 +10,10 @@
       vitrine de varejo, CNPJ vai para o balcão de atacado, que vende por
       caixa fechada e com preço de revenda.
 
-   ⚠ O login ainda não tem servidor. As contas ficam registradas neste
-   navegador (e-mail, nome, documento — nunca a senha), então a conta só
-   existe onde foi criada, e nada confere se a senha é a certa: o script só
-   olha o formato (e-mail com @ e domínio, senha com 6 caracteres ou mais).
-   A senha não é guardada em lugar nenhum e o campo é esvaziado logo depois
-   de entrar. Guardar senha no navegador sem um servidor para conferi-la
-   seria só um risco a mais.
-
-   Para ligar o servidor, os pontos são `autenticar()` e `cadastrar()`, na
-   seção 2; o resto da porta não precisa mudar.
+   Login e cadastro passam por `autenticar()` e `cadastrar()`, na seção 2.
+   Com a API ligada (js/config.js), os dois falam com /api/auth e guardam o
+   token JWT na sessão. No modo simulado as contas ficam neste navegador e
+   a senha é guardada só como hash SHA-256, conferido a cada login.
 
    ⚠ A conferência do dígito verificador está DESLIGADA (CONFERE_DIGITO, logo
    abaixo). Neste momento qualquer número passa, desde que tenha 11 dígitos
@@ -65,6 +59,32 @@ const LOJA = {
 };
 
 const DESTINO = {varejo: "index.html", atacado: "atacado.html"};
+
+const CHAVES_SEM_CONTA = ["zg-carrinho", "zg-atacado", "zg-pedidos", "zg-endereco", "zg-entrega"];
+try{ for(const k of CHAVES_SEM_CONTA) localStorage.removeItem(k) }catch{}
+
+function idConta(p){
+  if(!p) return null;
+  if(p.id !== undefined && p.id !== null) return `id-${p.id}`;
+  return p.email ? String(p.email).toLowerCase() : null;
+}
+
+function chaveDaConta(base){
+  const id = idConta(PERFIL.ler());
+  return id ? `${base}:${id}` : null;
+}
+
+function lerDaConta(base, padrao){
+  const chave = chaveDaConta(base);
+  if(!chave) return padrao;
+  try{ const v = JSON.parse(localStorage.getItem(chave) || "null"); return v ?? padrao }catch{ return padrao }
+}
+
+function gravarNaConta(base, valor){
+  const chave = chaveDaConta(base);
+  if(!chave) return;
+  try{ localStorage.setItem(chave, JSON.stringify(valor)) }catch{}
+}
 
 /* ---------- dígito verificador ----------
    Os dois algoritmos são o mesmo esqueleto: soma ponderada dos dígitos,
@@ -229,16 +249,7 @@ function textoDoc(v){
 
 /* ---------- contas ----------
    O documento é pedido só ao criar a conta; no login bastam e-mail e senha,
-   e é a conta que diz se a pessoa é CPF (varejo) ou CNPJ (atacado).
-
-   Sem servidor, as contas ficam registradas neste navegador: e-mail, nome e
-   documento — NUNCA a senha. Consequência honesta: a conta só existe no
-   navegador em que foi criada, e qualquer senha no formato certo entra.
-
-   Os dois pontos onde o servidor entra são `autenticar` e `cadastrar`.
-   Quando houver, `autenticar` confere e-mail e senha lá e devolve a conta
-   (ou null), `cadastrar` cria e responde se o e-mail já estava em uso — e o
-   resto da porta não muda. */
+   e é a conta que diz se a pessoa é CPF (varejo) ou CNPJ (atacado). */
 const CONTAS = {
   todas(){ try{ return JSON.parse(localStorage.getItem("zg-contas") || "{}") || {} }catch{ return {} } },
   achar(email){ return this.todas()[email.toLowerCase()] || null },
@@ -252,14 +263,50 @@ const CONTAS = {
   }
 };
 
-/* devolve a conta ({email, nome, tipo, doc}) ou null */
-function autenticar({email}){
-  return Promise.resolve(CONTAS.achar(email));
+function contaDaApi(u){
+  return {id: u.id, email: String(u.email).toLowerCase(), nome: u.nome, doc: u.documento, tipo: u.tipo_documento, perfil: u.perfil || "cliente"};
 }
-/* devolve true se criou, false se o e-mail já tinha conta */
-function cadastrar({nome, email, doc, tipo}){
-  if(CONTAS.achar(email)) return Promise.resolve(false);
-  return Promise.resolve(CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo}));
+
+async function autenticar({email, senha}){
+  if(!API.usarMock){
+    try{
+      const r = await API.post("/auth/login", {email: email.trim().toLowerCase(), senha}, {token: null});
+      if(!r?.token || !r.usuario) return {erro: "O servidor não devolveu a sessão. Tente de novo."};
+      API.token.gravar(r.token);
+      return {conta: contaDaApi(r.usuario)};
+    }catch(e){
+      if(e.status === 401) return {erro: "E-mail ou senha incorretos.", campo: "senha"};
+      return {erro: e.message};
+    }
+  }
+  const conta = CONTAS.achar(email);
+  if(!conta) return {erro: "Não encontramos uma conta com esse e-mail. Confira o endereço ou crie uma conta.", campo: "email"};
+  let hash;
+  try{ hash = await hashSenha(email, senha) }
+  catch{ return {erro: "Este navegador não deixa conferir a senha com segurança aqui. Abra o site pelo endereço https."} }
+  if(!conta.senhaHash){
+    CONTAS.gravar({...conta, senhaHash: hash});
+    return {conta};
+  }
+  if(conta.senhaHash !== hash) return {erro: "Senha incorreta. Confira e tente de novo.", campo: "senha"};
+  return {conta};
+}
+
+async function cadastrar({nome, email, senha, doc, tipo}){
+  if(!API.usarMock){
+    try{
+      await API.post("/auth/cadastro", {nome, email: email.trim().toLowerCase(), senha, documento: doc, tipo_documento: tipo}, {token: null});
+    }catch(e){
+      if(e.status === 400 && /e-mail/i.test(e.message) && /cadastrad/i.test(e.message)) return {ok: false, campo: "email"};
+      return {ok: false, erro: e.message};
+    }
+    const {conta, erro} = await autenticar({email, senha});
+    if(!conta) return {ok: false, erro: erro || "A conta foi criada, mas não deu para entrar agora. Entre com o e-mail e a senha."};
+    return {ok: true, conta};
+  }
+  if(CONTAS.achar(email)) return {ok: false, campo: "email"};
+  const senhaHash = await hashSenha(email, senha);
+  return {ok: CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo, senhaHash})};
 }
 
 /* Entrar ou criar conta terminam igual: grava quem é, grava a loja e vai
@@ -279,10 +326,13 @@ async function entrar(){
   if(!senhaInput.value)   return r(senhaInput, "Digite sua senha.");
   if(senhaInput.value.length < SENHA_MIN)
     return r(senhaInput, `A senha tem de ter pelo menos ${SENHA_MIN} caracteres.`);
-  const conta = await autenticar({email, senha: senhaInput.value});
-  senhaInput.value = "";                      /* a senha não fica nem no campo */
-  if(!conta) return r(emailInput, "Não encontramos uma conta com esse e-mail. Confira o endereço ou crie uma conta.");
-  concluir(conta.tipo === "cnpj" ? "atacado" : "varejo", {doc: conta.doc, email: conta.email, nome: conta.nome});
+  const botao = $id("docBtn");
+  botao.disabled = true;
+  const {conta, erro, campo} = await autenticar({email, senha: senhaInput.value});
+  botao.disabled = false;
+  senhaInput.value = "";
+  if(!conta) return r(campo === "email" ? emailInput : senhaInput, erro);
+  concluir(conta.tipo === "cnpj" ? "atacado" : "varejo", {doc: conta.doc, email: conta.email, nome: conta.nome, ...(conta.id !== undefined ? {id: conta.id} : {}), ...(conta.perfil ? {perfil: conta.perfil} : {})});
 }
 
 async function criar(){
@@ -304,10 +354,21 @@ async function criar(){
     return r(cConfInput, "As duas senhas não são iguais.");
 
   const tipo = destino === "atacado" ? "cnpj" : "cpf";
-  const ok = await cadastrar({nome, email, senha: cSenhaInput.value, doc: mascarar(cDocInput.value), tipo});
+  const botao = $id("criarBtn");
+  botao.disabled = true;
+  let resultado;
+  try{ resultado = await cadastrar({nome, email, senha: cSenhaInput.value, doc: mascarar(cDocInput.value), tipo}) }
+  catch{ resultado = {ok: false, erro: "Este navegador não deixa guardar a senha com segurança aqui. Abra o site pelo endereço https.", campo: "senha"} }
+  finally{ botao.disabled = false }
+  if(!resultado.ok){
+    if(resultado.campo === "email"){ cSenhaInput.value = cConfInput.value = ""; return r(cEmailInput, "Já existe uma conta com esse e-mail. Entre com ela."); }
+    return r(resultado.campo === "senha" ? cSenhaInput : cDocInput, resultado.erro);
+  }
   cSenhaInput.value = cConfInput.value = "";
-  if(!ok) return r(cEmailInput, "Já existe uma conta com esse e-mail. Entre com ela.");
-  concluir(destino, {doc: mascarar(cDocInput.value), email: email.toLowerCase(), nome});
+  const c = resultado.conta;
+  concluir(destino, c
+    ? {doc: c.doc, email: c.email, nome: c.nome, id: c.id, perfil: c.perfil}
+    : {doc: mascarar(cDocInput.value), email: email.toLowerCase(), nome});
 }
 
 /* Trocar de painel leva junto o que já foi digitado no outro — quem escreveu
@@ -437,7 +498,7 @@ document.getElementById("gateYes").addEventListener("click", fecharGate);
 for(const el of document.querySelectorAll("[data-trocar]")){
   el.addEventListener("click", e => {
     e.preventDefault();
-    PERFIL.limpar(); LOJA.limpar();
+    PERFIL.limpar(); LOJA.limpar(); API.token.limpar();
     abrirPorta();
   });
 }
@@ -457,6 +518,11 @@ document.addEventListener("zg:entrou", e => {
       ? `Conectado como ${e.detail.nome ? `${e.detail.nome} (${e.detail.email})` : e.detail.email} · trocar de conta`
       : "Trocar de conta";
 });
+
+const avisoPorta = porta.querySelector(".gate-legal");
+if(avisoPorta) avisoPorta.textContent = API.usarMock
+  ? "Os dados ficam só neste navegador, e a senha é guardada só como hash, nunca como texto. O cadastro de revenda é aprovado depois, quando o pedido chega."
+  : "A senha é conferida no servidor da loja e não fica guardada neste navegador. O cadastro de revenda é aprovado depois, quando o pedido chega.";
 
 if(!idadeOk()){
   abrirCaixa(gate, true, focoGate);

@@ -12,7 +12,7 @@
 
 <!-- Prévia ao compartilhar. O canal de venda é o WhatsApp, e é ele quem lê isto.
      ⚠ og:url e og:image precisam ser absolutos. O endereço abaixo é o do
-     GitHub Pages deste repositório: o workflow publica a pasta ZeroGrau/ como
+     GitHub Pages deste repositório: o workflow publica a pasta frontend/ como
      raiz do site, por isso ela não aparece no caminho. Troque se for usar
      outro domínio. -->
 <meta property="og:type" content="website">
@@ -174,7 +174,7 @@
         </div>
 
         <div class="hero-stats">
-          <div class="hstat"><b>38 min</b><span>Tempo médio<br>das últimas 500 entregas</span></div>
+          <div class="hstat"><b>R$ <span data-regra="freteGratis" data-fmt="curto">120</span></b><span>Frete grátis<br>a partir deste valor</span></div>
           <div class="hstat"><b>R$ <span data-regra="taxaBase" data-fmt="brl">4,90</span></b><span>Taxa base<br>+ R$ <span data-regra="taxaKm" data-fmt="brl">1,20</span> por km</span></div>
           <div class="hstat"><b>R$ <span data-regra="minimo" data-fmt="curto">30</span></b><span>Pedido mínimo<br>em toda a área</span></div>
           <div class="hstat"><b data-total="disponivel">14</b><span>Rótulos<br>disponíveis hoje</span></div>
@@ -266,22 +266,22 @@
           <div class="srule">
             <span class="srule-k">Cupom de estreia</span>
             <span class="srule-line"></span>
-            <span class="srule-v">Válido até 31/12/2026</span>
+            <span class="srule-v" data-regra="cupomValidadeTexto" data-fmt="texto">Válido até 31/12/2026</span>
           </div>
     <div class="cupom">
       <div>
         <p class="tag">Primeiro pedido</p>
-        <h2><span data-regra="cupomDesconto" data-fmt="pct">15</span>% off em todo o catálogo</h2>
-        <p class="lead">Sem teto de desconto e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
+        <h2><span data-regra="cupomDesconto" data-fmt="pct">10</span>% off em todo o catálogo</h2>
+        <p class="lead"><span data-regra="cupomTetoTexto" data-fmt="texto">Desconto de até R$ 30,00</span> e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
         <ul class="cupom-list">
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ <span data-regra="cupomMinimo" data-fmt="brl">60,00</span></li>
+          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ <span data-regra="cupomMinimo" data-fmt="brl">100,00</span></li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ <span data-regra="freteGratis" data-fmt="brl">120,00</span></li>
           <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
         </ul>
       </div>
       <div class="ticket">
         <small>Código</small>
-        <button class="code" id="code" aria-describedby="codeHint" data-regra="cupomCodigo" data-fmt="texto">PRIMEIRAGELADA</button>
+        <button class="code" id="code" aria-describedby="codeHint" data-regra="cupomCodigo" data-fmt="texto">ZEROGRAU10</button>
         <small id="codeHint">Clique para copiar</small>
       </div>
     </div>
@@ -317,12 +317,12 @@
           <div class="srule">
             <span class="srule-k">Área de cobertura</span>
             <span class="srule-line"></span>
-            <span class="srule-v">Raio de <span data-regra="raio" data-fmt="km">12</span> km · Aldeota, Fortaleza</span>
+            <span class="srule-v">Raio de <span data-regra="raio" data-fmt="km">12</span> km · <span data-contato="bairro">Aldeota · Fortaleza / CE</span></span>
           </div>
           <div class="split">
             <div>
               <h2>Entregamos num raio de <span data-regra="raio" data-fmt="km">12</span> km da loja</h2>
-              <p class="lead lead--spaced">Loja física na Av. Santos Dumont, com câmara fria própria e frota de entregadores parceiros. Fora do raio, você retira no balcão sem pagar taxa.</p>
+              <p class="lead lead--spaced">Loja física na <span data-contato="endereco">Av. Santos Dumont, 1580</span>, com câmara fria própria e frota de entregadores parceiros. Fora do raio, você retira no balcão sem pagar taxa.</p>
               <p class="lead">A taxa é de R$ <span data-regra="taxaBase" data-fmt="brl">4,90</span> mais R$ <span data-regra="taxaKm" data-fmt="brl">1,20</span> por quilômetro, e some de vez acima de R$ <span data-regra="freteGratis" data-fmt="brl">120,00</span> em produtos. Informe o CEP na aba Início para ver quanto fica no seu endereço.</p>
             </div>
 
@@ -332,7 +332,6 @@
               <div class="info-row"><span>Taxa base</span><b>R$ <span data-regra="taxaBase" data-fmt="brl">4,90</span> <i>+ R$ <span data-regra="taxaKm" data-fmt="brl">1,20</span>/km</i></b></div>
               <div class="info-row"><span>Pedido mínimo</span><b>R$ <span data-regra="minimo" data-fmt="brl">30,00</span></b></div>
               <div class="info-row"><span>Frete grátis</span><b class="hl">Acima de R$ <span data-regra="freteGratis" data-fmt="brl">120,00</span></b></div>
-              <div class="info-row"><span>Tempo médio</span><b class="hl">38 minutos</b></div>
               <div class="info-row"><span>Fora do raio</span><b>Retirada no balcão, sem taxa</b></div>
             </div>
           </div>
@@ -373,8 +372,6 @@
 <!-- ============ RODAPÉ DE OPERAÇÃO ============ -->
 <footer class="app-pe">
   <span data-horario="status">Seg a dom · 10h00 – 03h00</span>
-  <span class="some">Câmara <b class="num" id="t1">−2,0 °C</b></span>
-  <span class="some">Em rota <b class="num" id="rotas">6</b></span>
   <span><b class="num" data-total="itens">15</b> itens · <b class="num" data-total="unidades">1439</b> unidades</span>
   <span class="some"><b class="num" data-total="disponivel">14</b> à venda agora</span>
   <span class="some">Frete grátis acima de <b class="num">R$ <span data-regra="freteGratis" data-fmt="curto">120</span></b></span>
@@ -643,11 +640,13 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/ajustes.js?v=15"></script>
-<script src="js/dados.js?v=15"></script>
-<script src="js/porta.js?v=15"></script>
+<script src="js/ajustes.js?v=16"></script>
+<script src="js/dados.js?v=16"></script>
+<script src="js/config.js?v=16"></script>
+<script src="js/api.js?v=16"></script>
+<script src="js/porta.js?v=16"></script>
 <script src="js/app.js?v=15"></script>
 <script src="js/pix.js?v=15"></script>
-<script src="js/script.js?v=15"></script>
+<script src="js/script.js?v=18"></script>
 </body>
 </html>

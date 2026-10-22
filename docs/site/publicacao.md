@@ -1,12 +1,12 @@
 # Publicação e o que falta para ir ao ar
 
-> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`ZeroGrau/`](../../ZeroGrau), que é o site.
+> Os caminhos citados aqui (`js/…`, `css/…`, `img/…`) são relativos à pasta [`frontend/`](../../frontend), que é o site.
 
 ## Como o site é publicado
 
-`.github/workflows/pages.yml` publica a pasta `ZeroGrau/` no GitHub Pages a
+`.github/workflows/pages.yml` publica a pasta `frontend/` no GitHub Pages a
 cada push na `main`. O conteúdo dessa pasta vira a raiz do site, então o
-endereço é `https://costamaiavitor.github.io/Site-Zero-Grau/` — sem `ZeroGrau`
+endereço é `https://costamaiavitor.github.io/Site-Zero-Grau/` — sem `frontend`
 no caminho. É esse endereço que o `og:url` do `index.html` declara.
 
 Duas condições, as duas fora do workflow e só na primeira vez:

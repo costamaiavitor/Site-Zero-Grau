@@ -256,9 +256,11 @@ const AJUSTES_PUBLICADOS = {
     "minimo": 30,
     "freteGratis": 120,
     "cupom": {
-      "codigo": "DANGATINHO",
-      "desconto": 0.67,
-      "minimo": 100
+      "codigo": "ZEROGRAU10",
+      "desconto": 0.1,
+      "teto": 30,
+      "minimo": 100,
+      "validade": "2026-12-31"
     },
     "taxaBase": 4.9,
     "taxaKm": 1.2,
