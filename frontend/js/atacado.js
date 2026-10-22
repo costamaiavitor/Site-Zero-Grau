@@ -1,141 +1,186 @@
-/* ==========================================================================
-   ZERO GRAU · balcão de atacado
+const corpoTabela = document.getElementById("linhas");
+const abasCategoria = document.getElementById("tabs");
+const campoBusca = document.getElementById("buscaInput");
+const avisoSemResultado = document.getElementById("semResultado");
+const botaoLimparBusca = document.getElementById("limparBusca");
 
-   Outra loja, não outro tema. O que muda não é a cor: é a unidade de venda.
-   Aqui se vende caixa fechada, o preço sai do preço cheio de varejo com o
-   desconto de revenda, e a promoção de fim de semana não vale — quem leva
-   vinte caixas já tem o desconto dele.
+const painelPedido = document.getElementById("pedido");
+const fundoPedido = document.getElementById("pedidoOverlay");
+const botaoFecharPedido = document.getElementById("pedidoClose");
+const barraDoPedido = document.getElementById("barra");
+const itensDoPedido = document.getElementById("pedidoItens");
+const pedidoVazio = document.getElementById("pedidoVazio");
+const avisoPedido = document.getElementById("pedidoAviso");
+const botaoEnviar = document.getElementById("enviar");
 
-   Por isso a tela é tabela e não vitrine. Quem compra para revender compara
-   preço por unidade entre dez itens de uma vez; card com foto grande e selo
-   de "gelada" atrapalha essa conta em vez de ajudar.
-   ========================================================================== */
+const botaoCarrinho = document.getElementById("cartBtn");
+const contadorCarrinho = document.getElementById("cartCount");
+const totalNoBotao = document.getElementById("cartTotal");
+const caixasNaBarra = document.getElementById("barraCaixas");
+const totalNaBarra = document.getElementById("barraTotal");
 
-/* ---------- 1. TABELA ---------- */
-const linhas = $("linhas");
+const resumoCaixas = document.getElementById("rCaixas");
+const resumoMercadoria = document.getElementById("rSub");
+const linhaFaixa = document.getElementById("linhaFaixa");
+const resumoFaixa = document.getElementById("rFaixa");
+const nomeDaFaixa = document.getElementById("rFaixaNome");
+const resumoFrete = document.getElementById("rFrete");
+const resumoTotal = document.getElementById("rTotal");
 
-function linhaTabela(b){
-  const cx       = caixaDe(b);
-  const emCaixas = caixasDe(b);
-  const un       = precoAtacado(b);
-  const esgotado = emCaixas === 0;
+const avisoToast = document.getElementById("toast");
+const textoToast = document.getElementById("toastMsg");
+
+const pedido = new Map();
+let categoriaAtual = "all";
+let buscaAtual = "";
+let esperaDaBusca;
+let esperaDoToast;
+let contaDoPedido = idConta(PERFIL.ler());
+const focoPainelPedido = prenderFoco(painelPedido);
+
+const PEDIDO_SALVO = {
+  ler() {
+    const salvo = lerDaConta("zg-atacado", []);
+    return Array.isArray(salvo) ? salvo : [];
+  },
+  salvar() {
+    gravarNaConta("zg-atacado", [...pedido]);
+  }
+};
+
+
+function acharBebida(sku) {
+  return BEBIDAS.find(bebida => bebida.sku === sku);
+}
+
+function montarLinhaTabela(bebida) {
+  const unidadesPorCaixa = caixaDe(bebida);
+  const caixasEmEstoque = caixasDe(bebida);
+  const precoUnidade = precoAtacado(bebida);
+  const esgotado = caixasEmEstoque === 0;
 
   return `
-  <tr class="item${esgotado ? " esgotado" : ""}" data-sku="${b.sku}" data-cat="${b.cat}"
-      data-busca="${semAcento(b.marca + " " + b.nome + " " + b.vol)}">
+  <tr class="item${esgotado ? " esgotado" : ""}" data-sku="${bebida.sku}" data-cat="${bebida.cat}"
+      data-busca="${semAcento(bebida.marca + " " + bebida.nome + " " + bebida.vol)}">
     <th scope="row" class="prod">
-      <span class="prod-marca">${b.marca}</span>
-      <span class="prod-nome">${b.nome}</span>
-      <span class="prod-emb">caixa com ${cx} un. · ${esgotado ? "esgotado" : emCaixas + " cx em estoque"}</span>
-      ${b.retornavel ? `<span class="prod-nota">casco retornável · R$ ${brl(b.casco)} por unidade</span>` : ""}
+      <span class="prod-marca">${bebida.marca}</span>
+      <span class="prod-nome">${bebida.nome}</span>
+      <span class="prod-emb">caixa com ${unidadesPorCaixa} un. · ${esgotado ? "esgotado" : caixasEmEstoque + " cx em estoque"}</span>
+      ${bebida.retornavel ? `<span class="prod-nota">casco retornável · R$ ${brl(bebida.casco)} por unidade</span>` : ""}
     </th>
-    <td class="n">${cx} un.</td>
-    <td class="n">R$ ${brl(un)}</td>
-    <td class="n forte">R$ ${brl(un * cx)}</td>
-    <td class="n ${esgotado ? "zero" : ""}">${esgotado ? "esgotado" : emCaixas + " cx"}</td>
+    <td class="n">${unidadesPorCaixa} un.</td>
+    <td class="n">R$ ${brl(precoUnidade)}</td>
+    <td class="n forte">R$ ${brl(precoUnidade * unidadesPorCaixa)}</td>
+    <td class="n ${esgotado ? "zero" : ""}">${esgotado ? "esgotado" : caixasEmEstoque + " cx"}</td>
     <td class="n">
       <div class="qtd">
-        <button data-acao="menos" ${esgotado ? "disabled" : ""} aria-label="Menos uma caixa de ${b.marca} ${b.nome}">−</button>
+        <button data-acao="menos" ${esgotado ? "disabled" : ""} aria-label="Menos uma caixa de ${bebida.marca} ${bebida.nome}">−</button>
         <span aria-live="polite" data-qtd>0</span>
-        <button data-acao="mais" ${esgotado ? "disabled" : ""} aria-label="Mais uma caixa de ${b.marca} ${b.nome}">+</button>
+        <button data-acao="mais" ${esgotado ? "disabled" : ""} aria-label="Mais uma caixa de ${bebida.marca} ${bebida.nome}">+</button>
       </div>
     </td>
   </tr>`;
 }
 
-linhas.innerHTML = BEBIDAS.map(linhaTabela).join("");
+function montarTabela() {
+  corpoTabela.innerHTML = BEBIDAS.map(montarLinhaTabela).join("");
 
-/* abas a partir da mesma lista de categorias do varejo */
-const tabs = $("tabs");
-tabs.insertAdjacentHTML("beforeend", CATEGORIAS.map(c =>
-  `<button class="tab" data-cat="${c.id}" role="tab" aria-selected="false" aria-controls="tabela">${c.nome}</button>`
-).join(""));
+  const botoes = CATEGORIAS.map(categoria =>
+    `<button class="tab" data-cat="${categoria.id}" role="tab" aria-selected="false" aria-controls="tabela">${categoria.nome}</button>`
+  );
+  abasCategoria.insertAdjacentHTML("beforeend", botoes.join(""));
 
-/* números que vêm do catálogo, nunca escritos à mão */
-for(const el of document.querySelectorAll("[data-total]")){
-  el.textContent = {itens: BEBIDAS.length, categorias: CATEGORIAS.length}[el.dataset.total];
+  const totais = {itens: BEBIDAS.length, categorias: CATEGORIAS.length};
+  for (const elemento of document.querySelectorAll("[data-total]")) {
+    elemento.textContent = totais[elemento.dataset.total];
+  }
+  for (const elemento of document.querySelectorAll("[data-reg]")) {
+    elemento.textContent = "R$ " + brl(ATACADO[elemento.dataset.reg]);
+  }
+  document.getElementById("pedidoNota").textContent = ATACADO.prazo;
 }
-for(const el of document.querySelectorAll("[data-reg]")){
-  el.textContent = "R$ " + brl(ATACADO[el.dataset.reg]);
-}
-$("pedidoNota").textContent = ATACADO.prazo;
 
-/* ---------- 2. BUSCA E FILTRO ---------- */
-let catAtual = "all", termoAtual = "";
 
-function aplicarFiltro(){
-  const termo = semAcento(termoAtual.trim());
-  const alvo = termo && new RegExp("(?<![\\p{L}\\p{N}])" + termo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u");
+function filtrarTabela() {
+  const termo = semAcento(buscaAtual.trim());
+  let procura = null;
+  if (termo) {
+    const termoSeguro = termo.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    procura = new RegExp("(?<![\\p{L}\\p{N}])" + termoSeguro, "u");
+  }
+
   let visiveis = 0;
-  for(const tr of linhas.querySelectorAll(".item")){
-    const mostrar = (catAtual === "all" || tr.dataset.cat === catAtual)
-                 && (!alvo || alvo.test(tr.dataset.busca));
-    tr.classList.toggle("hide", !mostrar);
-    if(mostrar) visiveis++;
+  for (const linha of corpoTabela.querySelectorAll(".item")) {
+    const daCategoria = categoriaAtual === "all" || linha.dataset.cat === categoriaAtual;
+    const daBusca = !procura || procura.test(linha.dataset.busca);
+    const aparece = daCategoria && daBusca;
+    linha.classList.toggle("hide", !aparece);
+    if (aparece) visiveis++;
   }
-  $("semResultado").hidden = visiveis > 0;
+  avisoSemResultado.hidden = visiveis > 0;
 }
 
-tabs.addEventListener("click", e => {
-  const tab = e.target.closest(".tab");
-  if(!tab) return;
-  for(const t of tabs.querySelectorAll(".tab")){
-    const on = t === tab;
-    t.classList.toggle("active", on);
-    t.setAttribute("aria-selected", String(on));
+function escolherCategoria(evento) {
+  const abaClicada = evento.target.closest(".tab");
+  if (!abaClicada) return;
+  for (const aba of abasCategoria.querySelectorAll(".tab")) {
+    const selecionada = aba === abaClicada;
+    aba.classList.toggle("active", selecionada);
+    aba.setAttribute("aria-selected", String(selecionada));
   }
-  catAtual = tab.dataset.cat;
-  aplicarFiltro();
-});
-
-const buscaInput = $("buscaInput");
-let buscaTimer;
-buscaInput.addEventListener("input", () => {
-  clearTimeout(buscaTimer);
-  buscaTimer = setTimeout(() => { termoAtual = buscaInput.value; aplicarFiltro(); }, 140);
-});
-$("limparBusca").addEventListener("click", () => {
-  buscaInput.value = ""; termoAtual = ""; aplicarFiltro(); buscaInput.focus();
-});
-
-/* ---------- 3. PEDIDO ----------
-   Estado em caixas, não em unidades. O carrinho do varejo guarda unidade e
-   aqui isso daria pedido de 7 latas, que não existe: a caixa é indivisível. */
-const pedido = new Map();      /* sku -> caixas */
-
-const guardar = {
-  ler:   () => { const l = lerDaConta("zg-atacado", []); return Array.isArray(l) ? l : [] },
-  salvar:() => gravarNaConta("zg-atacado", [...pedido])
-};
-
-function contas(){
-  let caixas = 0, sub = 0;
-  for(const [sku, n] of pedido){
-    const b = BEBIDAS.find(x => x.sku === sku);
-    if(!b) continue;
-    caixas += n;
-    sub += precoAtacado(b) * caixaDe(b) * n;
-  }
-  const extra    = faixaDe(caixas);
-  const desconto = sub * extra;
-  const base     = sub - desconto;
-  const frete    = caixas === 0 ? null : (base >= ATACADO.freteGratis ? 0 : TAXA_BASE + RAIO_MAX * TAXA_KM);
-  return {caixas, sub, extra, desconto, base, frete, total: base + (frete ?? 0)};
+  categoriaAtual = abaClicada.dataset.cat;
+  filtrarTabela();
 }
 
-function itemHTML(sku, n){
-  const b  = BEBIDAS.find(x => x.sku === sku);
-  const cx = caixaDe(b);
+function buscarComCalma() {
+  clearTimeout(esperaDaBusca);
+  esperaDaBusca = setTimeout(() => {
+    buscaAtual = campoBusca.value;
+    filtrarTabela();
+  }, 140);
+}
+
+function limparBusca() {
+  campoBusca.value = "";
+  buscaAtual = "";
+  filtrarTabela();
+  campoBusca.focus();
+}
+
+
+function calcularTotais() {
+  let caixas = 0;
+  let mercadoria = 0;
+  for (const [sku, quantidade] of pedido) {
+    const bebida = acharBebida(sku);
+    if (!bebida) continue;
+    caixas += quantidade;
+    mercadoria += precoAtacado(bebida) * caixaDe(bebida) * quantidade;
+  }
+  const extra = descontoDaFaixa(caixas);
+  const desconto = mercadoria * extra;
+  const totalProdutos = mercadoria - desconto;
+
+  let frete = null;
+  if (caixas > 0) {
+    frete = totalProdutos >= ATACADO.freteGratis ? 0 : TAXA_BASE + RAIO_MAX * TAXA_KM;
+  }
+  return {caixas, mercadoria, extra, desconto, totalProdutos, frete, total: totalProdutos + (frete ?? 0)};
+}
+
+function montarItemDoPedido(sku, quantidade) {
+  const bebida = acharBebida(sku);
+  const unidadesPorCaixa = caixaDe(bebida);
   return `
   <article class="pedido-item" data-sku="${sku}">
     <div>
-      <div class="marca">${b.marca}</div>
-      <div class="nome">${b.nome}</div>
-      <div class="un">${n} cx · ${n * cx} un. · R$ ${brl(precoAtacado(b))} a unidade</div>
+      <div class="marca">${bebida.marca}</div>
+      <div class="nome">${bebida.nome}</div>
+      <div class="un">${quantidade} cx · ${quantidade * unidadesPorCaixa} un. · R$ ${brl(precoAtacado(bebida))} a unidade</div>
     </div>
     <div class="linha-fim">
-      <div class="sub">R$ ${brl(precoAtacado(b) * cx * n)}</div>
-      <button class="tirar" data-acao="tirar" aria-label="Tirar ${b.marca} ${b.nome} do pedido">
+      <div class="sub">R$ ${brl(precoAtacado(bebida) * unidadesPorCaixa * quantidade)}</div>
+      <button class="tirar" data-acao="tirar" aria-label="Tirar ${bebida.marca} ${bebida.nome} do pedido">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/>
         </svg>
@@ -144,161 +189,195 @@ function itemHTML(sku, n){
   </article>`;
 }
 
-function pintar(){
-  const c = contas();
+function atualizarAvisoPedido(totais, vazio) {
+  avisoPedido.className = "cart-aviso";
+  if (vazio) {
+    avisoPedido.textContent = "";
+  } else if (totais.totalProdutos < ATACADO.minimo) {
+    avisoPedido.classList.add("bad");
+    avisoPedido.textContent = `Faltam R$ ${brl(ATACADO.minimo - totais.totalProdutos)} para o pedido mínimo de R$ ${brl(ATACADO.minimo)}.`;
+  } else if (totais.frete === 0) {
+    avisoPedido.classList.add("ok");
+    avisoPedido.textContent = "Frete grátis aplicado.";
+  } else {
+    const proximaFaixa = ATACADO.faixas.find(faixa => totais.caixas < faixa.cx);
+    if (proximaFaixa) {
+      avisoPedido.textContent = `Faltam ${proximaFaixa.cx - totais.caixas} caixas para ${Math.round(proximaFaixa.extra * 100)}% de desconto por volume.`;
+    } else {
+      avisoPedido.textContent = `Faltam R$ ${brl(ATACADO.freteGratis - totais.totalProdutos)} para o frete sair de graça.`;
+    }
+  }
+}
+
+function atualizarPedido() {
+  const totais = calcularTotais();
   const vazio = pedido.size === 0;
 
-  $("pedidoItens").innerHTML = [...pedido].map(([sku, n]) => itemHTML(sku, n)).join("");
-  $("pedidoVazio").hidden = !vazio;
+  itensDoPedido.innerHTML = [...pedido].map(([sku, quantidade]) => montarItemDoPedido(sku, quantidade)).join("");
+  pedidoVazio.hidden = !vazio;
 
-  /* a contagem de cada linha da tabela vem do estado, não do clique */
-  for(const tr of linhas.querySelectorAll(".item")){
-    const n = pedido.get(tr.dataset.sku) || 0;
-    tr.querySelector("[data-qtd]").textContent = n;
-    tr.classList.toggle("no-pedido", n > 0);
-    const b = BEBIDAS.find(x => x.sku === tr.dataset.sku);
-    const mais = tr.querySelector('[data-acao="mais"]');
-    if(mais) mais.disabled = n >= caixasDe(b);
-    const menos = tr.querySelector('[data-acao="menos"]');
-    if(menos) menos.disabled = n === 0;
+  for (const linha of corpoTabela.querySelectorAll(".item")) {
+    const quantidade = pedido.get(linha.dataset.sku) || 0;
+    linha.querySelector("[data-qtd]").textContent = quantidade;
+    linha.classList.toggle("no-pedido", quantidade > 0);
+    const bebida = acharBebida(linha.dataset.sku);
+    const botaoMais = linha.querySelector('[data-acao="mais"]');
+    if (botaoMais) botaoMais.disabled = quantidade >= caixasDe(bebida);
+    const botaoMenos = linha.querySelector('[data-acao="menos"]');
+    if (botaoMenos) botaoMenos.disabled = quantidade === 0;
   }
 
-  $("cartCount").textContent  = c.caixas;
-  $("cartTotal").textContent  = "R$ " + brl(c.total);
-  $("cartBtn").classList.toggle("tem-itens", !vazio);
-  $("barraCaixas").textContent = c.caixas;
-  $("barraTotal").textContent  = "R$ " + brl(c.total);
+  contadorCarrinho.textContent = totais.caixas;
+  totalNoBotao.textContent = "R$ " + brl(totais.total);
+  botaoCarrinho.classList.toggle("tem-itens", !vazio);
+  caixasNaBarra.textContent = totais.caixas;
+  totalNaBarra.textContent = "R$ " + brl(totais.total);
   document.body.classList.toggle("tem-pedido", !vazio);
 
-  $("rCaixas").textContent = c.caixas;
-  $("rSub").textContent    = "R$ " + brl(c.sub);
-  $("rTotal").textContent  = "R$ " + brl(c.total);
-  $("linhaFaixa").hidden   = c.extra === 0;
-  $("rFaixa").textContent  = "− R$ " + brl(c.desconto);
-  $("rFaixaNome").textContent = c.extra ? `(${Math.round(c.extra * 100)}%)` : "";
-  $("rFrete").textContent  = c.frete === null ? "—" : c.frete === 0 ? "grátis" : "R$ " + brl(c.frete);
+  resumoCaixas.textContent = totais.caixas;
+  resumoMercadoria.textContent = "R$ " + brl(totais.mercadoria);
+  resumoTotal.textContent = "R$ " + brl(totais.total);
+  linhaFaixa.hidden = totais.extra === 0;
+  resumoFaixa.textContent = "− R$ " + brl(totais.desconto);
+  nomeDaFaixa.textContent = totais.extra ? `(${Math.round(totais.extra * 100)}%)` : "";
 
-  const aviso = $("pedidoAviso");
-  aviso.className = "cart-aviso";
-  if(vazio){
-    aviso.textContent = "";
-  }else if(c.base < ATACADO.minimo){
-    aviso.classList.add("bad");
-    aviso.textContent = `Faltam R$ ${brl(ATACADO.minimo - c.base)} para o pedido mínimo de R$ ${brl(ATACADO.minimo)}.`;
-  }else if(c.frete === 0){
-    aviso.classList.add("ok");
-    aviso.textContent = "Frete grátis aplicado.";
-  }else{
-    const prox = ATACADO.faixas.find(f => c.caixas < f.cx);
-    aviso.textContent = prox
-      ? `Faltam ${prox.cx - c.caixas} caixas para ${Math.round(prox.extra * 100)}% de desconto por volume.`
-      : `Faltam R$ ${brl(ATACADO.freteGratis - c.base)} para o frete sair de graça.`;
+  if (totais.frete === null) {
+    resumoFrete.textContent = "—";
+  } else if (totais.frete === 0) {
+    resumoFrete.textContent = "grátis";
+  } else {
+    resumoFrete.textContent = "R$ " + brl(totais.frete);
   }
-  $("enviar").disabled = vazio || c.base < ATACADO.minimo;
 
-  guardar.salvar();
+  atualizarAvisoPedido(totais, vazio);
+  botaoEnviar.disabled = vazio || totais.totalProdutos < ATACADO.minimo;
+
+  PEDIDO_SALVO.salvar();
 }
 
-function mudar(sku, delta){
-  const b = BEBIDAS.find(x => x.sku === sku);
-  if(!b) return;
-  const teto = caixasDe(b);
-  const n = (pedido.get(sku) || 0) + delta;
-  if(n > teto){ toast(`${b.marca}: só há ${teto} caixas em estoque`); return; }
-  if(n <= 0) pedido.delete(sku); else pedido.set(sku, n);
-  pintar();
+function mudarCaixas(sku, diferenca) {
+  const bebida = acharBebida(sku);
+  if (!bebida) return;
+  const limite = caixasDe(bebida);
+  const quantidade = (pedido.get(sku) || 0) + diferenca;
+  if (quantidade > limite) {
+    mostrarToast(`${bebida.marca}: só há ${limite} caixas em estoque`);
+    return;
+  }
+  if (quantidade <= 0) {
+    pedido.delete(sku);
+  } else {
+    pedido.set(sku, quantidade);
+  }
+  atualizarPedido();
 }
 
-linhas.addEventListener("click", e => {
-  const btn = e.target.closest("button[data-acao]");
-  if(!btn || btn.disabled) return;
-  mudar(btn.closest(".item").dataset.sku, btn.dataset.acao === "mais" ? 1 : -1);
-});
+function clicarNaTabela(evento) {
+  const botao = evento.target.closest("button[data-acao]");
+  if (!botao || botao.disabled) return;
+  mudarCaixas(botao.closest(".item").dataset.sku, botao.dataset.acao === "mais" ? 1 : -1);
+}
 
-$("pedidoItens").addEventListener("click", e => {
-  const btn = e.target.closest('[data-acao="tirar"]');
-  if(!btn) return;
-  const sku = btn.closest(".pedido-item").dataset.sku;
-  const b = BEBIDAS.find(x => x.sku === sku);
+function tirarDoPedido(evento) {
+  const botao = evento.target.closest('[data-acao="tirar"]');
+  if (!botao) return;
+  const sku = botao.closest(".pedido-item").dataset.sku;
+  const bebida = acharBebida(sku);
   pedido.delete(sku);
-  pintar();
-  toast(`${b.marca} saiu do pedido`);
-});
-
-/* ---------- 4. O PAINEL EM TELA ESTREITA ----------
-   Acima de 1080px o resumo é coluna fixa e está sempre à vista, que é o que
-   um balcão precisa. Abaixo disso ele vira gaveta, chamada pela barra do pé. */
-const painel  = $("pedido");
-const overlay = $("pedidoOverlay");
-const focoPainel = prenderFoco(painel);
-
-function abrirPainel(abrir){
-  painel.classList.toggle("aberto", abrir);
-  if(abrir) overlay.hidden = false;
-  requestAnimationFrame(() => overlay.classList.toggle("aberto", abrir));
-  if(!abrir) setTimeout(() => { overlay.hidden = true }, 300);
-  document.body.classList.toggle("locked", abrir);
-  painel[abrir ? "addEventListener" : "removeEventListener"]("keydown", focoPainel);
-  if(abrir) $("pedidoClose").focus(); else $("barra").focus();
+  atualizarPedido();
+  mostrarToast(`${bebida.marca} saiu do pedido`);
 }
 
-$("barra").addEventListener("click", () => abrirPainel(true));
-$("cartBtn").addEventListener("click", () => abrirPainel(true));
-$("pedidoClose").addEventListener("click", () => abrirPainel(false));
-overlay.addEventListener("click", () => abrirPainel(false));
-addEventListener("keydown", e => {
-  if(e.key === "Escape" && painel.classList.contains("aberto")) abrirPainel(false);
-});
 
-/* ---------- 5. TOAST ---------- */
-let toastTimer;
-function toast(msg){
-  const t = $("toast");
-  $("toastMsg").textContent = msg;
-  t.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+function abrirPainelPedido() {
+  painelPedido.classList.add("aberto");
+  fundoPedido.hidden = false;
+  requestAnimationFrame(() => fundoPedido.classList.add("aberto"));
+  document.body.classList.add("locked");
+  painelPedido.addEventListener("keydown", focoPainelPedido);
+  botaoFecharPedido.focus();
 }
 
-/* ---------- 6. ENVIAR ---------- */
-$("enviar").addEventListener("click", () => {
-  const c = contas();
-  const doc = document.querySelector("[data-doc]")?.textContent || "";
-  const itens = [...pedido].map(([sku, n]) => {
-    const b = BEBIDAS.find(x => x.sku === sku);
-    return `• ${n} cx (${n * caixaDe(b)} un.) ${b.marca} ${b.nome} — R$ ${brl(precoAtacado(b) * caixaDe(b) * n)}`;
+function fecharPainelPedido() {
+  painelPedido.classList.remove("aberto");
+  requestAnimationFrame(() => fundoPedido.classList.remove("aberto"));
+  setTimeout(() => {
+    fundoPedido.hidden = true;
+  }, 300);
+  document.body.classList.remove("locked");
+  painelPedido.removeEventListener("keydown", focoPainelPedido);
+  barraDoPedido.focus();
+}
+
+function mostrarToast(mensagem) {
+  textoToast.textContent = mensagem;
+  avisoToast.classList.add("show");
+  clearTimeout(esperaDoToast);
+  esperaDoToast = setTimeout(() => avisoToast.classList.remove("show"), 2600);
+}
+
+function enviarPedidoAtacado() {
+  const totais = calcularTotais();
+  const cnpj = document.querySelector("[data-doc]")?.textContent || "";
+  const linhasDosItens = [...pedido].map(([sku, quantidade]) => {
+    const bebida = acharBebida(sku);
+    return `• ${quantidade} cx (${quantidade * caixaDe(bebida)} un.) ${bebida.marca} ${bebida.nome} — R$ ${brl(precoAtacado(bebida) * caixaDe(bebida) * quantidade)}`;
   });
-  const texto = [
+
+  const linhas = [
     "*Pedido de atacado · Zero Grau*",
-    doc ? `CNPJ: ${doc}` : null, "",
-    ...itens, "",
-    `Caixas: ${c.caixas}`,
-    `Mercadoria: R$ ${brl(c.sub)}`,
-    c.desconto > 0 ? `Desconto por volume (${Math.round(c.extra * 100)}%): − R$ ${brl(c.desconto)}` : null,
-    `Frete: ${c.frete === 0 ? "grátis" : "R$ " + brl(c.frete)}`,
-    `*Total: R$ ${brl(c.total)}*`, "",
+    cnpj ? `CNPJ: ${cnpj}` : null,
+    "",
+    ...linhasDosItens,
+    "",
+    `Caixas: ${totais.caixas}`,
+    `Mercadoria: R$ ${brl(totais.mercadoria)}`,
+    totais.desconto > 0 ? `Desconto por volume (${Math.round(totais.extra * 100)}%): − R$ ${brl(totais.desconto)}` : null,
+    `Frete: ${totais.frete === 0 ? "grátis" : "R$ " + brl(totais.frete)}`,
+    `*Total: R$ ${brl(totais.total)}*`,
+    "",
     ATACADO.prazo
-  ].filter(Boolean).join("\n");
+  ];
+  const mensagem = linhas.filter(Boolean).join("\n");
 
-  open(CONTATO.whatsapp + "?text=" + encodeURIComponent(texto), "_blank", "noopener");
-});
-
-/* ---------- 7. RETOMAR ---------- */
-let contaDoPedido = idConta(PERFIL.ler());
-
-function carregarDaConta(){
-  pedido.clear();
-  for(const [sku, n] of guardar.ler()){
-    const b = BEBIDAS.find(x => x.sku === sku);
-    if(b && n > 0) pedido.set(sku, Math.min(n, caixasDe(b)));
-  }
-  pintar();
+  open(CONTATO.whatsapp + "?text=" + encodeURIComponent(mensagem), "_blank", "noopener");
 }
-carregarDaConta();
 
-document.addEventListener("zg:entrou", e => {
-  const id = idConta(e.detail);
-  if(id === contaDoPedido) return;
+function carregarPedidoDaConta() {
+  pedido.clear();
+  for (const [sku, quantidade] of PEDIDO_SALVO.ler()) {
+    const bebida = acharBebida(sku);
+    if (bebida && quantidade > 0) pedido.set(sku, Math.min(quantidade, caixasDe(bebida)));
+  }
+  atualizarPedido();
+}
+
+function trocouDeConta(evento) {
+  const id = idConta(evento.detail);
+  if (id === contaDoPedido) return;
   contaDoPedido = id;
-  carregarDaConta();
+  carregarPedidoDaConta();
+}
+
+
+montarTabela();
+
+abasCategoria.addEventListener("click", escolherCategoria);
+campoBusca.addEventListener("input", buscarComCalma);
+botaoLimparBusca.addEventListener("click", limparBusca);
+
+corpoTabela.addEventListener("click", clicarNaTabela);
+itensDoPedido.addEventListener("click", tirarDoPedido);
+
+barraDoPedido.addEventListener("click", abrirPainelPedido);
+botaoCarrinho.addEventListener("click", abrirPainelPedido);
+botaoFecharPedido.addEventListener("click", fecharPainelPedido);
+fundoPedido.addEventListener("click", fecharPainelPedido);
+addEventListener("keydown", evento => {
+  if (evento.key === "Escape" && painelPedido.classList.contains("aberto")) fecharPainelPedido();
 });
+
+botaoEnviar.addEventListener("click", enviarPedidoAtacado);
+
+carregarPedidoDaConta();
+document.addEventListener("zg:entrou", trocouDeConta);

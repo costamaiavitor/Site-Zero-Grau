@@ -1,39 +1,17 @@
-/* ==========================================================================
-   ZERO GRAU · catálogo, contato e regras de venda
-
-   Fonte única das duas frentes: o varejo (index.html) e o atacado
-   (atacado.html) leem daqui. Duplicar a lista de produtos entre as duas
-   páginas seria garantir que um dia elas discordassem sobre o que está em
-   estoque, e o cliente veria preço de um lugar e disponibilidade do outro.
-   ========================================================================== */
-
-/* ---------- 1. ESTOQUE ----------
-   sku:   identidade do produto. É a chave do carrinho e do localStorage, e
-          existe separada de `foto` de propósito: a foto pode faltar, mudar de
-          nome ou chegar depois, e nada disso pode mexer no que o cliente já
-          colocou no carrinho.
-   cat:   a categoria de verdade — cada aba da vitrine e cada card de categoria
-          da home apontam para uma destas, sem apelido e sem agrupamento
-          escondido.
-   forma: bottle (long neck) · can (lata) · tall (destilado/vinho) · pet
-          (garrafão) · saco (gelo/carvão). É a silhueta de reserva.
-   foto:  nome-base do arquivo em img/. O card monta img/<foto>-200.webp e
-          img/<foto>-400.webp; se não existir, cai na silhueta — dá para ir
-          subindo as fotos uma a uma sem quebrar nada. */
 const BEBIDAS = [
   {sku:"estrella-galicia-330",  marca:"Estrella Galicia",  nome:"Cerveza Especial · lata 330 ml", cat:"cerveja",    foto:"estrella-galicia-330",   forma:"can",    vol:"330 ml", teor:"5,5%",  preco:8.90,   promo:6.90,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:240},
   {sku:"guinness-draught-500",  marca:"Guinness",          nome:"Draught Stout 500 ml",           cat:"cerveja",    foto:"guinness-draught-500",   forma:"can",    vol:"500 ml", teor:"4,2%",  preco:22.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:96},
   {sku:"feldschlosschen-500",   marca:"Feldschlösschen",   nome:"Original 500 ml",                cat:"cerveja",    foto:"feldschlosschen-500",    forma:"can",    vol:"500 ml", teor:"4,8%",  preco:15.90,  promo:null,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:0},
 
-  {sku:"jack-daniels-1l",       marca:"Jack Daniel's",     nome:"Old No. 7 · 700 ml",                cat:"destilado",  foto:"jack-daniels-1l",        forma:"tall",   vol:"700 ml",    teor:"40%",   preco:149.90, promo:null,   gelada:false, retornavel:false,               alcoolica:true,  estoque:14},
-  {sku:"absolut-1l",            marca:"Absolut",           nome:"Vodka Original 700 ml",             cat:"destilado",  foto:"absolut-1l",             forma:"tall",   vol:"700 ml",    teor:"40%",   preco:69.90,  promo:59.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:52},
-  {sku:"absolut-mango-1l",      marca:"Absolut",           nome:"Vodka Mango 750 ml",                cat:"destilado",  foto:"absolut-mango-1l",       forma:"tall",   vol:"750 ml",    teor:"38%",   preco:74.90,  promo:64.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:31},
+  {sku:"jack-daniels-1l",       marca:"Jack Daniel's",     nome:"Old No. 7 · 700 ml",             cat:"destilado",  foto:"jack-daniels-1l",        forma:"tall",   vol:"700 ml", teor:"40%",   preco:149.90, promo:null,   gelada:false, retornavel:false,               alcoolica:true,  estoque:14},
+  {sku:"absolut-1l",            marca:"Absolut",           nome:"Vodka Original 700 ml",          cat:"destilado",  foto:"absolut-1l",             forma:"tall",   vol:"700 ml", teor:"40%",   preco:69.90,  promo:59.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:52},
+  {sku:"absolut-mango-1l",      marca:"Absolut",           nome:"Vodka Mango 750 ml",             cat:"destilado",  foto:"absolut-mango-1l",       forma:"tall",   vol:"750 ml", teor:"38%",   preco:74.90,  promo:64.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:31},
   {sku:"tanqueray-750",         marca:"Tanqueray",         nome:"London Dry Gin 700 ml",          cat:"destilado",  foto:"tanqueray-750",          forma:"tall",   vol:"700 ml", teor:"47,3%", preco:129.90, promo:109.90, gelada:false, retornavel:false,               alcoolica:true,  estoque:21},
   {sku:"no3-gin-700",           marca:"No. 3",             nome:"London Dry Gin 700 ml",          cat:"destilado",  foto:"no3-gin-700",            forma:"tall",   vol:"700 ml", teor:"46%",   preco:189.90, promo:null,   gelada:false, retornavel:false,               alcoolica:true,  estoque:8},
   {sku:"seagrams-gin-700",      marca:"Seagram's",         nome:"Extra Dry Gin 750 ml",           cat:"destilado",  foto:"seagrams-gin-700",       forma:"tall",   vol:"750 ml", teor:"40%",   preco:69.90,  promo:57.90,  gelada:false, retornavel:false,               alcoolica:true,  estoque:64},
 
   {sku:"martini-rosso-1l",      marca:"Martini",           nome:"Rosso 1 L",                      cat:"vinho",      foto:"martini-rosso-1l",       forma:"tall",   vol:"1 L",    teor:"15%",   preco:64.90,  promo:52.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:26},
-  {sku:"coventry-fizz-750",     marca:"Coventry",          nome:"Fizz Elderflower 700 ml",        cat:"vinho",      foto:"coventry-fizz-750",      forma:"tall",   vol:"700 ml", teor:"15%",  preco:39.90,  promo:32.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:37},
+  {sku:"coventry-fizz-750",     marca:"Coventry",          nome:"Fizz Elderflower 700 ml",        cat:"vinho",      foto:"coventry-fizz-750",      forma:"tall",   vol:"700 ml", teor:"15%",   preco:39.90,  promo:32.90,  gelada:true,  retornavel:false,               alcoolica:true,  estoque:37},
   {sku:"smirnoff-ice-275",      marca:"Smirnoff",          nome:"Ice Tropical 275 ml",            cat:"vinho",      foto:"smirnoff-ice-275",       forma:"bottle", vol:"275 ml", teor:"5%",    preco:11.90,  promo:9.90,   gelada:true,  retornavel:false,               alcoolica:true,  estoque:210},
 
   {sku:"red-bull-250",          marca:"Red Bull",          nome:"Energy Drink 250 ml",            cat:"energetico", foto:"red-bull-250",           forma:"can",    vol:"250 ml", teor:"0%",    preco:9.90,   promo:7.90,   gelada:true,  retornavel:false,               alcoolica:false, estoque:310},
@@ -42,25 +20,16 @@ const BEBIDAS = [
   {sku:"coca-cola-2l",          marca:"Coca-Cola",         nome:"Sabor Original 2 L",             cat:"agua",       foto:"coca-cola-2l",           forma:"pet",    vol:"2 L",    teor:"0%",    preco:11.90,  promo:null,   gelada:true,  retornavel:true, casco:2.00,    alcoolica:false, estoque:150}
 ];
 
-/* Rótulo de cada categoria, na ordem em que aparecem nas abas e nos cards.
-   É a única lista de categorias do site: abas, cards da home e contagens
-   saem toda daqui, então não há como uma discordar da outra. */
 const CATEGORIAS = [
-  {id:"cerveja",    nome:"Cervejas",              detalhe:"lata de 330 e 500 ml"},
-  {id:"destilado",  nome:"Destilados",            detalhe:"whisky, vodka, gin"},
-  {id:"vinho",      nome:"Vinhos e drinks",       detalhe:"vermute, fizz, ice"},
-  {id:"energetico", nome:"Energéticos",           detalhe:"lata e garrafa de 2 L"},
-  {id:"agua",       nome:"Refrigerantes",         detalhe:"garrafa de 2 L"}
+  {id:"cerveja",    nome:"Cervejas",        detalhe:"lata de 330 e 500 ml"},
+  {id:"destilado",  nome:"Destilados",      detalhe:"whisky, vodka, gin"},
+  {id:"vinho",      nome:"Vinhos e drinks", detalhe:"vermute, fizz, ice"},
+  {id:"energetico", nome:"Energéticos",     detalhe:"lata e garrafa de 2 L"},
+  {id:"agua",       nome:"Refrigerantes",   detalhe:"garrafa de 2 L"}
 ];
 
-/* ---------- CONTATO ----------
-   O WhatsApp é o real da loja: (85) 98149-4445. ⚠ O resto ainda é VALOR DE
-   EXEMPLO — trocar pelos reais antes de publicar.
-   Tudo o que identifica a loja mora aqui e é escrito na página pelo script,
-   para que trocar o número não vire uma caça a string espalhada pelo HTML.
-   O mesmo vale para o CNPJ e o endereço no rodapé. */
 const CONTATO = {
-  whatsapp:  "https://wa.me/5585981494445",   /* (85) 98149-4445: 55 + DDD + número, sem símbolos */
+  whatsapp:  "https://wa.me/5585981494445",
   telefone:  "(85) 3000-0000",
   email:     "oi@zerograu.com.br",
   cnpj:      "00.000.000/0001-00",
@@ -70,201 +39,42 @@ const CONTATO = {
   facebook:  "#"
 };
 
-/* ---------- PIX ----------
-   Para o "pagar com Pix pelo site" do carrinho. Chave vazia = a opção não
-   aparece e o cliente fecha pelo WhatsApp, como antes — melhor não oferecer
-   do que gerar um Pix para uma chave que não é da loja. Preenche-se pelo
-   painel (aba Loja). `nome` e `cidade` vão dentro do código Pix e o banco
-   do cliente mostra os dois na hora de confirmar: até 25 e 15 caracteres,
-   sem acento, é o que o padrão do Banco Central aceita. */
 const PIX = {chave: "", nome: "ZERO GRAU", cidade: "FORTALEZA"};
 
-/* ---------- HORÁRIO ----------
-   Um turno por dia da semana, de domingo (0) a sábado (6): [abre, fecha] em
-   "HH:MM", ou null para fechado. Fechar antes de abrir quer dizer que o turno
-   passa da meia-noite (10:00 → 03:00). Abrir e fechar na mesma hora = 24 h.
-   O relógio é o de Fortaleza, não o do aparelho do cliente. */
 const HORARIO = {
   fuso: "America/Fortaleza",
   dias: [["10:00","03:00"], ["10:00","03:00"], ["10:00","03:00"], ["10:00","03:00"],
          ["10:00","03:00"], ["10:00","03:00"], ["10:00","03:00"]]
 };
 
-/* ---------- ESTATÍSTICA ----------
-   tipo "" = desligada (nada é carregado). "plausible" usa o domínio do site
-   como id e não põe cookie; "ga4" usa o id G-XXXXXXX do Google Analytics e,
-   por usar cookie, só liga depois que o visitante aceita. */
 const ESTATISTICA = {tipo: "", id: ""};
 
-/* ---------- a loja está aberta? ----------
-   Tudo em minutos desde a meia-noite, no fuso da loja. Um turno que passa da
-   meia-noite continua valendo na madrugada do dia seguinte: sábado às 01h30,
-   com sexta 10:00 → 03:00, a loja está aberta pelo turno de sexta. */
-const DIAS_NOME = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
-const DIAS_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const minutos = h => { const [a, b] = h.split(":").map(Number); return a * 60 + b; };
-const horaTxt = h => h.endsWith(":00") ? `${+h.slice(0, 2)}h` : `${+h.slice(0, 2)}h${h.slice(3)}`;
-const horaLonga = h => `${h.slice(0, 2)}h${h.slice(3)}`;           /* "03h00", como no resto do site */
-
-function agoraNaLoja(quando = new Date()){
-  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
-    timeZone: HORARIO.fuso, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
-  }).formatToParts(quando).map(x => [x.type, x.value]));
-  return {dia: ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(p.weekday), min: (+p.hour % 24) * 60 + +p.minute};
-}
-
-function situacaoLoja(quando = new Date()){
-  const {dia, min} = agoraNaLoja(quando);
-  const hoje = HORARIO.dias[dia], ontem = HORARIO.dias[(dia + 6) % 7];
-  const vira = d => d && minutos(d[1]) <= minutos(d[0]);     /* passa da meia-noite (ou 24 h) */
-
-  if(ontem && vira(ontem) && minutos(ontem[1]) !== minutos(ontem[0]) && min < minutos(ontem[1]))
-    return {aberto: true, fecha: ontem[1]};
-  if(hoje){
-    const a = minutos(hoje[0]), f = minutos(hoje[1]);
-    if(a === f) return {aberto: true, fecha: null};          /* 24 horas */
-    if(min >= a && (vira(hoje) || min < f)) return {aberto: true, fecha: hoje[1]};
-    if(min < a) return {aberto: false, abre: {quando: "hoje", hora: hoje[0]}};
-  }
-  for(let i = 1; i <= 7; i++){
-    const d = HORARIO.dias[(dia + i) % 7];
-    if(d) return {aberto: false, abre: {quando: i === 1 ? "amanhã" : DIAS_NOME[(dia + i) % 7], hora: d[0]}};
-  }
-  return {aberto: false, abre: null};                        /* fechada a semana toda */
-}
-
-/* "abre hoje às 10h" / "abre sexta às 10h30" */
-const abreTxt = s => s.abre ? `abre ${s.abre.quando} às ${horaTxt(s.abre.hora)}` : "sem horário marcado";
-
-/* "Seg a dom · 10h00 – 03h00", juntando dias seguidos com o mesmo turno */
-function resumoHorario(){
-  const ordem = [1, 2, 3, 4, 5, 6, 0];                       /* a semana começa na segunda */
-  const chave = d => d ? d.join("-") : "x";
-  const grupos = [];
-  for(const i of ordem){
-    const g = grupos[grupos.length - 1];
-    if(g && chave(HORARIO.dias[i]) === chave(HORARIO.dias[g.fim])) g.fim = i;
-    else grupos.push({ini: i, fim: i});
-  }
-  return grupos.map(g => {
-    const nome = g.ini === g.fim ? DIAS_CURTO[g.ini]
-               : ordem.indexOf(g.fim) - ordem.indexOf(g.ini) === 1 ? `${DIAS_CURTO[g.ini]} e ${DIAS_CURTO[g.fim].toLowerCase()}`
-               : `${DIAS_CURTO[g.ini]} a ${DIAS_CURTO[g.fim].toLowerCase()}`;
-    const d = HORARIO.dias[g.ini];
-    return `${nome} · ${d ? (minutos(d[0]) === minutos(d[1]) ? "24 horas" : `${horaLonga(d[0])} – ${horaLonga(d[1])}`) : "fechado"}`;
-  }).join(" · ");
-}
-
-/* taxa de entrega. `let` e não `const` porque o painel de administração
-   pode mudá-las (ver AJUSTES, no fim do arquivo). */
 let TAXA_BASE = 4.90;
 let TAXA_KM   = 1.20;
 let RAIO_MAX  = 12;
 
-const brl = v => v.toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
-const $   = id => document.getElementById(id);
-
-/* "Água" e "agua" têm de achar a mesma coisa. Tira o acento por decomposição
-   e joga para minúscula: vale para o que o cliente digita e para o texto do
-   card, então os dois lados se encontram no meio. */
-const semAcento = s => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-
-/* Altura da silhueta em função do volume, para que a estante fique proporcional.
-   Escala logarítmica: na prateleira uma garrafa de 2 L não é oito vezes maior
-   que uma lata de 250 ml. */
-function alturaSilhueta(vol){
-  const n = parseFloat(vol.replace(",", "."));
-  const ml = /\bL\b/.test(vol) ? n * 1000
-           : /kg/.test(vol)    ? n * 300   /* saco de gelo, aproximado pelo volume ocupado */
-           : n;
-  const t = Math.min(1, Math.max(0, Math.log(ml / 250) / Math.log(2000 / 250)));
-  return Math.round(140 + t * 46);
-}
-
-/* A foto ocupa sempre a mesma altura na tela (o .card-art é fixo), então o que
-   muda de aparelho para aparelho é só a densidade — daí descritor x, e não w.
-   Foto que ainda não foi publicada (subida pelo painel, só no rascunho) vem de
-   FOTOS_PREVIA, como data URL, para a prévia não mostrar imagem quebrada. */
-const FOTOS_PREVIA = {};
-function fotoAttrs(foto){
-  const p = FOTOS_PREVIA[foto];
-  if(p) return `src="${p[200]}" srcset="${p[200]} 1x, ${p[400]} 2x"`;
-  return `src="img/${foto}-200.webp" srcset="img/${foto}-200.webp 1x, img/${foto}-400.webp 2x"`;
-}
-
-/* ---------- VAREJO ---------- */
 const REGRAS = {
-  minimo: 30,          /* pedido mínimo, em reais */
-  freteGratis: 120,    /* acima disso a entrega sai de graça */
+  minimo: 30,
+  freteGratis: 120,
   cupom: {codigo:"ZEROGRAU10", desconto:.10, teto:30, minimo:100, validade:"2026-12-31"}
 };
 
-const DATA_OK = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-const hojeNaLoja = (quando = new Date()) => new Intl.DateTimeFormat("en-CA", {timeZone: HORARIO.fuso, year: "numeric", month: "2-digit", day: "2-digit"}).format(quando);
-const dataCurta = iso => iso ? iso.split("-").reverse().join("/") : "";
-const cupomVencido = () => !!REGRAS.cupom.validade && hojeNaLoja() > REGRAS.cupom.validade;
-
-function descontoCupom(sub){
-  const c = REGRAS.cupom;
-  if(sub < c.minimo || cupomVencido()) return 0;
-  const bruto = sub * c.desconto;
-  return c.teto > 0 ? Math.min(bruto, c.teto) : bruto;
-}
-
-
-/* ---------- ATACADO ----------
-   A venda para CNPJ é por caixa fechada, nunca por unidade: é o que separa
-   distribuidora de mercearia, e é o que justifica o preço menor.
-
-   `desconto` incide sobre o preço cheio de varejo, não sobre a promoção —
-   promoção de varejo é isca de fim de semana e não tem por que valer para
-   quem compra vinte caixas. As faixas somam em cima disso, por volume no
-   pedido inteiro.
-
-   ⚠ Números de exemplo, como o resto do catálogo. */
 const ATACADO = {
   desconto:    0.28,
-  minimo:      500,      /* pedido mínimo, em reais */
+  minimo:      500,
   freteGratis: 1200,
   prazo:       "Faturado em 28 dias para CNPJ com cadastro aprovado.",
-  faixas: [              /* desconto extra por caixas no pedido */
+  faixas: [
     {cx: 10, extra: 0.04},
     {cx: 20, extra: 0.07}
   ]
 };
 
-/* Unidades por caixa. O padrão vem da forma da embalagem, que é o que decide
-   na prática; a exceção existe porque garrafão e saco não seguem a regra da
-   garrafa e da lata. */
 const CAIXA_PADRAO = {can: 12, bottle: 12, tall: 6, pet: 6, saco: 4};
 const CAIXA_EXCECAO = {
   "coca-cola-2l": 6
 };
 
-const caixaDe   = b => CAIXA_EXCECAO[b.sku] ?? CAIXA_PADRAO[b.forma] ?? 12;
-const caixasDe  = b => Math.floor(b.estoque / caixaDe(b));
-const precoAtacado = b => b.preco * (1 - ATACADO.desconto);
-
-/* desconto extra da faixa em que o pedido caiu, por número de caixas */
-function faixaDe(caixas){
-  let extra = 0;
-  for(const f of ATACADO.faixas) if(caixas >= f.cx) extra = f.extra;
-  return extra;
-}
-
-/* ---------- ENTREGA ----------
-   O CEP é conferido no ViaCEP, que é a base dos Correios exposta de graça e
-   sem chave. É de lá que vêm cidade e bairro; a distância sai da tabela
-   abaixo. Antes disso a distância era derivada dos três últimos dígitos do
-   CEP — um número inventado com cara de cálculo, que mandaria alguém pagar
-   frete errado ou ouvir "fora do raio" morando a dois quarteirões.
-
-   ⚠ Os quilômetros são estimativas a partir do endereço da loja, que também é
-   exemplo. Quem for publicar mede os seus e troca só esta tabela: é o único
-   lugar do site que decide quanto custa chegar em cada bairro.
-
-   Bairro que não estiver na lista cai em `PADRAO_FORTALEZA`; cidade que não
-   estiver em `CIDADES` fica fora do raio, e aí é retirada no balcão. */
 const ENTREGA = {
   loja: "Aldeota · Fortaleza / CE",
 
@@ -282,184 +92,440 @@ const ENTREGA = {
   PADRAO_FORTALEZA: 7.5,
 
   cidades: {
-    "fortaleza": null,     /* null = usa a tabela de bairros */
+    "fortaleza": null,
     "eusebio": 14.0,       "caucaia": 17.5,       "maracanau": 16.8,
     "aquiraz": 27.0,       "pacatuba": 24.0,      "maranguape": 28.5,
     "itaitinga": 21.0
   }
 };
 
-/* "Fátima" e "fatima" são o mesmo bairro; o ViaCEP devolve com acento. */
-const chaveLugar = s => semAcento(String(s || "")).trim();
+
+function brl(valor) {
+  return valor.toLocaleString("pt-BR", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function semAcento(texto) {
+  return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
+function normalizarLugar(nomeDoLugar) {
+  return semAcento(String(nomeDoLugar || "")).trim();
+}
+
+function alturaSilhueta(volume) {
+  const numero = parseFloat(volume.replace(",", "."));
+  let mililitros = numero;
+  if (/\bL\b/.test(volume)) {
+    mililitros = numero * 1000;
+  } else if (/kg/.test(volume)) {
+    mililitros = numero * 300;
+  }
+  const proporcao = Math.min(1, Math.max(0, Math.log(mililitros / 250) / Math.log(2000 / 250)));
+  return Math.round(140 + proporcao * 46);
+}
+
+const FOTOS_PREVIA = {};
+
+function fotoAttrs(foto) {
+  const previa = FOTOS_PREVIA[foto];
+  if (previa) {
+    return `src="${previa[200]}" srcset="${previa[200]} 1x, ${previa[400]} 2x"`;
+  }
+  return `src="img/${foto}-200.webp" srcset="img/${foto}-200.webp 1x, img/${foto}-400.webp 2x"`;
+}
 
 
-/* ==========================================================================
-   AJUSTES DO PAINEL (admin.html)
+const DIAS_NOME = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+const DIAS_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-   Três camadas, nesta ordem, e só esta função as aplica:
+function paraMinutos(hora) {
+  const [horas, minutos] = hora.split(":").map(Number);
+  return horas * 60 + minutos;
+}
 
-   1. O que está escrito acima neste arquivo — a base.
-   2. AJUSTES_PUBLICADOS, de js/ajustes.js, que é o arquivo que o botão
-      "Publicar" do painel gera. Subido no repositório, vale para todo mundo.
-   3. O rascunho do painel, no localStorage. Vale só no navegador de quem
-      está editando, e a loja mostra um aviso de prévia enquanto ele existir.
-      O painel em si não aplica o rascunho: ele precisa ver o publicado para
-      saber o que mudou.
+function horaCurta(hora) {
+  const horas = Number(hora.slice(0, 2));
+  if (hora.endsWith(":00")) return `${horas}h`;
+  return `${horas}h${hora.slice(3)}`;
+}
 
-   Os ajustes são um retrato inteiro do que o painel edita, não uma lista de
-   diferenças: o que chega substitui o que havia. Tudo é conferido na entrada
-   — número tem de ser número, fração tem de estar entre 0 e 1 —, porque o
-   rascunho mora num lugar que qualquer um edita pelo console, e um valor
-   torto aqui derrubaria a loja inteira.
-   ========================================================================== */
-const AJUSTE_VERSAO  = 1;
-const RASCUNHO_CHAVE = "zg-admin-rascunho";
-const FORMAS = ["can", "bottle", "tall", "pet", "saco"];
+function horaLonga(hora) {
+  return `${hora.slice(0, 2)}h${hora.slice(3)}`;
+}
 
-const numOk  = (v, min = 0, max = Infinity) => typeof v === "number" && Number.isFinite(v) && v >= min && v <= max;
-const textoOk = v => typeof v === "string" && v.trim().length > 0;
-
-/* Um produto vindo de fora só entra se tiver o que o card precisa para ser
-   desenhado; o resto dos campos cai no padrão. */
-function produtoDe(b){
-  if(!b || !textoOk(b.sku) || !textoOk(b.marca) || !textoOk(b.nome)) return null;
-  if(!CATEGORIAS.some(c => c.id === b.cat) || !FORMAS.includes(b.forma)) return null;
-  if(!numOk(b.preco, 0.01) || !numOk(b.estoque) || !Number.isInteger(b.estoque)) return null;
-  const promo = numOk(b.promo, 0.01) && b.promo < b.preco ? b.promo : null;
-  const casco = b.retornavel && numOk(b.casco, 0.01) ? b.casco : null;
+function agoraNaLoja(quando = new Date()) {
+  const formato = new Intl.DateTimeFormat("en-US", {
+    timeZone: HORARIO.fuso, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+  });
+  const partes = {};
+  for (const parte of formato.formatToParts(quando)) {
+    partes[parte.type] = parte.value;
+  }
+  const diasEmIngles = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return {
-    sku: b.sku.trim(), marca: b.marca.trim(), nome: b.nome.trim(), cat: b.cat,
-    foto: textoOk(b.foto) ? b.foto.trim() : "", forma: b.forma,
-    vol: textoOk(b.vol) ? b.vol.trim() : "—", teor: textoOk(b.teor) ? b.teor.trim() : "—",
-    preco: b.preco, promo, gelada: !!b.gelada,
-    retornavel: casco !== null, ...(casco !== null ? {casco} : {}),
-    alcoolica: !!b.alcoolica, estoque: b.estoque
+    dia: diasEmIngles.indexOf(partes.weekday),
+    min: (Number(partes.hour) % 24) * 60 + Number(partes.minute)
   };
 }
 
-/* O retrato do que o painel edita, no estado em que está agora. */
-function estadoAtual(){
+function passaDaMeiaNoite(turno) {
+  return turno && paraMinutos(turno[1]) <= paraMinutos(turno[0]);
+}
+
+function situacaoLoja(quando = new Date()) {
+  const {dia, min} = agoraNaLoja(quando);
+  const turnoDeHoje = HORARIO.dias[dia];
+  const turnoDeOntem = HORARIO.dias[(dia + 6) % 7];
+
+  if (turnoDeOntem && passaDaMeiaNoite(turnoDeOntem)
+      && paraMinutos(turnoDeOntem[1]) !== paraMinutos(turnoDeOntem[0])
+      && min < paraMinutos(turnoDeOntem[1])) {
+    return {aberto: true, fecha: turnoDeOntem[1]};
+  }
+
+  if (turnoDeHoje) {
+    const abre = paraMinutos(turnoDeHoje[0]);
+    const fecha = paraMinutos(turnoDeHoje[1]);
+    if (abre === fecha) {
+      return {aberto: true, fecha: null};
+    }
+    if (min >= abre && (passaDaMeiaNoite(turnoDeHoje) || min < fecha)) {
+      return {aberto: true, fecha: turnoDeHoje[1]};
+    }
+    if (min < abre) {
+      return {aberto: false, abre: {quando: "hoje", hora: turnoDeHoje[0]}};
+    }
+  }
+
+  for (let diasAFrente = 1; diasAFrente <= 7; diasAFrente++) {
+    const proximoDia = (dia + diasAFrente) % 7;
+    const turno = HORARIO.dias[proximoDia];
+    if (turno) {
+      const quando = diasAFrente === 1 ? "amanhã" : DIAS_NOME[proximoDia];
+      return {aberto: false, abre: {quando, hora: turno[0]}};
+    }
+  }
+  return {aberto: false, abre: null};
+}
+
+function textoQuandoAbre(situacao) {
+  if (!situacao.abre) return "sem horário marcado";
+  return `abre ${situacao.abre.quando} às ${horaCurta(situacao.abre.hora)}`;
+}
+
+function resumoHorario() {
+  const ordemDaSemana = [1, 2, 3, 4, 5, 6, 0];
+  const jeitoDoTurno = turno => turno ? turno.join("-") : "x";
+
+  const grupos = [];
+  for (const dia of ordemDaSemana) {
+    const ultimoGrupo = grupos[grupos.length - 1];
+    if (ultimoGrupo && jeitoDoTurno(HORARIO.dias[dia]) === jeitoDoTurno(HORARIO.dias[ultimoGrupo.fim])) {
+      ultimoGrupo.fim = dia;
+    } else {
+      grupos.push({inicio: dia, fim: dia});
+    }
+  }
+
+  const textos = grupos.map(grupo => {
+    const primeiro = DIAS_CURTO[grupo.inicio];
+    const ultimo = DIAS_CURTO[grupo.fim].toLowerCase();
+    let dias;
+    if (grupo.inicio === grupo.fim) {
+      dias = primeiro;
+    } else if (ordemDaSemana.indexOf(grupo.fim) - ordemDaSemana.indexOf(grupo.inicio) === 1) {
+      dias = `${primeiro} e ${ultimo}`;
+    } else {
+      dias = `${primeiro} a ${ultimo}`;
+    }
+
+    const turno = HORARIO.dias[grupo.inicio];
+    let horas;
+    if (!turno) {
+      horas = "fechado";
+    } else if (paraMinutos(turno[0]) === paraMinutos(turno[1])) {
+      horas = "24 horas";
+    } else {
+      horas = `${horaLonga(turno[0])} – ${horaLonga(turno[1])}`;
+    }
+    return `${dias} · ${horas}`;
+  });
+
+  return textos.join(" · ");
+}
+
+
+const FORMATO_DATA = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+
+function hojeNaLoja(quando = new Date()) {
+  const formato = new Intl.DateTimeFormat("en-CA", {timeZone: HORARIO.fuso, year: "numeric", month: "2-digit", day: "2-digit"});
+  return formato.format(quando);
+}
+
+function dataCurta(dataIso) {
+  if (!dataIso) return "";
+  return dataIso.split("-").reverse().join("/");
+}
+
+function cupomVencido() {
+  return !!REGRAS.cupom.validade && hojeNaLoja() > REGRAS.cupom.validade;
+}
+
+function descontoCupom(subtotal) {
+  const cupom = REGRAS.cupom;
+  if (subtotal < cupom.minimo || cupomVencido()) return 0;
+  const desconto = subtotal * cupom.desconto;
+  if (cupom.teto > 0) return Math.min(desconto, cupom.teto);
+  return desconto;
+}
+
+
+function caixaDe(bebida) {
+  return CAIXA_EXCECAO[bebida.sku] ?? CAIXA_PADRAO[bebida.forma] ?? 12;
+}
+
+function caixasDe(bebida) {
+  return Math.floor(bebida.estoque / caixaDe(bebida));
+}
+
+function precoAtacado(bebida) {
+  return bebida.preco * (1 - ATACADO.desconto);
+}
+
+function descontoDaFaixa(totalDeCaixas) {
+  let extra = 0;
+  for (const faixa of ATACADO.faixas) {
+    if (totalDeCaixas >= faixa.cx) extra = faixa.extra;
+  }
+  return extra;
+}
+
+
+const AJUSTE_VERSAO = 1;
+const RASCUNHO_CHAVE = "zg-admin-rascunho";
+const FORMAS = ["can", "bottle", "tall", "pet", "saco"];
+const LINK_WHATSAPP = /^https:\/\/wa\.me\/55\d{10,11}$/;
+const FORMATO_HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function numeroValido(valor, minimo = 0, maximo = Infinity) {
+  return typeof valor === "number" && Number.isFinite(valor) && valor >= minimo && valor <= maximo;
+}
+
+function textoPreenchido(valor) {
+  return typeof valor === "string" && valor.trim().length > 0;
+}
+
+function turnoValido(turno) {
+  return Array.isArray(turno) && turno.length === 2 && FORMATO_HORA.test(turno[0]) && FORMATO_HORA.test(turno[1]);
+}
+
+function produtoDe(bebida) {
+  if (!bebida || !textoPreenchido(bebida.sku) || !textoPreenchido(bebida.marca) || !textoPreenchido(bebida.nome)) return null;
+  if (!CATEGORIAS.some(categoria => categoria.id === bebida.cat) || !FORMAS.includes(bebida.forma)) return null;
+  if (!numeroValido(bebida.preco, 0.01) || !numeroValido(bebida.estoque) || !Number.isInteger(bebida.estoque)) return null;
+
+  const promo = numeroValido(bebida.promo, 0.01) && bebida.promo < bebida.preco ? bebida.promo : null;
+  const casco = bebida.retornavel && numeroValido(bebida.casco, 0.01) ? bebida.casco : null;
+
+  const produto = {
+    sku: bebida.sku.trim(),
+    marca: bebida.marca.trim(),
+    nome: bebida.nome.trim(),
+    cat: bebida.cat,
+    foto: textoPreenchido(bebida.foto) ? bebida.foto.trim() : "",
+    forma: bebida.forma,
+    vol: textoPreenchido(bebida.vol) ? bebida.vol.trim() : "—",
+    teor: textoPreenchido(bebida.teor) ? bebida.teor.trim() : "—",
+    preco: bebida.preco,
+    promo,
+    gelada: !!bebida.gelada,
+    retornavel: casco !== null
+  };
+  if (casco !== null) produto.casco = casco;
+  produto.alcoolica = !!bebida.alcoolica;
+  produto.estoque = bebida.estoque;
+  return produto;
+}
+
+function estadoAtual() {
   return {
     versao: AJUSTE_VERSAO,
-    bebidas: BEBIDAS.map(b => ({...b})),
+    bebidas: BEBIDAS.map(bebida => ({...bebida})),
     varejo: {
-      minimo: REGRAS.minimo, freteGratis: REGRAS.freteGratis,
+      minimo: REGRAS.minimo,
+      freteGratis: REGRAS.freteGratis,
       cupom: {...REGRAS.cupom},
-      taxaBase: TAXA_BASE, taxaKm: TAXA_KM, raioMax: RAIO_MAX
+      taxaBase: TAXA_BASE,
+      taxaKm: TAXA_KM,
+      raioMax: RAIO_MAX
     },
     atacado: {
-      desconto: ATACADO.desconto, minimo: ATACADO.minimo, freteGratis: ATACADO.freteGratis,
-      prazo: ATACADO.prazo, faixas: ATACADO.faixas.map(f => ({...f}))
+      desconto: ATACADO.desconto,
+      minimo: ATACADO.minimo,
+      freteGratis: ATACADO.freteGratis,
+      prazo: ATACADO.prazo,
+      faixas: ATACADO.faixas.map(faixa => ({...faixa}))
     },
     caixaPadrao: {...CAIXA_PADRAO},
     caixaExcecao: {...CAIXA_EXCECAO},
     contato: {...CONTATO},
     pix: {...PIX},
-    horario: {dias: HORARIO.dias.map(d => d ? [...d] : null)},
+    horario: {dias: HORARIO.dias.map(turno => turno ? [...turno] : null)},
     estatistica: {...ESTATISTICA}
   };
 }
 
-function aplicarAjustes(a){
-  if(!a || a.versao !== AJUSTE_VERSAO) return false;
+function aplicarProdutos(listaRecebida) {
+  if (!Array.isArray(listaRecebida)) return;
+  const produtos = listaRecebida.map(produtoDe).filter(Boolean);
+  const skus = new Set(produtos.map(produto => produto.sku));
+  if (produtos.length && skus.size === produtos.length) {
+    BEBIDAS.splice(0, BEBIDAS.length, ...produtos);
+  }
+}
 
-  if(Array.isArray(a.bebidas)){
-    const lista = a.bebidas.map(produtoDe).filter(Boolean);
-    const skus = new Set(lista.map(b => b.sku));
-    if(lista.length && skus.size === lista.length) BEBIDAS.splice(0, BEBIDAS.length, ...lista);
+function aplicarVarejo(varejo) {
+  if (numeroValido(varejo.minimo)) REGRAS.minimo = varejo.minimo;
+  if (numeroValido(varejo.freteGratis)) REGRAS.freteGratis = varejo.freteGratis;
+
+  const cupom = varejo.cupom;
+  if (cupom) {
+    if (textoPreenchido(cupom.codigo)) REGRAS.cupom.codigo = cupom.codigo.trim().toUpperCase();
+    if (numeroValido(cupom.desconto, 0.01, 0.9)) REGRAS.cupom.desconto = cupom.desconto;
+    if (numeroValido(cupom.minimo)) REGRAS.cupom.minimo = cupom.minimo;
+    if (numeroValido(cupom.teto)) REGRAS.cupom.teto = cupom.teto;
+    if (cupom.validade === "" || (typeof cupom.validade === "string" && FORMATO_DATA.test(cupom.validade))) {
+      REGRAS.cupom.validade = cupom.validade;
+    }
   }
 
-  const v = a.varejo || {};
-  if(numOk(v.minimo))          REGRAS.minimo = v.minimo;
-  if(numOk(v.freteGratis))     REGRAS.freteGratis = v.freteGratis;
-  if(v.cupom){
-    if(textoOk(v.cupom.codigo))            REGRAS.cupom.codigo = v.cupom.codigo.trim().toUpperCase();
-    if(numOk(v.cupom.desconto, 0.01, 0.9)) REGRAS.cupom.desconto = v.cupom.desconto;
-    if(numOk(v.cupom.minimo))              REGRAS.cupom.minimo = v.cupom.minimo;
-    if(numOk(v.cupom.teto))                REGRAS.cupom.teto = v.cupom.teto;
-    if(v.cupom.validade === "" || (typeof v.cupom.validade === "string" && DATA_OK.test(v.cupom.validade)))
-      REGRAS.cupom.validade = v.cupom.validade;
-  }
-  if(numOk(v.taxaBase))        TAXA_BASE = v.taxaBase;
-  if(numOk(v.taxaKm))          TAXA_KM = v.taxaKm;
-  if(numOk(v.raioMax, 0.5))    RAIO_MAX = v.raioMax;
+  if (numeroValido(varejo.taxaBase)) TAXA_BASE = varejo.taxaBase;
+  if (numeroValido(varejo.taxaKm)) TAXA_KM = varejo.taxaKm;
+  if (numeroValido(varejo.raioMax, 0.5)) RAIO_MAX = varejo.raioMax;
+}
 
-  const at = a.atacado || {};
-  if(numOk(at.desconto, 0, 0.9)) ATACADO.desconto = at.desconto;
-  if(numOk(at.minimo))           ATACADO.minimo = at.minimo;
-  if(numOk(at.freteGratis))      ATACADO.freteGratis = at.freteGratis;
-  if(textoOk(at.prazo))          ATACADO.prazo = at.prazo.trim();
-  if(Array.isArray(at.faixas)){
-    const faixas = at.faixas
-      .filter(f => f && Number.isInteger(f.cx) && f.cx > 0 && numOk(f.extra, 0, 0.5))
-      .sort((x, y) => x.cx - y.cx);
+function aplicarAtacado(atacado) {
+  if (numeroValido(atacado.desconto, 0, 0.9)) ATACADO.desconto = atacado.desconto;
+  if (numeroValido(atacado.minimo)) ATACADO.minimo = atacado.minimo;
+  if (numeroValido(atacado.freteGratis)) ATACADO.freteGratis = atacado.freteGratis;
+  if (textoPreenchido(atacado.prazo)) ATACADO.prazo = atacado.prazo.trim();
+
+  if (Array.isArray(atacado.faixas)) {
+    const faixas = atacado.faixas
+      .filter(faixa => faixa && Number.isInteger(faixa.cx) && faixa.cx > 0 && numeroValido(faixa.extra, 0, 0.5))
+      .sort((primeira, segunda) => primeira.cx - segunda.cx);
     ATACADO.faixas.splice(0, ATACADO.faixas.length, ...faixas);
   }
+}
 
-  for(const f of FORMAS){
-    const n = a.caixaPadrao?.[f];
-    if(Number.isInteger(n) && n > 0) CAIXA_PADRAO[f] = n;
-  }
-  if(a.caixaExcecao && typeof a.caixaExcecao === "object"){
-    for(const k of Object.keys(CAIXA_EXCECAO)) delete CAIXA_EXCECAO[k];
-    for(const [sku, n] of Object.entries(a.caixaExcecao))
-      if(Number.isInteger(n) && n > 0) CAIXA_EXCECAO[sku] = n;
+function aplicarCaixas(caixaPadrao, caixaExcecao) {
+  for (const forma of FORMAS) {
+    const unidades = caixaPadrao?.[forma];
+    if (Number.isInteger(unidades) && unidades > 0) CAIXA_PADRAO[forma] = unidades;
   }
 
-  /* Contato: cada campo com o formato que o site sabe usar. Um link de
-     WhatsApp torto quebraria o fechamento de todos os pedidos. */
-  const ct = a.contato || {};
-  if(typeof ct.whatsapp === "string" && ZAP_OK.test(ct.whatsapp)) CONTATO.whatsapp = ct.whatsapp;
-  for(const k of ["telefone", "email", "cnpj", "endereco", "bairro"])
-    if(textoOk(ct[k]) && ct[k].length <= 120) CONTATO[k] = ct[k].trim();
-  for(const k of ["instagram", "facebook"])
-    if(ct[k] === "#" || (typeof ct[k] === "string" && /^https:\/\/\S+$/.test(ct[k]))) CONTATO[k] = ct[k];
+  if (caixaExcecao && typeof caixaExcecao === "object") {
+    for (const sku of Object.keys(CAIXA_EXCECAO)) {
+      delete CAIXA_EXCECAO[sku];
+    }
+    for (const [sku, unidades] of Object.entries(caixaExcecao)) {
+      if (Number.isInteger(unidades) && unidades > 0) CAIXA_EXCECAO[sku] = unidades;
+    }
+  }
+}
 
-  const px = a.pix || {};
-  if(typeof px.chave === "string" && px.chave.length <= 77) PIX.chave = px.chave.trim();
-  if(textoOk(px.nome) && px.nome.length <= 25)   PIX.nome = px.nome.trim();
-  if(textoOk(px.cidade) && px.cidade.length <= 15) PIX.cidade = px.cidade.trim();
+function aplicarContato(contato) {
+  if (typeof contato.whatsapp === "string" && LINK_WHATSAPP.test(contato.whatsapp)) {
+    CONTATO.whatsapp = contato.whatsapp;
+  }
+  for (const campo of ["telefone", "email", "cnpj", "endereco", "bairro"]) {
+    if (textoPreenchido(contato[campo]) && contato[campo].length <= 120) CONTATO[campo] = contato[campo].trim();
+  }
+  for (const rede of ["instagram", "facebook"]) {
+    const link = contato[rede];
+    if (link === "#" || (typeof link === "string" && /^https:\/\/\S+$/.test(link))) CONTATO[rede] = link;
+  }
+}
 
-  const dias = a.horario?.dias;
-  if(Array.isArray(dias) && dias.length === 7 && dias.every(d => d === null || turnoOk(d)))
-    HORARIO.dias.splice(0, 7, ...dias.map(d => d ? [...d] : null));
+function aplicarPix(pix) {
+  if (typeof pix.chave === "string" && pix.chave.length <= 77) PIX.chave = pix.chave.trim();
+  if (textoPreenchido(pix.nome) && pix.nome.length <= 25) PIX.nome = pix.nome.trim();
+  if (textoPreenchido(pix.cidade) && pix.cidade.length <= 15) PIX.cidade = pix.cidade.trim();
+}
 
-  const es = a.estatistica || {};
-  if(es.tipo === "")                                             Object.assign(ESTATISTICA, {tipo: "", id: ""});
-  if(es.tipo === "ga4" && /^G-[A-Z0-9]{4,14}$/.test(es.id))      Object.assign(ESTATISTICA, {tipo: "ga4", id: es.id});
-  if(es.tipo === "plausible" && /^[a-z0-9.-]{3,120}$/.test(es.id)) Object.assign(ESTATISTICA, {tipo: "plausible", id: es.id});
+function aplicarHorario(dias) {
+  if (Array.isArray(dias) && dias.length === 7 && dias.every(turno => turno === null || turnoValido(turno))) {
+    HORARIO.dias.splice(0, 7, ...dias.map(turno => turno ? [...turno] : null));
+  }
+}
+
+function aplicarEstatistica(estatistica) {
+  if (estatistica.tipo === "") {
+    Object.assign(ESTATISTICA, {tipo: "", id: ""});
+  }
+  if (estatistica.tipo === "ga4" && /^G-[A-Z0-9]{4,14}$/.test(estatistica.id)) {
+    Object.assign(ESTATISTICA, {tipo: "ga4", id: estatistica.id});
+  }
+  if (estatistica.tipo === "plausible" && /^[a-z0-9.-]{3,120}$/.test(estatistica.id)) {
+    Object.assign(ESTATISTICA, {tipo: "plausible", id: estatistica.id});
+  }
+}
+
+function aplicarAjustes(ajustes) {
+  if (!ajustes || ajustes.versao !== AJUSTE_VERSAO) return false;
+  aplicarProdutos(ajustes.bebidas);
+  aplicarVarejo(ajustes.varejo || {});
+  aplicarAtacado(ajustes.atacado || {});
+  aplicarCaixas(ajustes.caixaPadrao, ajustes.caixaExcecao);
+  aplicarContato(ajustes.contato || {});
+  aplicarPix(ajustes.pix || {});
+  aplicarHorario(ajustes.horario?.dias);
+  aplicarEstatistica(ajustes.estatistica || {});
   return true;
 }
 
-const ZAP_OK  = /^https:\/\/wa\.me\/55\d{10,11}$/;
-const HORA_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
-const turnoOk = d => Array.isArray(d) && d.length === 2 && HORA_OK.test(d[0]) && HORA_OK.test(d[1]);
-
 const RASCUNHO = {
-  ler(){ try{ return JSON.parse(localStorage.getItem(RASCUNHO_CHAVE) || "null") }catch{ return null } },
-  gravar(r){ try{ localStorage.setItem(RASCUNHO_CHAVE, JSON.stringify(r)); return true }catch{ return false } },
-  limpar(){ try{ localStorage.removeItem(RASCUNHO_CHAVE) }catch{} }
+  ler() {
+    try {
+      return JSON.parse(localStorage.getItem(RASCUNHO_CHAVE) || "null");
+    } catch {
+      return null;
+    }
+  },
+  gravar(rascunho) {
+    try {
+      localStorage.setItem(RASCUNHO_CHAVE, JSON.stringify(rascunho));
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  limpar() {
+    try {
+      localStorage.removeItem(RASCUNHO_CHAVE);
+    } catch {}
+  }
 };
 
-/* camada 1 guardada à parte: o histórico do painel precisa dela para
-   restaurar a versão em que nada tinha sido publicado */
+function fotoNovaValida(nome, foto) {
+  const webp = /^data:image\/webp;base64,/;
+  return /^[a-z0-9-]+$/.test(nome) && webp.test(foto?.[200] || "") && webp.test(foto?.[400] || "");
+}
+
 const ESTADO_BASE = estadoAtual();
 
-/* camada 2: o publicado */
-if(typeof AJUSTES_PUBLICADOS !== "undefined") aplicarAjustes(AJUSTES_PUBLICADOS);
+if (typeof AJUSTES_PUBLICADOS !== "undefined") aplicarAjustes(AJUSTES_PUBLICADOS);
 
-/* camada 3: o rascunho, só nas lojas */
-const RASCUNHO_LIDO = document.body?.dataset.publico !== "admin" ? RASCUNHO.ler() : null;
-const EM_PREVIA = aplicarAjustes(RASCUNHO_LIDO);
-/* fotos subidas pelo painel e ainda não publicadas */
-if(EM_PREVIA && RASCUNHO_LIDO.fotosNovas && typeof RASCUNHO_LIDO.fotosNovas === "object")
-  for(const [nome, f] of Object.entries(RASCUNHO_LIDO.fotosNovas))
-    if(/^[a-z0-9-]+$/.test(nome) && /^data:image\/webp;base64,/.test(f?.[200] || "") && /^data:image\/webp;base64,/.test(f?.[400] || ""))
-      FOTOS_PREVIA[nome] = f;
+const rascunhoDaLoja = document.body?.dataset.publico !== "admin" ? RASCUNHO.ler() : null;
+const emPrevia = aplicarAjustes(rascunhoDaLoja);
 
-/* Quem está vendo o rascunho precisa saber disso: sem o aviso, o dono abre a
-   loja, vê o preço novo e acha que já está no ar para todo mundo. */
-if(EM_PREVIA){
+if (emPrevia && rascunhoDaLoja.fotosNovas && typeof rascunhoDaLoja.fotosNovas === "object") {
+  for (const [nome, foto] of Object.entries(rascunhoDaLoja.fotosNovas)) {
+    if (fotoNovaValida(nome, foto)) FOTOS_PREVIA[nome] = foto;
+  }
+}
+
+if (emPrevia) {
   document.body.insertAdjacentHTML("beforeend", `
     <div class="previa" role="status">
       <b>Prévia do rascunho</b>
