@@ -180,6 +180,7 @@ test.describe('fechamento pelo WhatsApp', () => {
     await page.click('#feitoFechar');
     await abrirCarrinho(page);
     await expect(page.locator('#pedidosAntigos')).toBeVisible();
+    await page.mouse.move(5, page.viewportSize().height / 2);
     await pronto(page);
     await expect(page).toHaveScreenshot('carrinho-pedir-de-novo.png');
     await page.click('[data-denovo="0"]');
