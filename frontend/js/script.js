@@ -367,9 +367,9 @@ function precoDeVenda(bebida) {
 function calcularTotais() {
   let quantidade = 0;
   let subtotal = 0;
-  for (const {bebida, quantidade: unidades} of carrinho.values()) {
-    quantidade += unidades;
-    subtotal += precoDeVenda(bebida) * unidades;
+  for (const linha of carrinho.values()) {
+    quantidade += linha.quantidade;
+    subtotal += precoDeVenda(linha.bebida) * linha.quantidade;
   }
   const desconto = cupomAtivo ? descontoCupom(subtotal) : 0;
   const totalProdutos = subtotal - desconto;

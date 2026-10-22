@@ -10,11 +10,6 @@
 <link rel="apple-touch-icon" href="icone-180.png">
 <link rel="manifest" href="manifest.webmanifest">
 
-<!-- Prévia ao compartilhar. O canal de venda é o WhatsApp, e é ele quem lê isto.
-     ⚠ og:url e og:image precisam ser absolutos. O endereço abaixo é o do
-     GitHub Pages deste repositório: o workflow publica a pasta frontend/ como
-     raiz do site, por isso ela não aparece no caminho. Troque se for usar
-     outro domínio. -->
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:site_name" content="Zero Grau Distribuidora">
@@ -31,25 +26,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
-<!-- ?v= é selo de versão contra cache. O GitHub Pages serve CSS e JS com
-     max-age=600, então uma mudança recém-publicada continua chegando velha
-     no navegador de quem esteve aqui nos últimos dez minutos — e o site
-     parece não ter mudado. Suba o número ao mexer em css/ ou js/. -->
-<link rel="stylesheet" href="css/style.css?v=15">
-<link rel="stylesheet" href="css/temas.css?v=15">
+<link rel="stylesheet" href="css/style.css?v=19">
+<link rel="stylesheet" href="css/temas.css?v=19">
 
-<!-- A casca de uma tela só existe com script. Marcar aqui, e não depois que o
-     script.js roda, evita a página nascer rolando e encolher na cara de quem
-     olha. Sem JavaScript a classe não entra e as vistas empilham num
-     documento comum, que rola — é o que o buscador enxerga. -->
 <script>document.documentElement.classList.add("js")</script>
 </head>
 <body data-publico="varejo">
 
-<!-- ============ SPRITE: silhuetas técnicas (traço 1px, sem preenchimento) ============ -->
 <svg class="sprite" aria-hidden="true" focusable="false">
   <defs>
-    <!-- long neck -->
     <symbol id="s-bottle" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
       <path d="M21.5 10h17v8.5c0 3.6.7 5.8 2.4 9.2l3.2 6.4c1.6 3.2 2.2 5.8 2.2 9.4V145c0 4-2.6 6.6-6.6 6.6H20.3c-4 0-6.6-2.6-6.6-6.6V43.5c0-3.6.6-6.2 2.2-9.4l3.2-6.4c1.7-3.4 2.4-5.6 2.4-9.2z"/>
       <path d="M21.5 4.5h17V10h-17z"/>
@@ -58,7 +43,6 @@
       <path d="M18.6 96h16" stroke-width=".9" opacity=".55"/>
     </symbol>
 
-    <!-- lata -->
     <symbol id="s-can" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
       <path d="M15 26.5c0-3.2 2.3-5 15-5s15 1.8 15 5v107c0 3.2-2.3 5-15 5s-15-1.8-15-5z"/>
       <ellipse cx="30" cy="26.5" rx="15" ry="5"/>
@@ -68,7 +52,6 @@
       <path d="M20 83h14" stroke-width=".9" opacity=".55"/>
     </symbol>
 
-    <!-- garrafa alta: destilado e vinho -->
     <symbol id="s-tall" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
       <path d="M23.6 9h12.8v17.6l5.5 8.2c2 3 2.8 5.4 2.8 9V145c0 4-2.6 6.6-6.6 6.6H22c-4 0-6.6-2.6-6.6-6.6V43.8c0-3.6.8-6 2.8-9l5.4-8.2z"/>
       <path d="M22.6 3.5h14.8V13H22.6z"/>
@@ -77,7 +60,6 @@
       <path d="M20 91h13" stroke-width=".9" opacity=".55"/>
     </symbol>
 
-    <!-- pet / garrafão -->
     <symbol id="s-pet" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
       <path d="M22 12h16v6.4c0 2.8 1 4.4 2.9 6.2l3.3 3.2c2.6 2.6 3.4 4.8 3.4 8.2V145c0 4-2.6 6.6-6.6 6.6H19c-4 0-6.6-2.6-6.6-6.6V36c0-3.4.8-5.6 3.4-8.2l3.3-3.2c1.9-1.8 2.9-3.4 2.9-6.2z"/>
       <path d="M21.4 5h17.2v7.2H21.4z"/>
@@ -86,7 +68,6 @@
       <path d="M17 92h26" stroke-width=".9" opacity=".55"/>
     </symbol>
 
-    <!-- saco selado: gelo e carvão -->
     <symbol id="s-saco" viewBox="0 0 60 160" fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke">
       <path d="M16.6 26h26.8l3.6 13.6c1.3 4.8 1.8 8.2 1.8 13V141c0 6.2-3.4 9.8-9.6 9.8H20.8c-6.2 0-9.6-3.6-9.6-9.8V52.6c0-4.8.5-8.2 1.8-13z"/>
       <path d="M16.6 26 15 13.4h30L43.4 26"/>
@@ -100,7 +81,6 @@
 
 <a class="pular" href="#v-catalogo" data-vista="catalogo">Pular para o catálogo</a>
 
-<!-- ============ TOPO ============ -->
 <header class="app-topo">
   <a href="#" class="logo" aria-label="Zero Grau, início">
     <div class="logo-mark" aria-hidden="true">0°</div>
@@ -116,7 +96,6 @@
   </nav>
 
   <div class="app-acoes">
-    <!-- trocar de conta: limpa o documento desta aba e reabre a porta -->
     <button class="conta-btn" data-trocar title="Trocar de conta">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M4 8h13l-3-3M20 16H7l3 3"/>
@@ -137,23 +116,16 @@
 
 <main class="vistas" id="vistas">
 
-
-  <!-- ============ VISTA: INÍCIO ============
-       A porta abre aqui, não na prateleira. Cair direto no catálogo é entrar
-       numa loja pela porta dos fundos: não dá tempo de dizer quem é a casa,
-       quanto custa a entrega nem em quanto tempo ela chega. -->
   <section class="vista ativa" id="v-inicio" role="tabpanel" aria-label="Início">
     <div class="vista-rola">
       <div class="abertura">
         <div class="hero-eyebrow">
-          <!-- sem script não há como saber se está aberto agora: fica o horário -->
           <span class="loja-agora" data-horario="agora">Seg a dom · 10h00 – 03h00</span>
           <span>Distribuidora de bebidas</span>
           <span>Fortaleza / CE</span>
           <span>Câmara fria própria desde 2014</span>
         </div>
 
-        <!-- o script sorteia entre os slogans; estas linhas são o que fica sem JS -->
         <h1 class="manchete">
           <span class="ht-1">Sexta à noite não é</span>
           <span class="ht-2">hora de encarar</span>
@@ -184,7 +156,6 @@
           <button class="btn btn-primary" data-vista="catalogo">Ver o catálogo
             <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
-          <!-- aparece só onde o navegador oferece instalar (Chrome, Android) -->
           <button type="button" class="btn btn-ghost" id="instalarApp" hidden>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
             Instalar o app
@@ -195,9 +166,6 @@
           </a>
         </div>
 
-        <!-- No celular a faixa do pé some para dar lugar à barra de abas, e
-             estes dois links iam junto. Aqui eles ficam onde quem procura
-             procura: o revendedor, logo na abertura. -->
         <p class="abertura-pe">
           <a href="atacado.html" data-loja="atacado">Compro para revender</a>
           <a href="creditos.html">Créditos das imagens</a>
@@ -206,12 +174,10 @@
     </div>
   </section>
 
-  <!-- ============ VISTA: CATÁLOGO ============ -->
   <section class="vista" id="v-catalogo" role="tabpanel" aria-label="Catálogo">
     <div class="vista-cab">
       <h2 class="so-leitor">Catálogo</h2>
       <div class="filtro-linha">
-        <!-- uma aba por categoria real; o script preenche a partir de CATEGORIAS -->
         <div class="tabs" id="tabs" role="tablist" aria-label="Filtrar por categoria">
           <button class="tab active" data-cat="all" role="tab" aria-selected="true" aria-controls="grid">Tudo</button>
         </div>
@@ -228,7 +194,6 @@
     </div>
   </section>
 
-  <!-- ============ VISTA: COMO PEDIR ============ -->
   <section class="vista" id="v-pedir" role="tabpanel" aria-label="Como pedir">
     <div class="vista-rola">
       <div class="doc-corpo">
@@ -239,26 +204,25 @@
             <span class="srule-v">Quatro passos · nenhum telefonema</span>
           </div>
           <h2>Como pedir</h2>
-    <ol class="steps">
-      <li class="step"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
-      <li class="step"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
-      <li class="step"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
-      <li class="step"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
-    </ol>
+          <ol class="steps">
+            <li class="step"><div class="n">Passo 01</div><h3>Monte o carrinho</h3><p>Busque por marca, categoria ou faixa de preço. Salve os favoritos para repetir o pedido em um toque.</p></li>
+            <li class="step"><div class="n">Passo 02</div><h3>Escolha o endereço</h3><p>Cadastre quantos endereços quiser e defina o principal. A taxa é calculada pela distância até a loja.</p></li>
+            <li class="step"><div class="n">Passo 03</div><h3>Pague como preferir</h3><p>Pix, crédito, débito na entrega ou dinheiro, com o troco já calculado e separado.</p></li>
+            <li class="step"><div class="n">Passo 04</div><h3>Receba gelado</h3><p>Acompanhe o status em tempo real e apresente o documento na entrega. Só isso.</p></li>
+          </ol>
         </div>
 
-    <div class="aviso">
-      <div class="m18" aria-hidden="true">18+</div>
-      <div>
-        <h3>Venda proibida para menores de 18 anos</h3>
-        <p>A idade é verificada no cadastro e conferida com documento com foto na entrega. Sem documento, a bebida alcoólica volta para a loja e o valor é estornado. Aprecie com moderação — se for dirigir, não beba.</p>
-      </div>
-    </div>
+        <div class="aviso">
+          <div class="m18" aria-hidden="true">18+</div>
+          <div>
+            <h3>Venda proibida para menores de 18 anos</h3>
+            <p>A idade é verificada no cadastro e conferida com documento com foto na entrega. Sem documento, a bebida alcoólica volta para a loja e o valor é estornado. Aprecie com moderação — se for dirigir, não beba.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ VISTA: CUPOM ============ -->
   <section class="vista" id="v-cupom" role="tabpanel" aria-label="Cupom">
     <div class="vista-rola">
       <div class="doc-corpo">
@@ -268,23 +232,23 @@
             <span class="srule-line"></span>
             <span class="srule-v" data-regra="cupomValidadeTexto" data-fmt="texto">Válido até 31/12/2026</span>
           </div>
-    <div class="cupom">
-      <div>
-        <p class="tag">Primeiro pedido</p>
-        <h2><span data-regra="cupomDesconto" data-fmt="pct">10</span>% off em todo o catálogo</h2>
-        <p class="lead"><span data-regra="cupomTetoTexto" data-fmt="texto">Desconto de até R$ 30,00</span> e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
-        <ul class="cupom-list">
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ <span data-regra="cupomMinimo" data-fmt="brl">100,00</span></li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ <span data-regra="freteGratis" data-fmt="brl">120,00</span></li>
-          <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
-        </ul>
-      </div>
-      <div class="ticket">
-        <small>Código</small>
-        <button class="code" id="code" aria-describedby="codeHint" data-regra="cupomCodigo" data-fmt="texto">ZEROGRAU10</button>
-        <small id="codeHint">Clique para copiar</small>
-      </div>
-    </div>
+          <div class="cupom">
+            <div>
+              <p class="tag">Primeiro pedido</p>
+              <h2><span data-regra="cupomDesconto" data-fmt="pct">10</span>% off em todo o catálogo</h2>
+              <p class="lead"><span data-regra="cupomTetoTexto" data-fmt="texto">Desconto de até R$ 30,00</span> e sem categoria de fora. Aplique no carrinho antes de fechar o pedido.</p>
+              <ul class="cupom-list">
+                <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Pedido mínimo de R$ <span data-regra="cupomMinimo" data-fmt="brl">100,00</span></li>
+                <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Soma com o frete grátis acima de R$ <span data-regra="freteGratis" data-fmt="brl">120,00</span></li>
+                <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Um uso por CPF</li>
+              </ul>
+            </div>
+            <div class="ticket">
+              <small>Código</small>
+              <button class="code" id="code" aria-describedby="codeHint" data-regra="cupomCodigo" data-fmt="texto">ZEROGRAU10</button>
+              <small id="codeHint">Clique para copiar</small>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -294,13 +258,11 @@
             <span class="srule-v" data-horario="resumo">Seg a dom · 10h00 – 03h00</span>
           </div>
           <h2>A loja</h2>
-          <!-- os href e os dados abaixo são escritos pelo bloco CONTATO do script -->
           <div class="info-list">
             <div class="info-row"><span>Telefone</span><b><a data-contato="tel"></a></b></div>
             <div class="info-row"><span>E-mail</span><b><a data-contato="mailto"></a></b></div>
             <div class="info-row"><span>Endereço</span><b><span data-contato="endereco"></span> · <span data-contato="bairro"></span></b></div>
             <div class="info-row"><span>CNPJ</span><b class="num" data-contato="cnpj"></b></div>
-            <!-- ⚠ sem página própria ainda: por ora caem no WhatsApp, que responde de verdade -->
             <div class="info-row"><span>Trocas e devoluções</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
             <div class="info-row"><span>Política de casco</span><b><a class="link" data-contato="whatsapp" rel="noopener">falar no WhatsApp</a></b></div>
           </div>
@@ -309,7 +271,6 @@
     </div>
   </section>
 
-  <!-- ============ VISTA: ENTREGA ============ -->
   <section class="vista" id="v-entrega" role="tabpanel" aria-label="Entrega">
     <div class="vista-rola">
       <div class="doc-corpo">
@@ -344,24 +305,24 @@
             <span class="srule-v">4 formas aceitas</span>
           </div>
           <h2>Pague do jeito que der</h2>
-    <div class="pay-grid">
-      <div class="pay">
-        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 4 4-4 4-4-4z"/><path d="m12 14 4 4-4 4-4-4z"/><path d="m6 8 4 4-4 4-4-4z"/><path d="m18 8 4 4-4 4-4-4z"/></svg></span>
-        <b>Pix</b><small>Aprovação na hora. O pedido só sai depois da confirmação.</small>
-      </div>
-      <div class="pay">
-        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1"/><path d="M2 10h20M6 15h4"/></svg></span>
-        <b>Crédito e débito</b><small>No site ou na maquininha do entregador. Todas as bandeiras.</small>
-      </div>
-      <div class="pay">
-        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="1"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></span>
-        <b>Dinheiro</b><small>Informe para quanto precisa de troco e ele já vai separado.</small>
-      </div>
-      <div class="pay">
-        <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
-        <b>Vale-refeição</b><small>Alelo, Sodexo e Ticket, válidos para itens sem álcool.</small>
-      </div>
-    </div>
+          <div class="pay-grid">
+            <div class="pay">
+              <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 4 4-4 4-4-4z"/><path d="m12 14 4 4-4 4-4-4z"/><path d="m6 8 4 4-4 4-4-4z"/><path d="m18 8 4 4-4 4-4-4z"/></svg></span>
+              <b>Pix</b><small>Aprovação na hora. O pedido só sai depois da confirmação.</small>
+            </div>
+            <div class="pay">
+              <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1"/><path d="M2 10h20M6 15h4"/></svg></span>
+              <b>Crédito e débito</b><small>No site ou na maquininha do entregador. Todas as bandeiras.</small>
+            </div>
+            <div class="pay">
+              <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="1"/><circle cx="12" cy="12" r="2.6"/><path d="M6 12h.01M18 12h.01"/></svg></span>
+              <b>Dinheiro</b><small>Informe para quanto precisa de troco e ele já vai separado.</small>
+            </div>
+            <div class="pay">
+              <span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+              <b>Vale-refeição</b><small>Alelo, Sodexo e Ticket, válidos para itens sem álcool.</small>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -369,7 +330,6 @@
 
 </main>
 
-<!-- ============ RODAPÉ DE OPERAÇÃO ============ -->
 <footer class="app-pe">
   <span data-horario="status">Seg a dom · 10h00 – 03h00</span>
   <span><b class="num" data-total="itens">15</b> itens · <b class="num" data-total="unidades">1439</b> unidades</span>
@@ -379,9 +339,6 @@
   <span><a href="creditos.html">Créditos</a></span>
 </footer>
 
-<!-- ============ AVISO DE IDADE ============
-     Nasce fechado: quem abre é o script. Sem JavaScript não há diálogo
-     cobrindo a tela e o site continua navegável. Ver js/porta.js. -->
 <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
   <div class="gate-card">
     <div class="logo">
@@ -398,7 +355,6 @@
   </div>
 </div>
 
-<!-- ============ IDENTIFICAÇÃO ============ -->
 <div class="gate porta" id="porta" role="dialog" aria-modal="true" aria-labelledby="portaTitle" aria-hidden="true">
   <div class="gate-card">
     <div class="logo">
@@ -406,13 +362,9 @@
       <div class="logo-word">Zero Grau<small>Distribuidora</small></div>
     </div>
 
-    <!-- dois painéis na mesma caixa: o script mostra um e esconde o outro, e
-         aponta o aria-labelledby do diálogo para o título que está à vista -->
     <section class="porta-painel" id="painelEntrar">
       <h2 id="portaTitle">Entrar</h2>
       <p>Entre com o e-mail e a senha da sua conta. Conta de CPF compra na vitrine de varejo; conta de CNPJ, no balcão de atacado, por caixa fechada.</p>
-      <!-- novalidate: a conferência é do script, que diz o que falta em português
-           e num lugar só, em vez do balão de cada navegador -->
       <form class="login" id="loginForm" novalidate>
         <label class="doc-campo">
           <span class="tag">E-mail</span>
@@ -473,7 +425,6 @@
   </div>
 </div>
 
-<!-- ============ CARRINHO ============ -->
 <div class="cart-overlay" id="cartOverlay" hidden></div>
 <aside class="cart" id="cart" aria-label="Carrinho de compras" aria-hidden="true">
   <header class="cart-head">
@@ -486,47 +437,43 @@
     </button>
   </header>
 
-  <!-- O fechamento acontece dentro do carrinho, em etapas: a lista, os dados
-       de entrega e pagamento, o Pix (quando o cliente paga pelo site) e a
-       confirmação. Uma etapa à mostra por vez. -->
   <div class="cart-etapa" data-etapa="carrinho">
-  <div class="cart-itens" id="cartItens"></div>
+    <div class="cart-itens" id="cartItens"></div>
 
-  <div class="cart-vazio" id="cartVazio">
-    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
-      <path d="M2 3h3l2.7 12.6a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
-    </svg>
-    <p>Carrinho vazio</p>
-    <small>Adicione uma gelada e ela aparece aqui.</small>
-    <section class="pedidos-antigos" id="pedidosAntigos" hidden aria-labelledby="pedidosTit">
-      <h4 id="pedidosTit">Seus últimos pedidos</h4>
-      <ul id="pedidosLista"></ul>
-    </section>
-  </div>
-
-  <footer class="cart-pe" id="cartPe">
-    <div class="cart-cupom">
-      <input id="cupomInput" type="text" placeholder="Cupom de desconto" aria-label="Código do cupom" autocomplete="off">
-      <button class="btn btn-ghost btn-sm" id="cupomBtn">Aplicar</button>
+    <div class="cart-vazio" id="cartVazio">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>
+        <path d="M2 3h3l2.7 12.6a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"/>
+      </svg>
+      <p>Carrinho vazio</p>
+      <small>Adicione uma gelada e ela aparece aqui.</small>
+      <section class="pedidos-antigos" id="pedidosAntigos" hidden aria-labelledby="pedidosTit">
+        <h4 id="pedidosTit">Seus últimos pedidos</h4>
+        <ul id="pedidosLista"></ul>
+      </section>
     </div>
-    <p class="cart-aviso" id="cupomMsg" role="status" aria-live="polite"></p>
 
-    <dl class="cart-resumo">
-      <div><dt>Subtotal</dt><dd class="num" id="rSub">R$ 0,00</dd></div>
-      <div id="linhaDesconto" hidden><dt>Desconto <span id="rCupomNome"></span></dt><dd class="num desconto" id="rDesc">− R$ 0,00</dd></div>
-      <div><dt>Entrega <span class="cart-cep" id="rCepInfo">informe o CEP</span></dt><dd class="num" id="rEntrega">—</dd></div>
-      <div class="cart-total-linha"><dt>Total</dt><dd class="num" id="rTotal">R$ 0,00</dd></div>
-    </dl>
+    <footer class="cart-pe" id="cartPe">
+      <div class="cart-cupom">
+        <input id="cupomInput" type="text" placeholder="Cupom de desconto" aria-label="Código do cupom" autocomplete="off">
+        <button class="btn btn-ghost btn-sm" id="cupomBtn">Aplicar</button>
+      </div>
+      <p class="cart-aviso" id="cupomMsg" role="status" aria-live="polite"></p>
 
-    <p class="cart-aviso" id="cartAviso" role="status" aria-live="polite"></p>
-    <button class="btn btn-primary cart-fechar-pedido" id="finalizar">Continuar
-      <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </button>
-  </footer>
+      <dl class="cart-resumo">
+        <div><dt>Subtotal</dt><dd class="num" id="rSub">R$ 0,00</dd></div>
+        <div id="linhaDesconto" hidden><dt>Desconto <span id="rCupomNome"></span></dt><dd class="num desconto" id="rDesc">− R$ 0,00</dd></div>
+        <div><dt>Entrega <span class="cart-cep" id="rCepInfo">informe o CEP</span></dt><dd class="num" id="rEntrega">—</dd></div>
+        <div class="cart-total-linha"><dt>Total</dt><dd class="num" id="rTotal">R$ 0,00</dd></div>
+      </dl>
+
+      <p class="cart-aviso" id="cartAviso" role="status" aria-live="polite"></p>
+      <button class="btn btn-primary cart-fechar-pedido" id="finalizar">Continuar
+        <svg class="seta" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </footer>
   </div>
 
-  <!-- ETAPA 2 · entrega e pagamento -->
   <div class="cart-etapa" data-etapa="dados" hidden>
     <form class="checkout" id="checkout" novalidate>
       <div class="checkout-rola">
@@ -601,7 +548,6 @@
     </form>
   </div>
 
-  <!-- ETAPA 3 · Pix pelo site -->
   <div class="cart-etapa" data-etapa="pix" hidden>
     <div class="checkout-rola pix-rola">
       <p class="pix-valor">Total <b class="num" id="pixValor">R$ 0,00</b></p>
@@ -623,7 +569,6 @@
     </footer>
   </div>
 
-  <!-- ETAPA 4 · pedido enviado -->
   <div class="cart-etapa" data-etapa="feito" hidden>
     <div class="cart-feito">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/></svg>
@@ -640,13 +585,13 @@
   <span id="toastMsg"></span>
 </div>
 
-<script src="js/ajustes.js?v=16"></script>
-<script src="js/dados.js?v=16"></script>
-<script src="js/config.js?v=16"></script>
-<script src="js/api.js?v=16"></script>
-<script src="js/porta.js?v=16"></script>
-<script src="js/app.js?v=15"></script>
-<script src="js/pix.js?v=15"></script>
-<script src="js/script.js?v=18"></script>
+<script src="js/ajustes.js?v=19"></script>
+<script src="js/dados.js?v=19"></script>
+<script src="js/config.js?v=19"></script>
+<script src="js/api.js?v=19"></script>
+<script src="js/porta.js?v=19"></script>
+<script src="js/app.js?v=19"></script>
+<script src="js/pix.js?v=19"></script>
+<script src="js/script.js?v=19"></script>
 </body>
 </html>

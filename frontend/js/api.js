@@ -59,15 +59,15 @@ async function chamarApi(caminho, {metodo = "GET", corpo, token = TOKEN_SESSAO.l
     clearTimeout(tempoEsgotado);
   }
 
-  let json = null;
+  let conteudoDaResposta = null;
   try {
-    json = await resposta.json();
+    conteudoDaResposta = await resposta.json();
   } catch {}
 
   if (!resposta.ok) {
-    throw new ErroApi(json?.erro || `O servidor respondeu com erro ${resposta.status}.`, resposta.status, json);
+    throw new ErroApi(conteudoDaResposta?.erro || `O servidor respondeu com erro ${resposta.status}.`, resposta.status, conteudoDaResposta);
   }
-  return json;
+  return conteudoDaResposta;
 }
 
 const API = {
