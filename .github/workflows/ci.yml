@@ -19,6 +19,11 @@ jobs:
       - name: Instalar dependências
         run: npm install --no-audit --no-fund
 
+      - name: Montar a página React (Minha conta)
+        run: |
+          npm ci --prefix frontend-react --no-audit --no-fund
+          npm run build --prefix frontend-react
+
       - name: Instalar o Chromium
         run: npx playwright install --with-deps chromium
 

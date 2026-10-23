@@ -1,0 +1,81 @@
+:root,
+[data-bs-theme="dark"] {
+  --zg-papel: #0A0A1E;
+  --zg-papel-2: #12122E;
+  --zg-tinta: #FFF3E6;
+  --zg-tinta-2: #8B8BA8;
+  --zg-regua: #2A2A4D;
+  --zg-acento: #FF2D78;
+  --zg-acento-2: #00E5D0;
+  --zg-sobre-acento: #0A0A1E;
+  --zg-display: "Gabarito", system-ui, sans-serif;
+  --zg-texto: "Manrope", system-ui, sans-serif;
+
+  --bs-body-bg: var(--zg-papel);
+  --bs-body-color: var(--zg-tinta);
+  --bs-secondary-color: var(--zg-tinta-2);
+  --bs-border-color: var(--zg-regua);
+  --bs-body-font-family: var(--zg-texto);
+  --bs-link-color: var(--zg-acento-2);
+  --bs-link-hover-color: var(--zg-tinta);
+  --bs-focus-ring-color: rgba(0, 229, 208, .45);
+  --bs-border-radius: 0;
+  --bs-border-radius-lg: 0;
+  --bs-border-radius-sm: 0;
+}
+
+body {
+  background: var(--zg-papel);
+  color: var(--zg-tinta);
+  font-family: var(--zg-texto);
+}
+
+.btn-primary {
+  --bs-btn-bg: transparent;
+  --bs-btn-color: var(--zg-acento);
+  --bs-btn-border-color: var(--zg-acento);
+  --bs-btn-hover-bg: var(--zg-acento);
+  --bs-btn-hover-color: var(--zg-sobre-acento);
+  --bs-btn-hover-border-color: var(--zg-acento);
+  --bs-btn-active-bg: var(--zg-acento);
+  --bs-btn-active-color: var(--zg-sobre-acento);
+  --bs-btn-active-border-color: var(--zg-acento);
+  --bs-btn-focus-shadow-rgb: 255, 45, 120;
+}
+
+.btn-outline-light {
+  --bs-btn-color: var(--zg-tinta);
+  --bs-btn-border-color: var(--zg-regua);
+  --bs-btn-hover-bg: var(--zg-tinta);
+  --bs-btn-hover-color: var(--zg-papel);
+  --bs-btn-hover-border-color: var(--zg-tinta);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--zg-tinta-2);
+  --bs-btn-border-color: var(--zg-regua);
+  --bs-btn-hover-bg: var(--zg-papel-2);
+  --bs-btn-hover-color: var(--zg-tinta);
+  --bs-btn-hover-border-color: var(--zg-tinta-2);
+}
+
+.card {
+  --bs-card-bg: var(--zg-papel-2);
+  --bs-card-border-color: var(--zg-regua);
+  --bs-card-color: var(--zg-tinta);
+}
+
+.list-group {
+  --bs-list-group-bg: transparent;
+  --bs-list-group-border-color: var(--zg-regua);
+  --bs-list-group-color: var(--zg-tinta);
+}
+
+:focus-visible {
+  outline: 2px solid var(--zg-acento-2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
