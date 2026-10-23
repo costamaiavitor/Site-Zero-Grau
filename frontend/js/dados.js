@@ -533,3 +533,9 @@ if (emPrevia) {
       <a href="admin.html">Voltar ao painel</a>
     </div>`);
 }
+
+function textoAlternativo(bebida) {
+  const nome = `${bebida.marca} ${bebida.nome}`.trim();
+  const temVolume = bebida.vol && bebida.vol !== "—" && semAcento(nome).includes(semAcento(bebida.vol));
+  return temVolume || !bebida.vol || bebida.vol === "—" ? nome : `${nome}, ${bebida.vol}`;
+}

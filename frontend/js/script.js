@@ -215,7 +215,7 @@ function montarCardProduto(bebida) {
   <article class="card${esgotado ? " esgotado" : ""}${bebida.promo && !esgotado ? " promo" : ""}" data-cat="${bebida.cat}" data-busca="${semAcento(bebida.marca + " " + bebida.nome + " " + bebida.vol)}">
     <div class="card-art${bebida.foto ? " com-foto" : ""}">
       <div class="badges">${selos}</div>
-      ${bebida.foto ? `<img class="foto" ${fotoAttrs(bebida.foto)} alt="" loading="lazy" decoding="async">` : ""}
+      ${bebida.foto ? `<img class="foto" ${fotoAttrs(bebida.foto)} alt="${escaparHtml(textoAlternativo(bebida))}" loading="lazy" decoding="async">` : ""}
       <svg class="silhueta" width="${Math.round(altura * .375)}" height="${altura}" viewBox="0 0 60 160" aria-hidden="true"><use href="#s-${bebida.forma}"/></svg>
     </div>
     <div class="card-body">
@@ -386,7 +386,7 @@ function montarLinhaCarrinho({bebida, quantidade}) {
   return `
   <article class="cart-item" data-sku="${bebida.sku}">
     <div class="cart-art${bebida.foto ? "" : " sem-foto"}">
-      ${bebida.foto ? `<img ${fotoAttrs(bebida.foto)} alt="" loading="lazy" decoding="async">` : ""}
+      ${bebida.foto ? `<img ${fotoAttrs(bebida.foto)} alt="${escaparHtml(textoAlternativo(bebida))}" loading="lazy" decoding="async">` : ""}
       <svg class="silhueta" viewBox="0 0 60 160" aria-hidden="true"><use href="#s-${bebida.forma}"/></svg>
     </div>
     <div>
@@ -530,6 +530,7 @@ function abrirCarrinho() {
   if (etapaAtual === "feito") irParaEtapa("carrinho");
   carrinhoLateral.classList.add("aberto");
   carrinhoLateral.setAttribute("aria-hidden", "false");
+  carrinhoLateral.inert = false;
   fundoCarrinho.hidden = false;
   requestAnimationFrame(() => fundoCarrinho.classList.add("aberto"));
   document.body.classList.add("locked");
@@ -540,6 +541,7 @@ function abrirCarrinho() {
 function fecharCarrinho() {
   carrinhoLateral.classList.remove("aberto");
   carrinhoLateral.setAttribute("aria-hidden", "true");
+  carrinhoLateral.inert = true;
   requestAnimationFrame(() => fundoCarrinho.classList.remove("aberto"));
   setTimeout(() => {
     fundoCarrinho.hidden = true;

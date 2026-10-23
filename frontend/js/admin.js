@@ -315,7 +315,7 @@ function montarLinhaProduto(bebida) {
     <td>${campoDeTexto("teor", bebida.teor, "curto")}</td>
     <td><select data-campo="forma" aria-label="${escaparHtml(rotulo)} — embalagem">${opcoesEmbalagem}</select></td>
     <td class="adm-foto">
-      ${bebida.foto ? `<img class="adm-thumb" src="${escaparHtml(enderecoDaFoto(bebida.foto))}" alt="">` : ""}
+      ${bebida.foto ? `<img class="adm-thumb" src="${escaparHtml(enderecoDaFoto(bebida.foto))}" alt="${escaparHtml(textoAlternativo(bebida))}">` : ""}
       <select data-campo="foto" aria-label="${escaparHtml(rotulo)} — foto">${opcoesFoto}</select>
       <button type="button" class="adm-foto-btn" data-acao="foto" aria-label="Subir foto de ${escaparHtml(rotulo)}">Subir foto</button>
     </td>

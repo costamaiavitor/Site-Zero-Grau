@@ -289,8 +289,15 @@ function tirarDoPedido(evento) {
 }
 
 
+const pedidoEmGaveta = matchMedia("(max-width: 1080px)");
+
+function ajustarInertePedido() {
+  painelPedido.inert = pedidoEmGaveta.matches && !painelPedido.classList.contains("aberto");
+}
+
 function abrirPainelPedido() {
   painelPedido.classList.add("aberto");
+  ajustarInertePedido();
   fundoPedido.hidden = false;
   requestAnimationFrame(() => fundoPedido.classList.add("aberto"));
   document.body.classList.add("locked");
@@ -300,6 +307,7 @@ function abrirPainelPedido() {
 
 function fecharPainelPedido() {
   painelPedido.classList.remove("aberto");
+  ajustarInertePedido();
   requestAnimationFrame(() => fundoPedido.classList.remove("aberto"));
   setTimeout(() => {
     fundoPedido.hidden = true;
@@ -381,3 +389,6 @@ botaoEnviar.addEventListener("click", enviarPedidoAtacado);
 
 carregarPedidoDaConta();
 document.addEventListener("zg:entrou", trocouDeConta);
+
+pedidoEmGaveta.addEventListener("change", ajustarInertePedido);
+ajustarInertePedido();
