@@ -38,12 +38,15 @@ let esperaDoToast;
 let contaDoPedido = idConta(PERFIL.ler());
 const focoPainelPedido = prenderFoco(painelPedido);
 
+let catalogoPronto = API.usarMock;
+
 const PEDIDO_SALVO = {
   ler() {
     const salvo = lerDaConta("zg-atacado", []);
     return Array.isArray(salvo) ? salvo : [];
   },
   salvar() {
+    if (!catalogoPronto) return;
     gravarNaConta("zg-atacado", [...pedido]);
   }
 };
@@ -364,11 +367,26 @@ function trocouDeConta(evento) {
   const id = idConta(evento.detail);
   if (id === contaDoPedido) return;
   contaDoPedido = id;
+  if (catalogoPronto) carregarPedidoDaConta();
+}
+
+async function carregarCatalogoDoAtacado() {
+  mostrarEstadoDoCatalogo(corpoTabela, "carregando");
+  try {
+    await substituirCatalogoPelaApi();
+  } catch {
+    mostrarEstadoDoCatalogo(corpoTabela, "erro", carregarCatalogoDoAtacado);
+    return;
+  }
+  catalogoPronto = true;
+  montarTabela();
+  if (!BEBIDAS.length) mostrarEstadoDoCatalogo(corpoTabela, "vazio");
   carregarPedidoDaConta();
 }
 
 
-montarTabela();
+if (API.usarMock) montarTabela();
+else carregarCatalogoDoAtacado();
 
 abasCategoria.addEventListener("click", escolherCategoria);
 campoBusca.addEventListener("input", buscarComCalma);
@@ -387,7 +405,7 @@ addEventListener("keydown", evento => {
 
 botaoEnviar.addEventListener("click", enviarPedidoAtacado);
 
-carregarPedidoDaConta();
+if (API.usarMock) carregarPedidoDaConta();
 document.addEventListener("zg:entrou", trocouDeConta);
 
 pedidoEmGaveta.addEventListener("change", ajustarInertePedido);

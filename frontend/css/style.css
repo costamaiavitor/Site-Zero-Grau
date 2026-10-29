@@ -2187,6 +2187,10 @@ h3 {
   filter: invert(.5);
 }
 
+.prod-grid > .estado-catalogo {
+  grid-column: 1 / -1;
+}
+
 .sem-resultado {
   font-family: var(--mono);
   font-size: .8rem;

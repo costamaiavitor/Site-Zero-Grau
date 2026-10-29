@@ -134,12 +134,15 @@ const focoCarrinho = prenderFoco(carrinhoLateral);
 const linhasDaManchete = [...document.querySelectorAll(".manchete span")];
 
 
+let catalogoPronto = API.usarMock;
+
 const CARRINHO_SALVO = {
   ler() {
     const salvo = lerDaConta("zg-carrinho", []);
     return Array.isArray(salvo) ? salvo : [];
   },
   salvar() {
+    if (!catalogoPronto) return;
     const itens = [...carrinho.values()].map(linha => [linha.bebida.sku, linha.quantidade]);
     gravarNaConta("zg-carrinho", itens);
   }
@@ -973,6 +976,27 @@ function pedirDeNovo(evento) {
   }
 }
 
+async function carregarCatalogoDaApi() {
+  mostrarEstadoDoCatalogo(gradeProdutos, "carregando");
+  try {
+    await substituirCatalogoPelaApi();
+  } catch {
+    mostrarEstadoDoCatalogo(gradeProdutos, "erro", carregarCatalogoDaApi);
+    return;
+  }
+  catalogoPronto = true;
+  if (!abasCategoria.querySelector(".tab[data-cat]:not([data-cat='all'])")) montarAbasDeCategoria();
+  preencherNumerosDoCatalogo();
+  if (!BEBIDAS.length) {
+    mostrarEstadoDoCatalogo(gradeProdutos, "vazio");
+    carregarCarrinhoDaConta();
+    return;
+  }
+  montarVitrine();
+  carregarCarrinhoDaConta();
+  filtrarCatalogo();
+}
+
 function carregarCarrinhoDaConta() {
   carrinho.clear();
   cupomAtivo = false;
@@ -994,7 +1018,7 @@ function trocouDeConta(evento) {
   contaDoCarrinho = id;
   campoCupom.value = "";
   mensagemCupom.textContent = "";
-  carregarCarrinhoDaConta();
+  if (catalogoPronto) carregarCarrinhoDaConta();
 }
 
 
@@ -1167,11 +1191,13 @@ function mostrarVista(vista) {
 }
 
 
-montarVitrine();
-preencherNumerosDoCatalogo();
+if (API.usarMock) {
+  montarVitrine();
+  preencherNumerosDoCatalogo();
+  montarAbasDeCategoria();
+}
 preencherRegrasNaPagina();
 preencherContato();
-montarAbasDeCategoria();
 
 abasCategoria.addEventListener("click", escolherCategoria);
 campoBusca.addEventListener("input", buscarComCalma);
@@ -1219,7 +1245,8 @@ botaoJaPaguei.addEventListener("click", () => {
 
 carrinhoLateral.addEventListener("click", pedirDeNovo);
 
-carregarCarrinhoDaConta();
+if (API.usarMock) carregarCarrinhoDaConta();
+else carregarCatalogoDaApi();
 document.addEventListener("zg:entrou", trocouDeConta);
 
 ligarConsultaDeCep(campoCep, botaoCep, mensagemCep);
