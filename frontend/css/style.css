@@ -2072,7 +2072,6 @@ h3 {
 
 .cart-cep {
   font-size: .68rem;
-  opacity: .75;
 }
 
 .cart-total-linha {
@@ -2838,8 +2837,16 @@ h3 {
   display: none;
 }
 
-.tabela-atacado tr.esgotado {
-  opacity: .45;
+.tabela-atacado tr.esgotado,
+.tabela-atacado tr.esgotado .prod-marca,
+.tabela-atacado tr.esgotado .prod-nome,
+.tabela-atacado tr.esgotado .prod-emb,
+.tabela-atacado tr.esgotado td {
+  color: var(--ink-2);
+}
+
+.tabela-atacado tr.esgotado td.zero {
+  color: var(--hot);
 }
 
 .tabela-atacado .forte {
@@ -4120,7 +4127,6 @@ h3 {
   font-style: normal;
   text-transform: none;
   letter-spacing: 0;
-  opacity: .7;
   font-weight: 500;
 }
 
