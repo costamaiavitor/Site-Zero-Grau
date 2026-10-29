@@ -69,6 +69,7 @@ function fotosDisponiveis() {
 }
 
 function enderecoDaFoto(foto) {
+  if (/^https?:\/\//.test(foto)) return foto;
   return emEdicao.fotosNovas?.[foto]?.[200] || `img/${foto}-200.webp`;
 }
 
@@ -315,7 +316,7 @@ function montarLinhaProduto(bebida) {
     <td>${campoDeTexto("teor", bebida.teor, "curto")}</td>
     <td><select data-campo="forma" aria-label="${escaparHtml(rotulo)} — embalagem">${opcoesEmbalagem}</select></td>
     <td class="adm-foto">
-      ${bebida.foto ? `<img class="adm-thumb" src="${escaparHtml(enderecoDaFoto(bebida.foto))}" alt="">` : ""}
+      ${bebida.foto ? `<img class="adm-thumb" src="${escaparHtml(enderecoDaFoto(bebida.foto))}" alt="${escaparHtml(textoAlternativo(bebida))}">` : ""}
       <select data-campo="foto" aria-label="${escaparHtml(rotulo)} — foto">${opcoesFoto}</select>
       <button type="button" class="adm-foto-btn" data-acao="foto" aria-label="Subir foto de ${escaparHtml(rotulo)}">Subir foto</button>
     </td>
@@ -1116,6 +1117,119 @@ function fotosParaPublicar() {
 }
 
 async function publicar() {
+  if (API.usarMock) {
+    await publicarPeloGitHub();
+    return;
+  }
+  const gravou = await publicarProdutosNaApi();
+  if (gravou && contarAlteracoes()) await publicarPeloGitHub();
+}
+
+function produtoParaApi(bebida) {
+  const fotoLocal = bebida.foto && !/^https?:\/\//.test(bebida.foto) && !emEdicao.fotosNovas?.[bebida.foto];
+  const produto = {
+    sku: bebida.sku,
+    categoria_id: CATALOGO_API.idPorCategoria.get(bebida.cat),
+    cat: bebida.cat,
+    marca: bebida.marca,
+    nome: bebida.nome,
+    volume: bebida.vol === "—" ? null : bebida.vol,
+    teor_alcoolico: bebida.teor === "—" ? null : bebida.teor,
+    embalagem: bebida.forma,
+    preco: bebida.preco,
+    preco_promo: bebida.promo ?? null,
+    unidades_caixa: caixaPropriaDe(bebida) ?? emEdicao.caixaPadrao[bebida.forma] ?? null,
+    estoque: bebida.estoque,
+    gelada: !!bebida.gelada,
+    alcoolica: !!bebida.alcoolica,
+    retornavel: !!bebida.retornavel,
+    valor_casco: bebida.retornavel ? bebida.casco ?? null : null,
+    ativo: true
+  };
+  if (fotoLocal) produto.foto_url = bebida.foto;
+  return produto;
+}
+
+function mudouNoServidor(antes, depois) {
+  return JSON.stringify(produtoParaApi(antes)) !== JSON.stringify(produtoParaApi(depois));
+}
+
+async function enviarFotoParaApi(sku, foto) {
+  const id = CATALOGO_API.idPorSku.get(sku);
+  if (!id) throw new Error(`o servidor não devolveu o código do produto ${sku}`);
+  const arquivo = await (await fetch(foto[400])).blob();
+  const formulario = new FormData();
+  formulario.append("foto", arquivo, `${sku}.webp`);
+  await API.pedir(`/produtos/${encodeURIComponent(id)}/foto`, {metodo: "POST", formulario});
+}
+
+async function publicarProdutosNaApi() {
+  const publicados = new Map(PUBLICADO.bebidas.map(bebida => [bebida.sku, bebida]));
+  const emEdicaoPorSku = new Map(emEdicao.bebidas.map(bebida => [bebida.sku, bebida]));
+  const novos = emEdicao.bebidas.filter(bebida => !publicados.has(bebida.sku));
+  const alterados = emEdicao.bebidas.filter(bebida => publicados.has(bebida.sku) && mudouNoServidor(publicados.get(bebida.sku), bebida));
+  const removidos = PUBLICADO.bebidas.filter(bebida => !emEdicaoPorSku.has(bebida.sku));
+  const comFotoNova = emEdicao.bebidas.filter(bebida => emEdicao.fotosNovas?.[bebida.foto]);
+  const total = novos.length + alterados.length + removidos.length;
+  if (!total && !comFotoNova.length) return true;
+
+  if (!confirm(`Gravar ${total || comFotoNova.length} ${total === 1 ? "produto" : "produtos"} no servidor da loja? Os clientes veem na hora.`)) return false;
+
+  publicando = true;
+  botaoPublicar.disabled = true;
+  botaoPublicar.textContent = "Gravando…";
+  try {
+    for (const bebida of novos) {
+      const resposta = await API.post("/produtos", produtoParaApi(bebida));
+      if (resposta?.produto?.id) CATALOGO_API.idPorSku.set(bebida.sku, resposta.produto.id);
+    }
+    for (const bebida of alterados) {
+      const {sku, ...dados} = produtoParaApi(bebida);
+      await API.put(`/produtos/${encodeURIComponent(sku)}`, dados);
+    }
+    for (const bebida of removidos) {
+      await API.apagar(`/produtos/${encodeURIComponent(bebida.sku)}`);
+    }
+    for (const bebida of comFotoNova) {
+      await enviarFotoParaApi(bebida.sku, emEdicao.fotosNovas[bebida.foto]);
+    }
+  } catch (erro) {
+    mostrarSituacao("bad", `Não gravou no servidor: ${erro.message}`);
+    mostrarToast("Não gravou — veja o aviso no topo");
+    publicando = false;
+    botaoPublicar.textContent = "Publicar";
+    botaoPublicar.disabled = !!camposComErro.size;
+    await carregarProdutosDaApi();
+    return false;
+  }
+  publicando = false;
+  botaoPublicar.textContent = "Publicar";
+  emEdicao.fotosNovas = {};
+  await carregarProdutosDaApi();
+  mostrarToast("Produtos gravados no servidor da loja.");
+  return true;
+}
+
+async function carregarProdutosDaApi() {
+  mostrarSituacao("", "Carregando os produtos do servidor…");
+  try {
+    await substituirCatalogoPelaApi();
+  } catch (erro) {
+    mostrarSituacao("bad", `Não deu para carregar os produtos do servidor: ${erro.message}`);
+    botaoPublicar.disabled = true;
+    return false;
+  }
+  const doServidor = BEBIDAS.map(bebida => ({...bebida}));
+  PUBLICADO.bebidas = doServidor.map(bebida => ({...bebida}));
+  PUBLICADO.caixaExcecao = {...CAIXA_EXCECAO};
+  emEdicao.bebidas = doServidor.map(bebida => ({...bebida}));
+  emEdicao.caixaExcecao = {...CAIXA_EXCECAO};
+  FOTOS_PUBLICADAS.splice(0, FOTOS_PUBLICADAS.length, ...[...new Set(doServidor.map(bebida => bebida.foto).filter(Boolean))].sort());
+  desenharTudo();
+  return true;
+}
+
+async function publicarPeloGitHub() {
   const conteudo = montarArquivoAjustes();
   if (!CHAVE_GITHUB.ler()) {
     janelaSemChave.showModal();
@@ -1310,3 +1424,5 @@ document.querySelector(".adm-abas").addEventListener("keydown", trocarAbaPeloTec
 
 desenharTudo();
 mostrarAba(abasDoPainel[0]);
+
+if (!API.usarMock) carregarProdutosDaApi();

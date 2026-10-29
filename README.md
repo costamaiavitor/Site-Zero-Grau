@@ -52,6 +52,14 @@ tests/               teste automático do site no navegador (Playwright)
 .github/workflows/   testes a cada push (ci.yml) e publicação no Pages (pages.yml)
 ```
 
+## Ligar o site à API
+
+Por padrão o site roda em modo simulado (sem servidor). Para usar a API do `backend/`,
+edite `frontend/js/config.js`: `apiBase` com o endereço da API e `usarMock: false`. Aí o
+login, o cadastro, o catálogo da loja e do atacado e o CRUD de produtos do painel passam
+a ir ao banco. O que falta no back-end para isso funcionar no ar está em
+[`docs/levantamento-entrega-final.md`](docs/levantamento-entrega-final.md).
+
 ## Rodar e testar
 
 ```bash

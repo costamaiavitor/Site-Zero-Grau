@@ -38,12 +38,15 @@ let esperaDoToast;
 let contaDoPedido = idConta(PERFIL.ler());
 const focoPainelPedido = prenderFoco(painelPedido);
 
+let catalogoPronto = API.usarMock;
+
 const PEDIDO_SALVO = {
   ler() {
     const salvo = lerDaConta("zg-atacado", []);
     return Array.isArray(salvo) ? salvo : [];
   },
   salvar() {
+    if (!catalogoPronto) return;
     gravarNaConta("zg-atacado", [...pedido]);
   }
 };
@@ -289,8 +292,15 @@ function tirarDoPedido(evento) {
 }
 
 
+const pedidoEmGaveta = matchMedia("(max-width: 1080px)");
+
+function ajustarInertePedido() {
+  painelPedido.inert = pedidoEmGaveta.matches && !painelPedido.classList.contains("aberto");
+}
+
 function abrirPainelPedido() {
   painelPedido.classList.add("aberto");
+  ajustarInertePedido();
   fundoPedido.hidden = false;
   requestAnimationFrame(() => fundoPedido.classList.add("aberto"));
   document.body.classList.add("locked");
@@ -300,6 +310,7 @@ function abrirPainelPedido() {
 
 function fecharPainelPedido() {
   painelPedido.classList.remove("aberto");
+  ajustarInertePedido();
   requestAnimationFrame(() => fundoPedido.classList.remove("aberto"));
   setTimeout(() => {
     fundoPedido.hidden = true;
@@ -356,11 +367,26 @@ function trocouDeConta(evento) {
   const id = idConta(evento.detail);
   if (id === contaDoPedido) return;
   contaDoPedido = id;
+  if (catalogoPronto) carregarPedidoDaConta();
+}
+
+async function carregarCatalogoDoAtacado() {
+  mostrarEstadoDoCatalogo(corpoTabela, "carregando");
+  try {
+    await substituirCatalogoPelaApi();
+  } catch {
+    mostrarEstadoDoCatalogo(corpoTabela, "erro", carregarCatalogoDoAtacado);
+    return;
+  }
+  catalogoPronto = true;
+  montarTabela();
+  if (!BEBIDAS.length) mostrarEstadoDoCatalogo(corpoTabela, "vazio");
   carregarPedidoDaConta();
 }
 
 
-montarTabela();
+if (API.usarMock) montarTabela();
+else carregarCatalogoDoAtacado();
 
 abasCategoria.addEventListener("click", escolherCategoria);
 campoBusca.addEventListener("input", buscarComCalma);
@@ -379,5 +405,8 @@ addEventListener("keydown", evento => {
 
 botaoEnviar.addEventListener("click", enviarPedidoAtacado);
 
-carregarPedidoDaConta();
+if (API.usarMock) carregarPedidoDaConta();
 document.addEventListener("zg:entrou", trocouDeConta);
+
+pedidoEmGaveta.addEventListener("change", ajustarInertePedido);
+ajustarInertePedido();

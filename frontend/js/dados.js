@@ -131,6 +131,7 @@ function fotoAttrs(foto) {
   if (previa) {
     return `src="${previa[200]}" srcset="${previa[200]} 1x, ${previa[400]} 2x"`;
   }
+  if (/^https?:\/\//.test(foto)) return `src="${foto}"`;
   return `src="img/${foto}-200.webp" srcset="img/${foto}-200.webp 1x, img/${foto}-400.webp 2x"`;
 }
 
@@ -532,4 +533,10 @@ if (emPrevia) {
       <span>só neste navegador</span>
       <a href="admin.html">Voltar ao painel</a>
     </div>`);
+}
+
+function textoAlternativo(bebida) {
+  const nome = `${bebida.marca} ${bebida.nome}`.trim();
+  const temVolume = bebida.vol && bebida.vol !== "—" && semAcento(nome).includes(semAcento(bebida.vol));
+  return temVolume || !bebida.vol || bebida.vol === "—" ? nome : `${nome}, ${bebida.vol}`;
 }
