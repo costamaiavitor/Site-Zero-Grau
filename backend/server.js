@@ -156,6 +156,75 @@ app.delete('/api/produtos/:sku', (req, res) => {
   res.status(200).json({ mensagem: 'Produto removido com sucesso!', produto: produtoRemovido });
 });
 
+
+// ==========================================================================
+// DADOS DE PEDIDOS EM MEMÓRIA
+// ==========================================================================
+
+let PEDIDOS = [
+  {
+    id: 1,
+    usuario_id: 1,
+    modalidade: "entrega",
+    total: 35.90,
+    status: "pendente",
+    criado_em: "2026-11-02"
+  },
+  {
+    id: 2,
+    usuario_id: 2,
+    modalidade: "retirada",
+    total: 22.50,
+    status: "preparando",
+    criado_em: "2026-11-02"
+  },
+  {
+    id: 3,
+    usuario_id: 1,
+    modalidade: "entrega",
+    total: 48.00,
+    status: "concluido",
+    criado_em: "2026-11-01"
+  }
+];
+
+// ==========================================================================
+// ROTAS DE PEDIDOS
+// ==========================================================================
+
+// GET /api/pedidos
+// Lista todos os pedidos
+app.get('/api/pedidos', (req, res) => {
+  res.status(200).json(PEDIDOS);
+});
+
+// PATCH /api/pedidos/:id/status
+// Atualiza somente o status de um pedido
+app.patch('/api/pedidos/:id/status', (req, res) => {
+  const id = Number(req.params.id);
+  const { status } = req.body;
+
+  const pedido = PEDIDOS.find(p => p.id === id);
+
+  if (!pedido) {
+    return res.status(404).json({
+      erro: 'Pedido não encontrado.'
+    });
+  }
+
+  if (!status) {
+    return res.status(400).json({
+      erro: 'O campo status é obrigatório.'
+    });
+  }
+
+  pedido.status = status;
+
+  res.status(200).json({
+    mensagem: 'Status atualizado com sucesso!',
+    pedido
+  });
+});
 // ==========================================================================
 // ROTA PRINCIPAL E INICIALIZAÇÃO
 // ==========================================================================
