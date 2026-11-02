@@ -1,3 +1,5 @@
+import mysql from 'mysql2/promise';
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,6 +9,16 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const db = await mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
+});
+
+console.log('MySQL conectado com sucesso!');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -157,73 +169,87 @@ app.delete('/api/produtos/:sku', (req, res) => {
 });
 
 
-// ==========================================================================
-// DADOS DE PEDIDOS EM MEMÓRIA
-// ==========================================================================
 
-let PEDIDOS = [
-  {
-    id: 1,
-    usuario_id: 1,
-    modalidade: "entrega",
-    total: 35.90,
-    status: "pendente",
-    criado_em: "2026-11-02"
-  },
-  {
-    id: 2,
-    usuario_id: 2,
-    modalidade: "retirada",
-    total: 22.50,
-    status: "preparando",
-    criado_em: "2026-11-02"
-  },
-  {
-    id: 3,
-    usuario_id: 1,
-    modalidade: "entrega",
-    total: 48.00,
-    status: "concluido",
-    criado_em: "2026-11-01"
-  }
-];
+
 
 // ==========================================================================
 // ROTAS DE PEDIDOS
 // ==========================================================================
 
 // GET /api/pedidos
-// Lista todos os pedidos
-app.get('/api/pedidos', (req, res) => {
-  res.status(200).json(PEDIDOS);
+// Lista todos os pedidos do banco
+app.get('/api/pedidos', async (req, res) => {
+  try {
+    const [pedidos] = await db.query(`
+      SELECT
+        id,
+        usuario_id,
+        endereco_id,
+        cupom_id,
+        canal,
+        modalidade,
+        subtotal,
+        desconto,
+        taxa_entrega,
+        total,
+        status,
+        agendado,
+        observacao,
+        criado_em
+      FROM pedidos
+      ORDER BY criado_em DESC
+    `);
+
+    res.status(200).json(pedidos);
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao buscar pedidos.'
+    });
+  }
 });
 
 // PATCH /api/pedidos/:id/status
-// Atualiza somente o status de um pedido
-app.patch('/api/pedidos/:id/status', (req, res) => {
-  const id = Number(req.params.id);
-  const { status } = req.body;
+// Atualiza somente o status de um pedido no banco
+app.patch('/api/pedidos/:id/status', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
 
-  const pedido = PEDIDOS.find(p => p.id === id);
+    if (!status) {
+      return res.status(400).json({
+        erro: 'O campo status é obrigatório.'
+      });
+    }
 
-  if (!pedido) {
-    return res.status(404).json({
-      erro: 'Pedido não encontrado.'
+    const [resultado] = await db.query(
+      'UPDATE pedidos SET status = ? WHERE id = ?',
+      [status, id]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        erro: 'Pedido não encontrado.'
+      });
+    }
+
+    const [pedidos] = await db.query(
+      'SELECT * FROM pedidos WHERE id = ?',
+      [id]
+    );
+
+    res.status(200).json({
+      mensagem: 'Status atualizado com sucesso!',
+      pedido: pedidos[0]
+    });
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao atualizar status do pedido.'
     });
   }
-
-  if (!status) {
-    return res.status(400).json({
-      erro: 'O campo status é obrigatório.'
-    });
-  }
-
-  pedido.status = status;
-
-  res.status(200).json({
-    mensagem: 'Status atualizado com sucesso!',
-    pedido
-  });
 });
 // ==========================================================================
 // ROTA PRINCIPAL E INICIALIZAÇÃO
