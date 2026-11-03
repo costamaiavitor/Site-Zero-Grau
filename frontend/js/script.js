@@ -64,6 +64,7 @@ const referenciaDoPix = document.getElementById("pixRef");
 const botaoJaPaguei = document.getElementById("pixPaguei");
 
 const textoPedidoFeito = document.getElementById("feitoTxt");
+const avisoPedidoNoServidor = document.getElementById("feitoServidor");
 const linkWhatsappDeNovo = document.getElementById("feitoZap");
 const botaoVoltarALoja = document.getElementById("feitoFechar");
 
@@ -825,7 +826,51 @@ function montarMensagemPedido(pedido) {
   return linhas.filter(linha => linha !== null).join("\n");
 }
 
+function montarPedidoParaApi(pedido) {
+  const retirada = !!entrega?.retirada;
+  const forma = pedido.fechar === "pix-site" ? "pix" : opcaoMarcada("forma");
+  const troco = forma === "dinheiro" && !caixaSemTroco.checked ? lerValorEmReais(valorDoCampo(campoTroco)) : null;
+  return {
+    canal: "varejo",
+    itens: [...carrinho.values()].map(({bebida, quantidade}) => ({sku: bebida.sku, quantidade, unidade: "un"})),
+    cupom: cupomAtivo ? REGRAS.cupom.codigo : null,
+    entrega: {
+      modalidade: retirada ? "retirada" : "entrega",
+      cep: String(entrega?.cep || "").replace(/\D/g, "") || null,
+      logradouro: retirada ? null : pedido.rua,
+      numero: retirada ? null : pedido.numero,
+      complemento: pedido.compl || null,
+      referencia: pedido.ref || null,
+      destinatario: pedido.nome
+    },
+    pagamento: {
+      momento: pedido.fechar === "pix-site" ? "site" : "entrega",
+      forma,
+      troco_para: Number.isFinite(troco) ? troco : null,
+      txid: pedido.fechar === "pix-site" ? referenciaDoPix.textContent || null : null
+    },
+    observacao: pedido.obs || null,
+    agendado: !situacaoLoja().aberto
+  };
+}
+
+async function gravarPedidoNaApi(dados) {
+  avisoPedidoNoServidor.hidden = false;
+  avisoPedidoNoServidor.className = "cart-aviso";
+  avisoPedidoNoServidor.textContent = "Gravando o pedido na loja…";
+  try {
+    const resposta = await API.post("/pedidos", dados);
+    const numero = resposta?.pedido?.id ?? resposta?.id;
+    avisoPedidoNoServidor.classList.add("ok");
+    avisoPedidoNoServidor.textContent = numero ? `Pedido nº ${numero} registrado na loja.` : "Pedido registrado na loja.";
+  } catch (erro) {
+    avisoPedidoNoServidor.classList.add("bad");
+    avisoPedidoNoServidor.textContent = `O pedido seguiu pelo WhatsApp, mas não foi registrado no sistema da loja (${erro.message})`;
+  }
+}
+
 function enviarPedido(pedido) {
+  const dadosParaApi = API.usarMock ? null : montarPedidoParaApi(pedido);
   const mensagem = montarMensagemPedido(pedido);
   const linkWhatsapp = CONTATO.whatsapp + "?text=" + encodeURIComponent(mensagem);
   const totais = calcularTotais();
@@ -843,6 +888,8 @@ function enviarPedido(pedido) {
 
   open(linkWhatsapp, "_blank", "noopener");
   linkWhatsappDeNovo.href = linkWhatsapp;
+  avisoPedidoNoServidor.hidden = true;
+  if (dadosParaApi) gravarPedidoNaApi(dadosParaApi);
   if (pedido.fechar === "pix-site") {
     textoPedidoFeito.textContent = "Abrimos a conversa com a loja com o pedido e a referência do Pix. Toque em enviar e mande o comprovante.";
   } else {

@@ -352,6 +352,26 @@ function enviarPedidoAtacado() {
   const mensagem = linhas.filter(Boolean).join("\n");
 
   open(CONTATO.whatsapp + "?text=" + encodeURIComponent(mensagem), "_blank", "noopener");
+  if (!API.usarMock) gravarPedidoAtacadoNaApi();
+}
+
+async function gravarPedidoAtacadoNaApi() {
+  const dados = {
+    canal: "atacado",
+    itens: [...pedido].map(([sku, quantidade]) => ({sku, quantidade, unidade: "cx"})),
+    cupom: null,
+    entrega: {modalidade: "entrega"},
+    pagamento: {momento: "entrega", forma: null},
+    observacao: null,
+    agendado: false
+  };
+  try {
+    const resposta = await API.post("/pedidos", dados);
+    const numero = resposta?.pedido?.id ?? resposta?.id;
+    mostrarToast(numero ? `Pedido nº ${numero} registrado na loja` : "Pedido registrado na loja");
+  } catch (erro) {
+    mostrarToast(`Pedido seguiu pelo WhatsApp, sem registro no sistema (${erro.message})`);
+  }
 }
 
 function carregarPedidoDaConta() {
