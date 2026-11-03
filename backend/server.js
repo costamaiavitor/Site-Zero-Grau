@@ -267,6 +267,227 @@ app.delete("/api/produtos/:sku", async (req, res) => {
 });
 
 // ==========================================================================
+// ROTAS DE PEDIDOS
+// ==========================================================================
+
+// GET /api/pedidos
+app.get("/api/pedidos", async (req, res) => {
+  try {
+    const pedidos = await Pedido.findAll({
+      order: [["criado_em", "DESC"]]
+    });
+
+    return res.status(200).json(pedidos);
+  } catch (erro) {
+    console.error("Erro ao buscar pedidos:", erro);
+    return res.status(500).json({
+      erro: "Erro ao buscar pedidos."
+    });
+  }
+});
+
+// PATCH /api/pedidos/:id/status
+app.patch("/api/pedidos/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        erro: "O campo status é obrigatório."
+      });
+    }
+
+    const pedido = await Pedido.findByPk(id);
+
+    if (!pedido) {
+      return res.status(404).json({
+        erro: "Pedido não encontrado."
+      });
+    }
+
+    pedido.status = status;
+    await pedido.save();
+
+    return res.status(200).json({
+      mensagem: "Status atualizado com sucesso!",
+      pedido
+    });
+  } catch (erro) {
+    console.error("Erro ao atualizar status do pedido:", erro);
+    return res.status(500).json({
+      erro: "Erro ao atualizar status do pedido."
+    });
+  }
+});
+
+// GET /api/pedidos/meus
+app.get("/api/pedidos/meus", autenticarToken, async (req, res) => {
+  try {
+    const pedidos = await Pedido.findAll({
+      where: {
+        usuario_id: req.usuario.id
+      },
+      order: [["criado_em", "DESC"]]
+    });
+
+    return res.status(200).json(pedidos);
+  } catch (erro) {
+    console.error("Erro ao buscar pedidos do usuário:", erro);
+    return res.status(500).json({
+      erro: "Erro ao buscar pedidos do usuário."
+    });
+  }
+});
+
+// PATCH /api/pedidos/:id/agendar
+app.patch("/api/pedidos/:id/agendar", autenticarToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { agendado_para } = req.body;
+
+    if (!agendado_para) {
+      return res.status(400).json({
+        erro: "O campo agendado_para é obrigatório."
+      });
+    }
+
+    const data = new Date(agendado_para);
+
+    if (Number.isNaN(data.getTime())) {
+      return res.status(400).json({
+        erro: "Data de agendamento inválida."
+      });
+    }
+
+    const diaSemana = data.getDay();
+    const hora = data.toTimeString().slice(0, 8);
+
+    const horario = await Horario.findOne({
+      where: {
+        loja_id: 1,
+        dia_semana: diaSemana
+      }
+    });
+
+    if (!horario || hora < horario.abre || hora > horario.fecha) {
+      return res.status(400).json({
+        erro: "Horário fora do funcionamento da loja."
+      });
+    }
+
+    const pedido = await Pedido.findOne({
+      where: {
+        id,
+        usuario_id: req.usuario.id
+      }
+    });
+
+    if (!pedido) {
+      return res.status(404).json({
+        erro: "Pedido não encontrado para este usuário."
+      });
+    }
+
+    pedido.agendado = true;
+    pedido.agendado_para = agendado_para;
+
+    await pedido.save();
+
+    return res.status(200).json({
+      mensagem: "Pedido agendado com sucesso!",
+      pedido
+    });
+  } catch (erro) {
+    console.error("Erro ao agendar pedido:", erro);
+    return res.status(500).json({
+      erro: "Erro ao agendar pedido."
+    });
+  }
+});
+
+// GET /api/loja
+app.get("/api/loja", async (req, res) => {
+  try {
+    const loja = await Loja.findByPk(1);
+
+    if (!loja) {
+      return res.status(404).json({
+        erro: "Loja não encontrada."
+      });
+    }
+
+    const horarios = await Horario.findAll({
+      where: {
+        loja_id: 1
+      },
+      order: [["dia_semana", "ASC"]]
+    });
+
+    return res.status(200).json({
+      ...loja.toJSON(),
+      horarios
+    });
+  } catch (erro) {
+    console.error("Erro ao buscar dados da loja:", erro);
+    return res.status(500).json({
+      erro: "Erro ao buscar dados da loja."
+    });
+  }
+});
+
+// PUT /api/loja
+app.put("/api/loja", async (req, res) => {
+  try {
+    const loja = await Loja.findByPk(1);
+
+    if (!loja) {
+      return res.status(404).json({
+        erro: "Loja não encontrada."
+      });
+    }
+
+    const {
+      nome,
+      cnpj,
+      whatsapp,
+      telefone,
+      email,
+      endereco,
+      chave_pix,
+      cidade_pix,
+      taxa_base,
+      taxa_km,
+      raio_max_km
+    } = req.body;
+
+    await loja.update({
+      nome: nome ?? loja.nome,
+      cnpj: cnpj ?? loja.cnpj,
+      whatsapp: whatsapp ?? loja.whatsapp,
+      telefone: telefone ?? loja.telefone,
+      email: email ?? loja.email,
+      endereco: endereco ?? loja.endereco,
+      chave_pix: chave_pix ?? loja.chave_pix,
+      cidade_pix: cidade_pix ?? loja.cidade_pix,
+      taxa_base: taxa_base ?? loja.taxa_base,
+      taxa_km: taxa_km ?? loja.taxa_km,
+      raio_max_km: raio_max_km ?? loja.raio_max_km
+    });
+
+    return res.status(200).json({
+      mensagem: "Dados da loja atualizados com sucesso!",
+      loja
+    });
+  } catch (erro) {
+    console.error("Erro ao atualizar dados da loja:", erro);
+    return res.status(500).json({
+      erro: "Erro ao atualizar dados da loja."
+    });
+  }
+});
+
+// ==========================================================================
 // 4. ROTA RAIZ (SPA FRONTEND)
 // ==========================================================================
 app.get("/", (req, res) => {
