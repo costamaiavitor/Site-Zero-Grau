@@ -65,8 +65,25 @@ let BEBIDAS = [
 // ==========================================================================
 // ROTAS DE CATEGORIAS
 // ==========================================================================
-app.get('/api/categorias', (req, res) => {
-  res.status(200).json(CATEGORIAS);
+app.get('/api/categorias', async (req, res) => {
+  try {
+    const [categorias] = await db.query(`
+      SELECT
+        slug AS id,
+        nome,
+        detalhe
+      FROM categoria
+      ORDER BY id
+    `);
+
+    res.status(200).json(categorias);
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao buscar categorias.'
+    });
+  }
 });
 
 // ==========================================================================

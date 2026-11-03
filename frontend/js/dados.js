@@ -42,6 +42,83 @@ const BEBIDAS = [
   {sku:"coca-cola-2l",          marca:"Coca-Cola",         nome:"Sabor Original 2 L",             cat:"agua",       foto:"coca-cola-2l",           forma:"pet",    vol:"2 L",    teor:"0%",    preco:11.90,  promo:null,   gelada:true,  retornavel:true, casco:2.00,    alcoolica:false, estoque:150}
 ];
 
+async function carregarProdutosAPI() {
+  try {
+    const resposta = await fetch('/api/produtos');
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao carregar produtos da API');
+    }
+
+    const produtos = await resposta.json();
+
+    if (Array.isArray(produtos) && produtos.length > 0) {
+      BEBIDAS.splice(0, BEBIDAS.length, ...produtos);
+    }
+  } catch (erro) {
+    console.warn('API indisponível. Usando catálogo local.', erro);
+  }
+}
+
+async function carregarCategoriasAPI() {
+  try {
+    const resposta = await fetch('/api/categorias');
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao carregar categorias da API');
+    }
+
+    const categorias = await resposta.json();
+
+    if (Array.isArray(categorias) && categorias.length > 0) {
+      CATEGORIAS.splice(0, CATEGORIAS.length, ...categorias);
+    }
+  } catch (erro) {
+    console.warn('API indisponível. Usando categorias locais.', erro);
+  }
+}
+
+async function carregarLojaAPI() {
+  try {
+    const resposta = await fetch('/api/loja');
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao carregar dados da loja');
+    }
+
+    const loja = await resposta.json();
+
+    if (loja.whatsapp) {
+      const numero = loja.whatsapp.replace(/\D/g, '');
+      CONTATO.whatsapp = `https://wa.me/55${numero}`;
+    }
+
+    if (loja.telefone) CONTATO.telefone = loja.telefone;
+    if (loja.email) CONTATO.email = loja.email;
+    if (loja.cnpj) CONTATO.cnpj = loja.cnpj;
+    if (loja.endereco) CONTATO.endereco = loja.endereco;
+
+    if (loja.chave_pix) PIX.chave = loja.chave_pix;
+    if (loja.nome) PIX.nome = loja.nome;
+    if (loja.cidade_pix) PIX.cidade = loja.cidade_pix;
+
+    if (Array.isArray(loja.horarios)) {
+      const dias = Array(7).fill(null);
+
+      for (const horario of loja.horarios) {
+        dias[horario.dia_semana] = [
+          horario.abre.slice(0, 5),
+          horario.fecha.slice(0, 5)
+        ];
+      }
+
+      HORARIO.dias = dias;
+    }
+  } catch (erro) {
+    console.warn('API indisponível. Usando dados locais da loja.', erro);
+  }
+}
+
 /* Rótulo de cada categoria, na ordem em que aparecem nas abas e nos cards.
    É a única lista de categorias do site: abas, cards da home e contagens
    saem toda daqui, então não há como uma discordar da outra. */

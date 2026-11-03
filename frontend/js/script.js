@@ -55,6 +55,8 @@ function cardHTML(b){
 const grid = $("grid");
 grid.innerHTML = BEBIDAS.map(cardHTML).join("");
 
+
+
 /* Foto que não carrega devolve o card para a silhueta. É o que permite subir as
    imagens aos poucos: enquanto o arquivo não existe em img/, o card não quebra. */
 function fotoComReserva(img, aoFalhar){

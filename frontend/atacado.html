@@ -254,6 +254,18 @@
 <script src="js/dados.js?v=15"></script>
 <script src="js/porta.js?v=15"></script>
 <script src="js/app.js?v=15"></script>
-<script src="js/atacado.js?v=15"></script>
+
+
+<script>
+Promise.all([
+  carregarProdutosAPI(),
+  carregarCategoriasAPI(),
+  carregarLojaAPI()
+]).then(() => {
+  const script = document.createElement("script");
+  script.src = "js/atacado.js?v=15";
+  document.body.appendChild(script);
+});
+</script>
 </body>
 </html>
