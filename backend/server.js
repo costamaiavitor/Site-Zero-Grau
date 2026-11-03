@@ -74,23 +74,57 @@ app.get('/api/categorias', (req, res) => {
 // ==========================================================================
 
 // 1. GET ALL: Listar produtos (com filtro opcional por categoria e busca)
-app.get('/api/produtos', (req, res) => {
-  const { cat, busca } = req.query;
-  let resultado = [...BEBIDAS];
+app.get('/api/produtos', async (req, res) => {
+  try {
+    const { cat, busca } = req.query;
 
-  if (cat && cat !== 'all') {
-    resultado = resultado.filter(item => item.cat === cat);
+    let sql = `
+      SELECT
+        p.sku,
+        p.marca,
+        p.nome,
+        c.slug AS cat,
+        p.foto_url AS foto,
+        p.embalagem AS forma,
+        p.volume AS vol,
+        p.teor_alcoolico AS teor,
+        p.preco,
+        p.preco_promo AS promo,
+        p.gelada,
+        p.retornavel,
+        p.valor_casco AS casco,
+        p.alcoolica,
+        p.estoque
+      FROM produtos p
+      JOIN categoria c ON c.id = p.categoria_id
+      WHERE p.ativo = 1
+    `;
+
+    const valores = [];
+
+    if (cat && cat !== 'all') {
+      sql += ' AND c.slug = ?';
+      valores.push(cat);
+    }
+
+    if (busca) {
+      sql += ' AND (LOWER(p.nome) LIKE ? OR LOWER(p.marca) LIKE ?)';
+      const termo = `%${busca.toLowerCase()}%`;
+      valores.push(termo, termo);
+    }
+
+    sql += ' ORDER BY p.nome';
+
+    const [produtos] = await db.query(sql, valores);
+
+    res.status(200).json(produtos);
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao buscar produtos.'
+    });
   }
-
-  if (busca) {
-    const termo = busca.toLowerCase();
-    resultado = resultado.filter(item =>
-      item.nome.toLowerCase().includes(termo) ||
-      item.marca.toLowerCase().includes(termo)
-    );
-  }
-
-  res.status(200).json(resultado);
 });
 
 // 2. GET BY SKU: Buscar produto específico
