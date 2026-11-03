@@ -204,7 +204,108 @@ app.delete('/api/produtos/:sku', (req, res) => {
   res.status(200).json({ mensagem: 'Produto removido com sucesso!', produto: produtoRemovido });
 });
 
+// ==========================================================================
+// ROTAS DA LOJA
+// ==========================================================================
 
+// GET /api/loja
+app.get('/api/loja', async (req, res) => {
+  try {
+    const [lojas] = await db.query(
+      'SELECT * FROM lojas WHERE id = 1'
+    );
+
+    if (lojas.length === 0) {
+      return res.status(404).json({
+        erro: 'Loja não encontrada.'
+      });
+    }
+
+    const [horarios] = await db.query(
+      'SELECT dia_semana, abre, fecha FROM horarios WHERE loja_id = 1 ORDER BY dia_semana'
+    );
+
+    res.status(200).json({
+      ...lojas[0],
+      horarios
+    });
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao buscar dados da loja.'
+    });
+  }
+});
+
+// PUT /api/loja
+app.put('/api/loja', async (req, res) => {
+  try {
+    const {
+      nome,
+      cnpj,
+      whatsapp,
+      telefone,
+      email,
+      endereco,
+      chave_pix,
+      cidade_pix,
+      taxa_base,
+      taxa_km,
+      raio_max_km
+    } = req.body;
+
+    const [resultado] = await db.query(`
+      UPDATE lojas
+      SET
+        nome = COALESCE(?, nome),
+        cnpj = COALESCE(?, cnpj),
+        whatsapp = COALESCE(?, whatsapp),
+        telefone = COALESCE(?, telefone),
+        email = COALESCE(?, email),
+        endereco = COALESCE(?, endereco),
+        chave_pix = COALESCE(?, chave_pix),
+        cidade_pix = COALESCE(?, cidade_pix),
+        taxa_base = COALESCE(?, taxa_base),
+        taxa_km = COALESCE(?, taxa_km),
+        raio_max_km = COALESCE(?, raio_max_km)
+      WHERE id = 1
+    `, [
+      nome,
+      cnpj,
+      whatsapp,
+      telefone,
+      email,
+      endereco,
+      chave_pix,
+      cidade_pix,
+      taxa_base,
+      taxa_km,
+      raio_max_km
+    ]);
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        erro: 'Loja não encontrada.'
+      });
+    }
+
+    const [lojas] = await db.query(
+      'SELECT * FROM lojas WHERE id = 1'
+    );
+
+    res.status(200).json({
+      mensagem: 'Dados da loja atualizados com sucesso!',
+      loja: lojas[0]
+    });
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao atualizar dados da loja.'
+    });
+  }
+});
 
 // ==========================================================================
 // AUTENTICAÇÃO
