@@ -1,3 +1,5 @@
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import mysql from 'mysql2/promise';
 import 'dotenv/config';
 import express from 'express';
@@ -170,7 +172,138 @@ app.delete('/api/produtos/:sku', (req, res) => {
 
 
 
+// ==========================================================================
+// AUTENTICAÇÃO
+// ==========================================================================
 
+// POST /api/auth/login
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, senha } = req.body;
+
+    if (!email || !senha) {
+      return res.status(400).json({
+        erro: 'Email e senha são obrigatórios.'
+      });
+    }
+
+    const [usuarios] = await db.query(
+      'SELECT id, nome, email, senha_hash, perfil, tipo_documento FROM usuarios WHERE email = ?',
+      [email]
+    );
+
+    if (usuarios.length === 0) {
+      return res.status(401).json({
+        erro: 'Email ou senha inválidos.'
+      });
+    }
+
+    const usuario = usuarios[0];
+
+    const senhaCorreta = await bcrypt.compare(senha, usuario.senha_hash);
+
+    if (!senhaCorreta) {
+      return res.status(401).json({
+        erro: 'Email ou senha inválidos.'
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: usuario.id,
+        perfil: usuario.perfil,
+        tipo_documento: usuario.tipo_documento
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '2h'
+      }
+    );
+
+    res.status(200).json({
+      mensagem: 'Login realizado com sucesso!',
+      token,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        perfil: usuario.perfil,
+        tipo_documento: usuario.tipo_documento
+      }
+    });
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao realizar login.'
+    });
+  }
+});
+
+function autenticarToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({
+      erro: 'Token não informado.'
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      erro: 'Token inválido.'
+    });
+  }
+
+  try {
+    const usuario = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.usuario = usuario;
+    next();
+  } catch (erro) {
+    return res.status(401).json({
+      erro: 'Token inválido ou expirado.'
+    });
+  }
+}
+
+
+// GET /api/pedidos/meus
+// Lista apenas os pedidos do usuário logado
+app.get('/api/pedidos/meus', autenticarToken, async (req, res) => {
+  try {
+    const [pedidos] = await db.query(`
+      SELECT
+        id,
+        usuario_id,
+        endereco_id,
+        cupom_id,
+        canal,
+        modalidade,
+        subtotal,
+        desconto,
+        taxa_entrega,
+        total,
+        status,
+        agendado,
+        observacao,
+        criado_em
+      FROM pedidos
+      WHERE usuario_id = ?
+      ORDER BY criado_em DESC
+    `, [req.usuario.id]);
+
+    res.status(200).json(pedidos);
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao buscar pedidos do usuário.'
+    });
+  }
+});
 
 // ==========================================================================
 // ROTAS DE PEDIDOS
