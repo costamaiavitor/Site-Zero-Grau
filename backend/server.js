@@ -404,7 +404,90 @@ function autenticarToken(req, res, next) {
   }
 }
 
+async function horarioPermitido(dataHora) {
+  const data = new Date(dataHora);
 
+  if (Number.isNaN(data.getTime())) {
+    return false;
+  }
+
+  const diaSemana = data.getDay();
+
+  const hora = data.toTimeString().slice(0, 8);
+
+  const [horarios] = await db.query(
+    `
+    SELECT abre, fecha
+    FROM horarios
+    WHERE loja_id = 1
+      AND dia_semana = ?
+    `,
+    [diaSemana]
+  );
+
+  if (horarios.length === 0) {
+    return false;
+  }
+
+  const { abre, fecha } = horarios[0];
+
+  return hora >= abre && hora <= fecha;
+}
+
+// PATCH /api/pedidos/:id/agendar
+app.patch('/api/pedidos/:id/agendar', autenticarToken, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { agendado_para } = req.body;
+
+    if (!agendado_para) {
+      return res.status(400).json({
+        erro: 'O campo agendado_para é obrigatório.'
+      });
+    }
+
+    const permitido = await horarioPermitido(agendado_para);
+
+    if (!permitido) {
+      return res.status(400).json({
+        erro: 'Horário fora do funcionamento da loja.'
+      });
+    }
+
+    const [resultado] = await db.query(
+      `
+      UPDATE pedidos
+      SET agendado = 1,
+          agendado_para = ?
+      WHERE id = ?
+        AND usuario_id = ?
+      `,
+      [agendado_para, id, req.usuario.id]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        erro: 'Pedido não encontrado para este usuário.'
+      });
+    }
+
+    const [pedidos] = await db.query(
+      'SELECT * FROM pedidos WHERE id = ?',
+      [id]
+    );
+
+    res.status(200).json({
+      mensagem: 'Pedido agendado com sucesso!',
+      pedido: pedidos[0]
+    });
+  } catch (erro) {
+    console.error(erro);
+
+    res.status(500).json({
+      erro: 'Erro ao agendar pedido.'
+    });
+  }
+});
 // GET /api/pedidos/meus
 // Lista apenas os pedidos do usuário logado
 app.get('/api/pedidos/meus', autenticarToken, async (req, res) => {
