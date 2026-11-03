@@ -11,7 +11,7 @@ Legenda: ✅ atendido · ⚠️ parcial · ❌ falta
 | Exigência | Situação | Onde |
 |---|---|---|
 | Front-end com HTML e JavaScript | ✅ | `frontend/*.html`, `frontend/js/` |
-| Front-end com Bootstrap e React | ✅ | `frontend-react/` (React 18 + Vite + Bootstrap 5), publicado em `/conta/` |
+| Front-end com Bootstrap e React | ✅ | `frontend-react/` (React 18 + Vite + Bootstrap 5): páginas "Minha conta" (`/conta/`) e "Pedidos" do painel (`/conta/pedidos.html`), com links na loja, no atacado e no painel |
 | Back-end Node.js + Express | ✅ | `backend/server.js` |
 | Banco MySQL | ✅ modelado, ⚠️ inconsistências (seção 3) | `backend/src/models/`, `src/migrations/`, `src/seeders/` |
 
@@ -51,18 +51,17 @@ Tudo abaixo só entra em ação quando `frontend/js/config.js` tem `usarMock: fa
 | Configuração da Vercel para o front (monta a página React e publica `frontend/`) | `vercel.json` (novo) | RNF11 |
 | Acessibilidade: carrinho fechado e gaveta do atacado fora do Tab (`inert`), fotos com texto alternativo (marca, nome e volume), áreas com rolagem acessíveis pelo teclado, busca sem resultado anunciada ao leitor de tela, auditoria axe em todas as telas | `index.html`, `atacado.html`, `js/script.js`, `js/atacado.js`, `js/dados.js`, `js/admin.js`, `tests/e2e/acessibilidade.spec.js` | RNF02 |
 | Testes da integração com a API simulada (catálogo, erro, vazio, carregando, carrinho, atacado e CRUD do painel com token) | `tests/e2e/integracao-api.spec.js` (novo) | RNF10 |
+| **Página Pedidos do painel em React + Bootstrap** (`/conta/pedidos.html`): só para administrador, contagem por status, filtro, busca por nº, nome ou e-mail e troca de status (`GET /api/pedidos`, `PATCH /api/pedidos/:id/status`). Sem a API, explica como os pedidos chegam | `frontend-react/src/pages/PaginaPedidos.jsx`, `components/TabelaPedidos.jsx`, `services/pedidos.js`, `services/api.js` (novos) | RF19 |
+| "Minha conta" lê o histórico de `GET /api/pedidos/meus`, com número e status de cada pedido; se o servidor não responder, usa o histórico do aparelho | `frontend-react/src/context/ContaContext.jsx`, `components/ListaPedidos.jsx` | RF14 |
+| Checkout e atacado gravam o pedido em `POST /api/pedidos` ao mesmo tempo em que abrem o WhatsApp; a tela final mostra o nº do pedido ou avisa que não foi registrado | `js/script.js`, `js/atacado.js`, `index.html` | RF10, RF12 |
+| Botão "Minha conta" no topo da loja e do atacado; botão "Pedidos" no painel | `index.html`, `atacado.html`, `admin.html` | RF14, RF19 |
+| E-mail de administrador de demonstração (`admin@zerograu.com.br`) para o painel abrir no site publicado em modo simulado | `js/config.js` | RF21 |
 
 Rodadas anteriores (já na `main`): login com senha validada, cadastro pela API, carrinho por conta, painel só para administrador, cupom configurável (ZEROGRAU10), indicadores inventados retirados, dados da loja vindos do painel, página "Minha conta" em React + Bootstrap, publicação e CI consertados.
 
-### Mudança visual ainda não aplicada
+### Contraste (aplicado)
 
-Três textos ficam abaixo do contraste mínimo do WCAG AA e a correção muda a aparência. Está guardada (`git stash`, "contraste-aguardando-aprovacao") esperando aprovação:
-
-| Onde | Hoje | Proposta |
-|---|---|---|
-| "informe o CEP" no carrinho | 3,65:1 | 5,52:1 (mesmo cinza, sem transparência) |
-| "opcional" no endereço e na observação | abaixo de 4,5:1 | mesmo cinza, sem transparência |
-| Linha esgotada no atacado | 1,9 a 2,9:1 | 5,43:1 (texto cinza legível, "esgotado" em vermelho) |
+Os três textos abaixo do contraste mínimo do WCAG AA foram corrigidos: "informe o CEP" no carrinho (3,65:1 para 5,52:1), "opcional" nos campos de endereço e a linha esgotada do atacado (1,9:1 para 5,43:1). A auditoria axe passa em todas as telas.
 
 ## 3. Back-end e banco de dados: levantamento (nada foi alterado)
 
@@ -108,7 +107,54 @@ Os models já existem (`Pedido`, `ItemPedido`, `Pagamento`, `Endereco`, `Cupom`,
 | `GET/PUT /api/regras/:canal` | pedido mínimo, frete grátis, desconto e faixas do atacado | RF17 | models `RegraVenda` e `FaixaAtacado` |
 | `GET/PUT /api/loja` | contato, WhatsApp, Pix e horário | RF18 | models `Loja` e `Horario` |
 
-Quando essas rotas existirem, o front precisa de: gravar o pedido no checkout antes do WhatsApp (`js/script.js`, `enviarPedido`), ler o histórico na página React (`frontend-react/src/services/armazenamento.js`) e uma aba Pedidos no painel.
+O front **já chama** as rotas de pedido. Enquanto elas não existirem, o site segue funcionando como antes (pedido pelo WhatsApp, histórico do aparelho, página de Pedidos avisando que o servidor ainda não tem a função). Para tudo funcionar junto, o back-end precisa seguir o formato abaixo.
+
+### Contrato das rotas de pedido que o front já usa
+
+Todas com `Authorization: Bearer <token>` do login.
+
+**`POST /api/pedidos`** (cliente logado). Corpo enviado pelo site:
+
+```json
+{
+  "canal": "varejo",
+  "itens": [{ "sku": "absolut-1l", "quantidade": 2, "unidade": "un" }],
+  "cupom": "ZEROGRAU10",
+  "entrega": {
+    "modalidade": "entrega",
+    "cep": "60160000",
+    "logradouro": "Rua Silva Paulet",
+    "numero": "100",
+    "complemento": null,
+    "referencia": null,
+    "destinatario": "Ana Cliente"
+  },
+  "pagamento": { "momento": "entrega", "forma": "dinheiro", "troco_para": 200, "txid": null },
+  "observacao": "portão azul",
+  "agendado": false
+}
+```
+
+No atacado, `"canal": "atacado"`, `"unidade": "cx"` e só `"modalidade"` em `entrega`. O servidor recalcula preço, desconto e frete (RNF04), baixa o estoque na mesma transação (RNF05) e responde `201` com `{ "pedido": { "id": 77, ... } }`. O site mostra "Pedido nº 77 registrado na loja".
+
+**`GET /api/pedidos/meus`** (cliente) e **`GET /api/pedidos`** (admin). Devolvem uma lista. O site lê de cada pedido:
+
+```json
+{
+  "id": 41,
+  "criado_em": "2026-10-15T23:00:00Z",
+  "status": "recebido",
+  "total": "126.62",
+  "canal": "varejo",
+  "modalidade": "entrega",
+  "usuario": { "nome": "Ana Cliente", "email": "ana@exemplo.com" },
+  "itens": [{ "quantidade": 2, "unidade": "un", "produto": { "sku": "absolut-1l", "marca": "Absolut", "nome": "Vodka Original 700 ml" } }]
+}
+```
+
+Os nomes que o Sequelize gera por padrão (`Usuario`, `ItemPedidos`, `Produto`) também são aceitos.
+
+**`PATCH /api/pedidos/:id/status`** (admin). Corpo `{ "status": "confirmado" }`. Status aceitos pelo site: `recebido`, `confirmado`, `em_preparo`, `saiu`, `entregue`, `cancelado`. Em caso de recusa, devolver `400` com `{ "erro": "mensagem" }`: o site mostra a mensagem e volta o status anterior.
 
 ## 4. Como colocar o sistema inteiro no ar
 

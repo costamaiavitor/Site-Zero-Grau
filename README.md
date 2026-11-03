@@ -52,6 +52,12 @@ tests/               teste automático do site no navegador (Playwright)
 .github/workflows/   testes a cada push (ci.yml) e publicação no Pages (pages.yml)
 ```
 
+## Painel no modo simulado
+
+Sem servidor, o painel abre para os e-mails de `adminsSimulados` em `frontend/js/config.js`.
+Para demonstração está `admin@zerograu.com.br`: crie uma conta com esse e-mail na loja e abra
+`admin.html`. Com a API ligada, quem decide é o perfil `admin` do usuário no banco.
+
 ## Ligar o site à API
 
 Por padrão o site roda em modo simulado (sem servidor). Para usar a API do `backend/`,
@@ -73,17 +79,18 @@ npx playwright install chromium
 npm test             # monta a página React e passa o Chromium pelas lojas, pelo painel e pela Minha conta
 ```
 
-### Minha conta (React + Bootstrap)
+### Páginas em React + Bootstrap
 
 A página `/conta/` é feita em React (Vite) com Bootstrap 5 e o tema neon do site por cima. Mostra a conta
-que entrou na loja e os últimos pedidos, com "Pedir de novo" (RF14). O código fica em `frontend-react/`:
+que entrou na loja e os últimos pedidos, com "Pedir de novo" (RF14). A página `/conta/pedidos.html`
+é a lista de pedidos do painel, com filtro, busca e troca de status (RF19). O código fica em `frontend-react/`:
 
 ```
 frontend-react/src/
-  components/   Cabecalho, Rodape, CartaoPerfil, ListaPedidos, AvisoSemConta
-  pages/        PaginaMinhaConta
+  components/   Cabecalho, Rodape, CartaoPerfil, ListaPedidos, AvisoSemConta, TabelaPedidos
+  pages/        PaginaMinhaConta (/conta/), PaginaPedidos (/conta/pedidos.html, só admin)
   context/      ContaContext (conta e pedidos da sessão)
-  services/     armazenamento (mesmas chaves por conta que a loja usa)
+  services/     armazenamento (mesmas chaves por conta que a loja usa), api, pedidos
   utils/        formato (R$, datas)
   styles/       tema.css (Bootstrap com as cores da marca), conta.css
 ```
