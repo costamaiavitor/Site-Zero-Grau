@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;900&family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=22">
+<link rel="stylesheet" href="css/style.css?v=23">
 <link rel="stylesheet" href="css/temas.css?v=19">
 
 <script>document.documentElement.classList.add("js")</script>
@@ -96,6 +96,12 @@
   </nav>
 
   <div class="app-acoes">
+    <a class="conta-btn" href="conta/" aria-label="Minha conta" title="Minha conta: dados e últimos pedidos">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      <span class="conta-txt">Minha conta</span>
+    </a>
     <button class="conta-btn" data-trocar title="Trocar de conta">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M4 8h13l-3-3M20 16H7l3 3"/>
@@ -574,6 +580,7 @@
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6.5"/></svg>
       <p>Pedido pronto no WhatsApp</p>
       <small id="feitoTxt">Abrimos a conversa com a loja com o pedido escrito. É só tocar em enviar.</small>
+      <p class="cart-aviso" id="feitoServidor" role="status" aria-live="polite" hidden></p>
       <a class="btn btn-primary" id="feitoZap" target="_blank" rel="noopener">Abrir o WhatsApp de novo</a>
       <button type="button" class="btn btn-ghost" id="feitoFechar">Voltar à loja</button>
     </div>

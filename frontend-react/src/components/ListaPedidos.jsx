@@ -1,4 +1,5 @@
 import { brl, dataHora, plural, totalDeItens } from '../utils/formato.js';
+import { nomeDoStatus } from '../services/pedidos.js';
 
 function CartaoPedido({ pedido, aoPedirDeNovo }) {
   const qtd = totalDeItens(pedido.itens);
@@ -7,9 +8,16 @@ function CartaoPedido({ pedido, aoPedirDeNovo }) {
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
         <div className="zg-pedido-texto">
           <p className="mb-1 zg-pedido-cab">
+            {pedido.id !== undefined && (
+              <>
+                <span className="zg-num">Nº {pedido.id}</span>
+                <span className="zg-sep" aria-hidden="true">·</span>
+              </>
+            )}
             <span className="zg-num">{dataHora(pedido.em)}</span>
             <span className="zg-sep" aria-hidden="true">·</span>
             {plural(qtd, 'item', 'itens')}
+            {pedido.status && <span className="badge zg-badge-status ms-2">{nomeDoStatus(pedido.status)}</span>}
           </p>
           <ul className="list-unstyled mb-0 zg-itens">
             {pedido.itens.map(([sku, quantidade, nome]) => (
@@ -32,21 +40,25 @@ function CartaoPedido({ pedido, aoPedirDeNovo }) {
   );
 }
 
-export default function ListaPedidos({ pedidos, aoPedirDeNovo }) {
+export default function ListaPedidos({ pedidos, aoPedirDeNovo, origem = 'aparelho' }) {
   return (
     <section className="card zg-cartao" aria-labelledby="tituloPedidos">
       <div className="card-body pb-0">
         <p className="zg-rotulo mb-2">Histórico</p>
         <h2 id="tituloPedidos" className="zg-titulo h4 mb-1">Seus últimos pedidos</h2>
         <p className="zg-suave mb-3">
-          Os 5 pedidos mais recentes enviados deste aparelho. "Pedir de novo" põe os itens de volta no carrinho;
-          a loja confere o estoque de hoje.
+          {origem === 'servidor'
+            ? 'Os pedidos registrados na loja, do mais recente para o mais antigo.'
+            : origem === 'carregando'
+              ? 'Buscando seus pedidos na loja…'
+              : 'Os 5 pedidos mais recentes enviados deste aparelho.'}{' '}
+          "Pedir de novo" põe os itens de volta no carrinho; a loja confere o estoque de hoje.
         </p>
       </div>
       {pedidos.length ? (
         <ul className="list-group list-group-flush">
           {pedidos.map(p => (
-            <CartaoPedido key={p.em} pedido={p} aoPedirDeNovo={aoPedirDeNovo} />
+            <CartaoPedido key={p.id ?? p.em} pedido={p} aoPedirDeNovo={aoPedirDeNovo} />
           ))}
         </ul>
       ) : (

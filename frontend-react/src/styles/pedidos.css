@@ -1,0 +1,52 @@
+.zg-filtro {
+  --bs-btn-color: var(--zg-tinta-2);
+  --bs-btn-border-color: var(--zg-regua);
+  --bs-btn-hover-color: var(--zg-tinta);
+  --bs-btn-hover-border-color: var(--zg-tinta-2);
+  --bs-btn-active-color: var(--zg-sobre-acento);
+  --bs-btn-active-bg: var(--zg-acento-2);
+  --bs-btn-active-border-color: var(--zg-acento-2);
+  font-weight: 600;
+}
+
+.zg-filtro.active .zg-badge-status {
+  color: var(--zg-sobre-acento);
+}
+
+.zg-tabela {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--zg-tinta);
+  --bs-table-border-color: var(--zg-regua);
+  --bs-table-hover-bg: rgba(255, 255, 255, .03);
+  --bs-table-hover-color: var(--zg-tinta);
+  font-size: .9rem;
+}
+
+.zg-tabela thead th {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--zg-tinta-2);
+  white-space: nowrap;
+}
+
+.zg-tabela td small {
+  font-size: .78rem;
+}
+
+.zg-status {
+  min-width: 11rem;
+  min-height: 38px;
+}
+
+.form-control,
+.form-select {
+  --bs-body-bg: var(--zg-papel);
+  border-color: var(--zg-regua);
+  color: var(--zg-tinta);
+}
+
+.form-control::placeholder {
+  color: var(--zg-tinta-2);
+}

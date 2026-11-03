@@ -4721,3 +4721,9 @@ h3 {
 #instalarApp[hidden] {
   display: none;
 }
+
+@media(max-width:400px) {
+  .bal-acoes a.conta-btn {
+    display: none;
+  }
+}

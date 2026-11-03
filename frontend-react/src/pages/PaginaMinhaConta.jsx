@@ -7,7 +7,7 @@ import AvisoSemConta from '../components/AvisoSemConta.jsx';
 import Rodape from '../components/Rodape.jsx';
 
 export default function PaginaMinhaConta() {
-  const { perfil, pedidos, pedirDeNovo, encerrar } = useConta();
+  const { perfil, pedidos, origem, pedirDeNovo, encerrar } = useConta();
   const [aviso, setAviso] = useState('');
 
   function aoPedirDeNovo(pedido) {
@@ -46,7 +46,7 @@ export default function PaginaMinhaConta() {
                     </div>
                   </section>
                 ) : (
-                  <ListaPedidos pedidos={pedidos} aoPedirDeNovo={aoPedirDeNovo} />
+                  <ListaPedidos pedidos={pedidos} origem={origem} aoPedirDeNovo={aoPedirDeNovo} />
                 )}
               </div>
             </div>

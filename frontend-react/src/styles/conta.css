@@ -182,3 +182,14 @@
   font-size: .8rem;
   color: var(--zg-tinta-2);
 }
+
+.zg-badge-status {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--zg-acento-2);
+  border: 1px solid currentColor;
+  background: transparent;
+  vertical-align: middle;
+}
