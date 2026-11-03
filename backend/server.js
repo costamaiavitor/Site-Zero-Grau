@@ -274,7 +274,471 @@ app.get("/", (req, res) => {
 });
 
 // ==========================================================================
-// 5. INICIALIZAÇÃO E SINCRONIZAÇÃO COM O BANCO DE DADOS
+// 5. CONSULTAR REGRAS DO CANAL (GET /api/regras/:canal - RF17)
+// ==========================================================================
+app.get("/api/regras/:canal", async (req, res) => {
+  try {
+    const canal = req.params.canal.toLowerCase();
+
+    if (!["varejo", "atacado"].includes(canal)) {
+      return res.status(400).json({
+        erro: "Canal inválido. Os valores permitidos são 'varejo' ou 'atacado'."
+      });
+    }
+
+    const [regra] = await RegraVenda.findOrCreate({
+      where: { canal },
+      defaults: {
+        canal,
+        loja_id: 1,
+        pedido_minimo: canal === "atacado" ? 300.00 : 30.00,
+        frete_gratis_acima: canal === "atacado" ? 800.00 : 150.00,
+        desconto_canal: 0.00,
+        prazo_pagamento: canal === "atacado" ? "30 dias" : "À vista"
+      }
+    });
+
+    return res.status(200).json(regra);
+  } catch (erro) {
+    console.error("Erro ao procurar regras de venda:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 6. ATUALIZAR REGRAS DO CANAL (PUT /api/regras/:canal - RF17 / RF21)
+// ==========================================================================
+app.put("/api/regras/:canal", async (req, res) => {
+  try {
+    const canal = req.params.canal.toLowerCase();
+
+    if (!["varejo", "atacado"].includes(canal)) {
+      return res.status(400).json({
+        erro: "Canal inválido. Os valores permitidos são 'varejo' ou 'atacado'."
+      });
+    }
+
+    const [regra] = await RegraVenda.findOrCreate({
+      where: { canal },
+      defaults: { canal }
+    });
+
+    const camposPermitidos = [
+      "pedido_minimo",
+      "frete_gratis_acima",
+      "desconto_canal",
+      "prazo_pagamento",
+      "loja_id"
+    ];
+
+    camposPermitidos.forEach((campo) => {
+      if (req.body[campo] !== undefined) {
+        regra[campo] = req.body[campo];
+      }
+    });
+
+    await regra.save();
+
+    return res.status(200).json({
+      mensagem: `Regras do canal '${canal}' atualizadas com sucesso!`,
+      regra
+    });
+  } catch (erro) {
+    console.error("Erro ao atualizar regras de venda:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 7. CADASTRAR OU ATUALIZAR FAIXA DE ATACADO (POST /api/produtos/:id/faixas)
+// ==========================================================================
+app.post("/api/produtos/:id/faixas", async (req, res) => {
+  try {
+    const produtoId = req.params.id;
+    const { quantidade_minima, desconto_percentual, preco_caixa } = req.body;
+
+    const produto = await Produto.findByPk(produtoId);
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado." });
+    }
+
+    if (!quantidade_minima || quantidade_minima <= 0) {
+      return res.status(400).json({ erro: "A quantidade mínima deve ser maior que zero." });
+    }
+
+    // Calcula o preço da caixa base se não for informado diretamente
+    const precoUnitario = Number(produto.preco_promo || produto.preco);
+    const precoCaixaPadrao = precoUnitario * (produto.unidades_caixa || 1);
+    
+    let valorCaixaFinal = preco_caixa;
+    if (!valorCaixaFinal && desconto_percentual) {
+      valorCaixaFinal = precoCaixaPadrao * (1 - Number(desconto_percentual) / 100);
+    }
+
+    const faixa = await FaixaAtacado.create({
+      produto_id: produtoId,
+      quantidade_minima,
+      desconto_percentual: desconto_percentual || 0,
+      preco_caixa: valorCaixaFinal || precoCaixaPadrao,
+    });
+
+    return res.status(201).json({
+      mensagem: "Faixa de atacado cadastrada com sucesso!",
+      faixa,
+    });
+  } catch (erro) {
+    console.error("Erro ao cadastrar faixa de atacado:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 8. LISTAR AS FAIXAS DE DESCONTO DE UM PRODUTO (GET /api/produtos/:id/faixas)
+// ==========================================================================
+app.get("/api/produtos/:id/faixas", async (req, res) => {
+  try {
+    const produtoId = req.params.id;
+
+    const produto = await Produto.findByPk(produtoId);
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado." });
+    }
+
+    const faixas = await FaixaAtacado.findAll({
+      where: { produto_id: produtoId },
+      order: [["quantidade_minima", "ASC"]],
+    });
+
+    const precoUnitario = Number(produto.preco_promo || produto.preco);
+    const unidadesCaixa = produto.unidades_caixa || 1;
+    const precoCaixaPadrao = precoUnitario * unidadesCaixa;
+
+    return res.status(200).json({
+      produto_id: produto.id,
+      nome: produto.nome,
+      unidades_por_caixa: unidadesCaixa,
+      preco_unitario: precoUnitario,
+      preco_caixa_padrao: precoCaixaPadrao,
+      faixas,
+    });
+  } catch (erro) {
+    console.error("Erro ao listar faixas de atacado:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 9. CALCULAR PREÇO DE ATACADO POR QUANTIDADE DE CAIXAS (POST /api/atacado/calcular)
+// ==========================================================================
+app.post("/api/atacado/calcular", async (req, res) => {
+  try {
+    const { produto_id, caixas } = req.body;
+
+    if (!produto_id || !caixas || caixas <= 0) {
+      return res.status(400).json({ erro: "Informe produto_id e a quantidade de caixas desejada." });
+    }
+
+    const produto = await Produto.findByPk(produto_id);
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado." });
+    }
+
+    // Busca faixas aplicáveis ordenadas pela maior quantidade elegível
+    const faixas = await FaixaAtacado.findAll({
+      where: { produto_id },
+      order: [["quantidade_minima", "DESC"]],
+    });
+
+    const faixaAplicavel = faixas.find((f) => caixas >= f.quantidade_minima);
+
+    const precoUnitario = Number(produto.preco_promo || produto.preco);
+    const unidadesCaixa = produto.unidades_caixa || 1;
+    const precoCaixaBase = precoUnitario * unidadesCaixa;
+
+    let precoPorCaixa = precoCaixaBase;
+    let descontoPercentual = 0;
+
+    if (faixaAplicavel) {
+      descontoPercentual = Number(faixaAplicavel.desconto_percentual);
+      precoPorCaixa = faixaAplicavel.preco_caixa 
+        ? Number(faixaAplicavel.preco_caixa)
+        : precoCaixaBase * (1 - descontoPercentual / 100);
+    }
+
+    const subtotal = precoPorCaixa * caixas;
+    const totalUnidades = unidadesCaixa * caixas;
+    const valorUnitarioEfetivo = subtotal / totalUnidades;
+
+    return res.status(200).json({
+      produto: produto.nome,
+      caixas,
+      unidades_por_caixa: unidadesCaixa,
+      total_unidades: totalUnidades,
+      desconto_aplicado_percentual: descontoPercentual,
+      preco_por_caixa: Number(precoPorCaixa.toFixed(2)),
+      preco_unitario_efetivo: Number(valorUnitarioEfetivo.toFixed(2)),
+      subtotal: Number(subtotal.toFixed(2)),
+    });
+  } catch (erro) {
+    console.error("Erro no cálculo de atacado:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 10. CALCULAR PREÇO VIA QUERY PARAMS (GET /api/atacado/calcular)
+// ==========================================================================
+app.get("/api/atacado/calcular", async (req, res) => {
+  try {
+    const produto_id = req.query.produto_id;
+    const caixas = Number(req.query.caixas);
+
+    if (!produto_id || !caixas || caixas <= 0) {
+      return res.status(400).json({
+        erro: "Informe 'produto_id' e 'caixas' como query params (ex: ?produto_id=1&caixas=10)."
+      });
+    }
+
+    const produto = await Produto.findByPk(produto_id);
+    if (!produto) {
+      return res.status(404).json({ erro: "Produto não encontrado." });
+    }
+
+    const faixas = await FaixaAtacado.findAll({
+      where: { produto_id },
+      order: [["quantidade_minima", "DESC"]],
+    });
+
+    const faixaAplicavel = faixas.find((f) => caixas >= f.quantidade_minima);
+
+    const precoUnitario = Number(produto.preco_promo || produto.preco);
+    const unidadesCaixa = produto.unidades_caixa || 1;
+    const precoCaixaBase = precoUnitario * unidadesCaixa;
+
+    let precoPorCaixa = precoCaixaBase;
+    let descontoPercentual = 0;
+
+    if (faixaAplicavel) {
+      descontoPercentual = Number(faixaAplicavel.desconto_percentual);
+      precoPorCaixa = faixaAplicavel.preco_caixa
+        ? Number(faixaAplicavel.preco_caixa)
+        : precoCaixaBase * (1 - descontoPercentual / 100);
+    }
+
+    const subtotal = precoPorCaixa * caixas;
+    const totalUnidades = unidadesCaixa * caixas;
+    const valorUnitarioEfetivo = subtotal / totalUnidades;
+
+    return res.status(200).json({
+      produto: produto.nome,
+      caixas,
+      unidades_por_caixa: unidadesCaixa,
+      total_unidades: totalUnidades,
+      desconto_aplicado_percentual: descontoPercentual,
+      preco_por_caixa: Number(precoPorCaixa.toFixed(2)),
+      preco_unitario_efetivo: Number(valorUnitarioEfetivo.toFixed(2)),
+      subtotal: Number(subtotal.toFixed(2)),
+    });
+  } catch (erro) {
+    console.error("Erro no cálculo de atacado:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// CRUD /api/cupons
+// ==========================================================================
+
+// 1. LISTAR TODOS OS CUPONS (GET /api/cupons)
+app.get("/api/cupons", async (req, res) => {
+  try {
+    const cupons = await Cupom.findAll({
+      order: [["createdAt", "DESC"]],
+    });
+    return res.status(200).json(cupons);
+  } catch (erro) {
+    console.error("Erro ao listar cupons:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// 2. OBTER CUPOM POR ID (GET /api/cupons/:id)
+app.get("/api/cupons/:id", async (req, res) => {
+  try {
+    const cupom = await Cupom.findByPk(req.params.id);
+    if (!cupom) {
+      return res.status(404).json({ erro: "Cupom não encontrado." });
+    }
+    return res.status(200).json(cupom);
+  } catch (erro) {
+    console.error("Erro ao obter cupom:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// 3. CRIAR NOVO CUPOM (POST /api/cupons)
+app.post("/api/cupons", async (req, res) => {
+  try {
+    const {
+      codigo,
+      tipo_desconto,
+      valor_desconto,
+      valor_minimo_pedido,
+      data_validade,
+      limite_uso,
+      ativo,
+    } = req.body;
+
+    if (!codigo || !valor_desconto) {
+      return res.status(400).json({ erro: "Código e valor de desconto são obrigatórios." });
+    }
+
+    const codigoNormalizado = codigo.trim().toUpperCase();
+
+    const cupomExistente = await Cupom.findOne({ where: { codigo: codigoNormalizado } });
+    if (cupomExistente) {
+      return res.status(400).json({ erro: "Já existe um cupom com este código." });
+    }
+
+    const novoCupom = await Cupom.create({
+      codigo: codigoNormalizado,
+      tipo_desconto: tipo_desconto || "percentual",
+      valor_desconto,
+      valor_minimo_pedido: valor_minimo_pedido || 0,
+      data_validade: data_validade || null,
+      limite_uso: limite_uso !== undefined ? limite_uso : null,
+      ativo: ativo !== undefined ? ativo : true,
+    });
+
+    return res.status(201).json({
+      mensagem: "Cupom criado com sucesso!",
+      cupom: novoCupom,
+    });
+  } catch (erro) {
+    console.error("Erro ao criar cupom:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// 4. ATUALIZAR CUPOM (PUT /api/cupons/:id)
+app.put("/api/cupons/:id", async (req, res) => {
+  try {
+    const cupom = await Cupom.findByPk(req.params.id);
+    if (!cupom) {
+      return res.status(404).json({ erro: "Cupom não encontrado." });
+    }
+
+    if (req.body.codigo) {
+      req.body.codigo = req.body.codigo.trim().toUpperCase();
+    }
+
+    await cupom.update(req.body);
+
+    return res.status(200).json({
+      mensagem: "Cupom atualizado com sucesso!",
+      cupom,
+    });
+  } catch (erro) {
+    console.error("Erro ao atualizar cupom:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// 5. DELETAR CUPOM (DELETE /api/cupons/:id)
+app.delete("/api/cupons/:id", async (req, res) => {
+  try {
+    const cupom = await Cupom.findByPk(req.params.id);
+    if (!cupom) {
+      return res.status(404).json({ erro: "Cupom não encontrado." });
+    }
+
+    await cupom.destroy();
+    return res.status(200).json({ mensagem: "Cupom excluído com sucesso." });
+  } catch (erro) {
+    console.error("Erro ao excluir cupom:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 11. VALIDAR CUPOM NO CARRINHO/CHECKOUT
+// ==========================================================================
+app.post("/api/cupons/validar", async (req, res) => {
+  try {
+    const { codigo, subtotal } = req.body;
+
+    if (!codigo || subtotal === undefined) {
+      return res.status(400).json({
+        valido: false,
+        erro: "Informe o 'codigo' do cupom e o 'subtotal' da compra.",
+      });
+    }
+
+    const codigoNormalizado = codigo.trim().toUpperCase();
+    const cupom = await Cupom.findOne({ where: { codigo: codigoNormalizado } });
+
+    if (!cupom) {
+      return res.status(404).json({ valido: false, erro: "Cupom inválido ou inexistente." });
+    }
+
+    if (!cupom.ativo) {
+      return res.status(400).json({ valido: false, erro: "Este cupom foi desativado." });
+    }
+
+    // Validação de expiração
+    if (cupom.data_validade && new Date(cupom.data_validade) < new Date()) {
+      return res.status(400).json({ valido: false, erro: "Este cupom já expirou." });
+    }
+
+    // Validação de limite de uso geral
+    if (cupom.limite_uso !== null && cupom.usos_atuais >= cupom.limite_uso) {
+      return res.status(400).json({ valido: false, erro: "O limite de uso deste cupom foi atingido." });
+    }
+
+    // Validação de valor mínimo de pedido
+    const subtotalNumero = Number(subtotal);
+    if (subtotalNumero < Number(cupom.valor_minimo_pedido)) {
+      return res.status(400).json({
+        valido: false,
+        erro: `Valor mínimo para este cupom é de R$ ${Number(cupom.valor_minimo_pedido).toFixed(2)}.`,
+      });
+    }
+
+    // Cálculo do desconto
+    let desconto = 0;
+    const valorDesconto = Number(cupom.valor_desconto);
+
+    if (cupom.tipo_desconto === "percentual") {
+      desconto = (subtotalNumero * valorDesconto) / 100;
+    } else {
+      desconto = valorDesconto;
+    }
+
+    // Desconto não pode ultrapassar o subtotal
+    if (desconto > subtotalNumero) {
+      desconto = subtotalNumero;
+    }
+
+    const totalComDesconto = subtotalNumero - desconto;
+
+    return res.status(200).json({
+      valido: true,
+      mensagem: "Cupom aplicado com sucesso!",
+      codigo: cupom.codigo,
+      tipo_desconto: cupom.tipo_desconto,
+      valor_desconto: valorDesconto,
+      desconto_calculado: Number(desconto.toFixed(2)),
+      subtotal_original: Number(subtotalNumero.toFixed(2)),
+      total_com_desconto: Number(totalComDesconto.toFixed(2)),
+    });
+  } catch (erro) {
+    console.error("Erro ao validar cupom:", erro);
+    return res.status(500).json({ erro: erro.message });
+  }
+});
+
+// ==========================================================================
+// 10. INICIALIZAÇÃO E SINCRONIZAÇÃO COM O BANCO DE DADOS
 // ==========================================================================
 async function iniciarServidor() {
   try {

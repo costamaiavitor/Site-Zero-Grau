@@ -63,7 +63,7 @@ Content-Type: image/png
 < ./teste.png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### 1. Cadastrar Usuário para Teste (POST)
+### 7. Cadastrar Usuário para Teste (POST)
 POST http://localhost:3000/api/auth/cadastro
 Content-Type: application/json
 
@@ -75,7 +75,7 @@ Content-Type: application/json
   "tipo_documento": "cpf"
 }
 
-### 2. Realizar Login com JWT (POST)
+### 8. Realizar Login com JWT (POST)
 POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
@@ -83,3 +83,123 @@ Content-Type: application/json
   "email": "cliente@zerograu.com",
   "senha": "senhaSegura123"
 }
+
+### 9. Consultar regras de varejo
+GET http://localhost:3000/api/regras/varejo
+
+### Consultar regras de Atacado
+GET http://localhost:3000/api/regras/atacado
+
+### 11. Atualizar regras de Varejo
+PUT http://localhost:3000/api/regras/varejo
+Content-Type: application/json
+
+{
+  "pedido_minimo": 40.00,
+  "frete_gratis_acima": 120.00,
+  "desconto_canal": 0.00,
+  "prazo_pagamento": "À vista / PIX / Cartão"
+}
+
+### 12. Atualizar regras de atacado
+PUT http://localhost:3000/api/regras/atacado
+Content-Type: application/json
+
+{
+  "pedido_minimo": 400.00,
+  "frete_gratis_acima": 900.00,
+  "desconto_canal": 5.00,
+  "prazo_pagamento": "boleto 28 dias"
+}
+
+### 13. Criar faixa de desconto para 5 caixas (5% off) no produto 1
+POST http://localhost:3000/api/produtos/1/faixas
+Content-Type: application/json
+
+{
+  "quantidade_minima": 5,
+  "desconto_percentual": 5.0
+}
+
+### 14. Criar faixa de desconto para 20 caixas (12% off) no produto 1
+POST http://localhost:3000/api/produtos/1/faixas
+Content-Type: application/json
+
+{
+  "quantidade_minima": 20,
+  "desconto_percentual": 12.0
+}
+
+### 15. Listar as faixas cadastradas para o produto 1
+GET http://localhost:3000/api/produtos/1/faixas
+
+### 16. Simular/Calcular compra de 25 caixas no atacado
+POST http://localhost:3000/api/atacado/calcular
+Content-Type: application/json
+
+{
+  "produto_id": 1,
+  "caixas": 25
+}
+
+### 17. Calcular preço de atacado via GET (Query Params) (troca 1 pelo ID e 10 pela quantidade de caixas desejada)
+GET http://localhost:3000/api/atacado/calcular?produto_id=1&caixas=10
+
+### 18. Criar cupom de desconto percentual (POST)
+POST http://localhost:3000/api/cupons
+Content-Type: application/json
+
+{
+  "codigo": "ZEROGRAU10",
+  "tipo_desconto": "percentual",
+  "valor_desconto": 10.00,
+  "valor_minimo_pedido": 50.00,
+  "limite_uso": 100,
+  "data_validade": "2026-12-31"
+}
+
+### 19. Criar cupom de desconto fixo em R$ (POST)
+POST http://localhost:3000/api/cupons
+Content-Type: application/json
+
+{
+  "codigo": "PRIMEIRACOMPRA",
+  "tipo_desconto": "fixo",
+  "valor_desconto": 25.00,
+  "valor_minimo_pedido": 100.00
+}
+
+### 20. Listar todos os cupons (GET)
+GET http://localhost:3000/api/cupons
+
+### 21. Consultar cupom por ID (GET)
+GET http://localhost:3000/api/cupons/1
+
+### 22. Atualizar cupom (PUT)
+PUT http://localhost:3000/api/cupons/1
+Content-Type: application/json
+
+{
+  "valor_minimo_pedido": 60.00
+}
+
+### 23. Validar cupom com sucesso (POST)
+POST http://localhost:3000/api/cupons/validar
+Content-Type: application/json
+
+{
+  "codigo": "ZEROGRAU10",
+  "subtotal": 150.00
+}
+
+### 24. Validar cupom que não atingiu o pedido mínimo (POST)
+POST http://localhost:3000/api/cupons/validar
+Content-Type: application/json
+
+{
+  "codigo": "ZEROGRAU10",
+  "subtotal": 30.00
+}
+
+### 25. Excluir cupom (DELETE)
+DELETE http://localhost:3000/api/cupons/2
