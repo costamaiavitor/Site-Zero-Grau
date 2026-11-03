@@ -77,7 +77,7 @@ export const test = base.extend({
     if (admin) {
       const token = tokenDeTeste(admin === 'api-cliente' ? 'cliente' : 'admin', admin === 'api-vencido' ? -60 : 3600, Date.parse(hora));
       await page.addInitScript(([email, token, comToken]) => {
-        if (!location.pathname.endsWith('/admin.html')) return;
+        if (!/\/(admin|pedidos)\.html$/.test(location.pathname)) return;
         sessionStorage.setItem('zg-idade', 'ok');
         sessionStorage.setItem('zg-perfil', JSON.stringify({ tipo: 'cpf', email, nome: 'Dono de Teste', doc: '111.444.777-35', perfil: 'admin' }));
         if (comToken) sessionStorage.setItem('zg-token', token);

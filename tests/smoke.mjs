@@ -593,7 +593,7 @@ secao('Login');
   ok('a senha não é guardada em lugar nenhum', !guardado.includes(SENHA));
   ok('nem fica no campo', (await p.inputValue('#senhaInput')) === '');
   ok('o botão de conta diz quem está conectado',
-     (await p.getAttribute('.conta-btn', 'title')).includes(EMAIL));
+     (await p.getAttribute('.conta-btn[data-trocar]', 'title')).includes(EMAIL));
 
   ok('o documento vem da conta, sem ter sido digitado', /111\.444\.777-35/.test(await p.textContent('[data-doc]')));
 
@@ -693,7 +693,7 @@ secao('Criar conta');
   const perfil = JSON.parse(await p.evaluate(() => sessionStorage.getItem('zg-perfil')));
   ok('o perfil guarda nome e e-mail', perfil.nome === 'Maria da Silva' && perfil.email === EMAIL, JSON.stringify(perfil));
   ok('a senha nova não é guardada', !(await p.evaluate(() => JSON.stringify({...sessionStorage, ...localStorage}))).includes(SENHA));
-  ok('o botão de conta diz o nome', (await p.getAttribute('.conta-btn', 'title')).includes('Maria da Silva'));
+  ok('o botão de conta diz o nome', (await p.getAttribute('.conta-btn[data-trocar]', 'title')).includes('Maria da Silva'));
 
   /* trocar conta volta sempre para o login, não para o cadastro */
   await p.click('.conta-btn[data-trocar]');
@@ -718,7 +718,7 @@ secao('Criar conta');
   await pl.click('#docBtn');
   await pl.waitForTimeout(600);
   ok('entrando só com e-mail e senha, a conta de CNPJ vai ao atacado', new URL(pl.url()).pathname.endsWith('atacado.html'), pl.url());
-  ok('com a razão social no botão de conta', (await pl.getAttribute('.conta-btn', 'title')).includes('Mercadinho Boa Esquina'));
+  ok('com a razão social no botão de conta', (await pl.getAttribute('.conta-btn[data-trocar]', 'title')).includes('Mercadinho Boa Esquina'));
 
   /* o mesmo e-mail não abre segunda conta */
   const pdup = await ctx.newPage();

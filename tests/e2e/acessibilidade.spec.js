@@ -149,3 +149,26 @@ test.describe('RNF02 teclado e leitor de tela', () => {
     await expect(page.locator('#pedido')).toHaveJSProperty('inert', false);
   });
 });
+
+test.describe('RNF02 acessibilidade da página de pedidos', () => {
+  test.describe('modo simulado', () => {
+    test.use({ admin: 'simulado' });
+    test('pedidos sem a API', async ({ page }) => {
+      await abrir(page, '/conta/pedidos.html');
+      await auditar(page, 'pedidos-simulado');
+    });
+  });
+  test.describe('com a API', () => {
+    test.use({ api: true, admin: 'api' });
+    test('pedidos com a lista', async ({ page }) => {
+      await page.route('**/api/pedidos', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([
+        { id: 41, criado_em: '2026-10-15T23:00:00Z', status: 'recebido', total: '126.62', canal: 'varejo', modalidade: 'entrega',
+          usuario: { nome: 'Ana Cliente', email: 'ana@exemplo.com' },
+          itens: [{ quantidade: 2, unidade: 'un', produto: { sku: 'absolut-1l', marca: 'Absolut', nome: 'Vodka Original 700 ml' } }] }
+      ]) }));
+      await abrir(page, '/conta/pedidos.html');
+      await expect(page.locator('tr[data-pedido]')).toHaveCount(1);
+      await auditar(page, 'pedidos-api');
+    });
+  });
+});
