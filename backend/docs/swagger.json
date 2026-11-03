@@ -1,0 +1,177 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Zero Grau - Distribuidora de Bebidas",
+    "description": "Documentação oficial dos endpoints REST da API do projeto Zero Grau (RNF10).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor Local"
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Autenticar usuário e obter token JWT (RF03, RNF03)",
+        "tags": ["Autenticação"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "example": "admin@zerograu.com" },
+                  "senha": { "type": "string", "example": "123456" }
+                },
+                "required": ["email", "senha"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login realizado com sucesso e token retornado." },
+          "401": { "description": "Credenciais inválidas." }
+        }
+      }
+    },
+    "/api/regras/{canal}": {
+      "get": {
+        "summary": "Consultar regras de pedido por canal (RF17)",
+        "tags": ["Regras de Venda"],
+        "parameters": [
+          {
+            "name": "canal",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["varejo", "atacado"] },
+            "description": "Canal de venda"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Dados da regra do canal retornados." },
+          "400": { "description": "Canal inválido." }
+        }
+      },
+      "put": {
+        "summary": "Atualizar regras de pedido por canal (RF17, RF21)",
+        "tags": ["Regras de Venda"],
+        "parameters": [
+          {
+            "name": "canal",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["varejo", "atacado"] }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pedido_minimo": { "type": "number", "example": 40.0 },
+                  "frete_gratis_acima": { "type": "number", "example": 150.0 },
+                  "desconto_canal": { "type": "number", "example": 5.0 },
+                  "prazo_pagamento": { "type": "string", "example": "À vista / PIX" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Regras atualizadas com sucesso." }
+        }
+      }
+    },
+    "/api/atacado/calcular": {
+      "post": {
+        "summary": "Calcular desconto por volume de caixas no atacado (RF13)",
+        "tags": ["Atacado"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "produto_id": { "type": "integer", "example": 1 },
+                  "caixas": { "type": "integer", "example": 10 }
+                },
+                "required": ["produto_id", "caixas"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cálculo de volume e preço unitário efetivo realizado." },
+          "400": { "description": "Parâmetros ausentes ou inválidos." }
+        }
+      }
+    },
+    "/api/cupons": {
+      "get": {
+        "summary": "Listar todos os cupons cadastrados (RF09)",
+        "tags": ["Cupons"],
+        "responses": {
+          "200": { "description": "Lista de cupons retornada." }
+        }
+      },
+      "post": {
+        "summary": "Criar novo cupom de desconto (RF09)",
+        "tags": ["Cupons"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "codigo": { "type": "string", "example": "ZEROGRAU10" },
+                  "tipo_desconto": { "type": "string", "enum": ["percentual", "fixo"], "example": "percentual" },
+                  "valor_desconto": { "type": "number", "example": 10.0 },
+                  "valor_minimo_pedido": { "type": "number", "example": 50.0 },
+                  "limite_uso": { "type": "integer", "example": 100 },
+                  "data_validade": { "type": "string", "format": "date", "example": "2026-12-31" }
+                },
+                "required": ["codigo", "valor_desconto"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Cupom cadastrado com sucesso." }
+        }
+      }
+    },
+    "/api/cupons/validar": {
+      "post": {
+        "summary": "Validar elegibilidade e aplicar cupom no carrinho (RF09)",
+        "tags": ["Cupons"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "codigo": { "type": "string", "example": "ZEROGRAU10" },
+                  "subtotal": { "type": "number", "example": 120.0 }
+                },
+                "required": ["codigo", "subtotal"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cupom validado e desconto calculado com sucesso." },
+          "400": { "description": "Cupom expirado, inativo ou pedido abaixo do mínimo." },
+          "404": { "description": "Cupom não encontrado." }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,7 @@
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
+const helmet = require("helmet");
 const { Op } = require("sequelize");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
@@ -20,15 +22,24 @@ const Loja = require("./src/models/Loja");
 const Horario = require("./src/models/Horario");
 const RegraVenda = require("./src/models/RegraVenda");
 const FaixaAtacado = require("./src/models/FaixaAtacado");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./docs/swagger.json");
+
+const app = express();
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Carrega associações/relacionamentos entre os models
 require("./src/models/relacionamentos");
 
-const app = express();
+
 const PORT = process.env.PORT || 3000;
 
 // Informa ao Express que ele está atrás de um proxy reverso seguro
 app.set("trust proxy", 1);
+app.use(helmet());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware para redirecionar tráfego HTTP para HTTPS automaticamente em produção
 app.use((req, res, next) => {
@@ -48,6 +59,7 @@ app.use(express.static(caminhoFrontend));
 
 // Ajuste o nome da pasta de acordo com o seu projeto ('../frontend' ou '../ZeroGrau')
 app.use(express.static(path.join(__dirname, "../frontend")));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // ==========================================================================
 // 1. ROTA DE CADASTRO
@@ -986,6 +998,7 @@ async function iniciarServidor() {
 
     app.listen(PORT, () => {
       console.log(`Servidor rodando em http://localhost:${PORT}`);
+      console.log(`Swagger disponível em http://localhost:${PORT}/api-docs`);
     });
   } catch (erro) {
     console.error("Erro ao inicializar conexão com o MySQL:", erro);
