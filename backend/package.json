@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-<<<<<<< HEAD
     "dev": "node --watch server.js",
+    "server:dev": "node --watch server.js",
+    "frontend:dev": "npx --yes http-server ZeroGrau -p 8080 -c-1 -o",
     "test": "node tests/smoke.mjs"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "dotenv": "^18.0.8",
     "express": "^4.19.2",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.4.0",
     "mysql2": "^3.9.0",
@@ -19,20 +21,5 @@
   },
   "devDependencies": {
     "playwright": "^1.56.1"
-=======
-    "server:dev": "node --watch server.js",
-    "dev": "npx --yes http-server ZeroGrau -p 8080 -c-1 -o",
-    "test": "node tests/smoke.mjs"
-  },
-  "devDependencies": {
-    "playwright": "^1.56.1"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "dotenv": "^18.0.9",
-    "express": "^5.3.0",
-    "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.24.6"
->>>>>>> joao-sprints
   }
 }

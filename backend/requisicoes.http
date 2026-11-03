@@ -95,10 +95,10 @@ PUT http://localhost:3000/api/regras/varejo
 Content-Type: application/json
 
 {
-  "pedido_minimo": 40.00,
-  "frete_gratis_acima": 120.00,
+  "pedido_minimo": 50.00,
+  "frete_gratis_acima": 150.00,
   "desconto_canal": 0.00,
-  "prazo_pagamento": "À vista / PIX / Cartão"
+  "prazo_pagamento": "À vista / PIX"
 }
 
 ### 12. Atualizar regras de atacado

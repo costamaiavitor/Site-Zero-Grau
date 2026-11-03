@@ -27,12 +27,27 @@ require("./src/models/relacionamentos");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Informa ao Express que ele está atrás de um proxy reverso seguro
+app.set("trust proxy", 1);
+
+// Middleware para redirecionar tráfego HTTP para HTTPS automaticamente em produção
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === "production" && !req.secure && req.headers["x-forwarded-proto"] !== "https") {
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
+
+
 // Middlewares para JSON e arquivos estáticos do frontend
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const caminhoFrontend = path.join(__dirname, "..", "frontend");
 app.use(express.static(caminhoFrontend));
+
+// Ajuste o nome da pasta de acordo com o seu projeto ('../frontend' ou '../ZeroGrau')
+app.use(express.static(path.join(__dirname, "../frontend")));
 
 // ==========================================================================
 // 1. ROTA DE CADASTRO
