@@ -6,6 +6,12 @@ export default defineConfig({
   base: './',
   build: {
     outDir: '../frontend/conta',
-    emptyOutDir: true
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        conta: 'index.html',
+        pedidos: 'pedidos.html'
+      }
+    }
   }
 });
