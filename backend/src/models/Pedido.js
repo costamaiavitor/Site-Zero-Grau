@@ -50,11 +50,24 @@ const Pedido = sequelize.define("Pedido", {
   },
 
   status: {
-    type: DataTypes.STRING(30)
+    type: DataTypes.STRING(30),
+    allowNull: false,
+    defaultValue: "recebido"
   },
 
   agendado: {
-    type: DataTypes.BOOLEAN
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+
+  agendado_para: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+
+  destinatario: {
+    type: DataTypes.STRING(120),
+    allowNull: true
   },
 
   observacao: {

@@ -1,5 +1,21 @@
+# Teste manual das rotas (extensão REST Client do VS Code).
+# As rotas que mudam dados exigem o token de um administrador: rode o login
+# abaixo primeiro (com o ADMIN_EMAIL e ADMIN_SENHA do seu .env).
+
+@token = {{login.response.body.token}}
+
+# @name login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@zerograu.com.br",
+  "senha": "troque-pela-ADMIN_SENHA"
+}
+
 ### Criar Categoria Cerveja (POST)
 POST http://localhost:3000/api/categorias
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -15,6 +31,7 @@ GET http://localhost:3000/api/produtos
 
 ### 3. Cadastrar novo produto no MySQL (POST)
 POST http://localhost:3000/api/produtos
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -42,6 +59,7 @@ GET http://localhost:3000/api/produtos/corona-330
 
 ### 5. Atualizar produto existente (PUT)
 PUT http://localhost:3000/api/produtos/corona-330
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -51,9 +69,11 @@ Content-Type: application/json
 
 ### 6. Deletar produto (DELETE)
 DELETE http://localhost:3000/api/produtos/corona-330
+Authorization: Bearer {{token}}
 
 ### Upload de Imagem do Produto (POST)
 POST http://localhost:3000/api/produtos/1/foto
+Authorization: Bearer {{token}}
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
@@ -92,6 +112,7 @@ GET http://localhost:3000/api/regras/atacado
 
 ### 11. Atualizar regras de Varejo
 PUT http://localhost:3000/api/regras/varejo
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -103,6 +124,7 @@ Content-Type: application/json
 
 ### 12. Atualizar regras de atacado
 PUT http://localhost:3000/api/regras/atacado
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -114,6 +136,7 @@ Content-Type: application/json
 
 ### 13. Criar faixa de desconto para 5 caixas (5% off) no produto 1
 POST http://localhost:3000/api/produtos/1/faixas
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -123,6 +146,7 @@ Content-Type: application/json
 
 ### 14. Criar faixa de desconto para 20 caixas (12% off) no produto 1
 POST http://localhost:3000/api/produtos/1/faixas
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -135,6 +159,7 @@ GET http://localhost:3000/api/produtos/1/faixas
 
 ### 16. Simular/Calcular compra de 25 caixas no atacado
 POST http://localhost:3000/api/atacado/calcular
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -147,6 +172,7 @@ GET http://localhost:3000/api/atacado/calcular?produto_id=1&caixas=10
 
 ### 18. Criar cupom de desconto percentual (POST)
 POST http://localhost:3000/api/cupons
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -160,6 +186,7 @@ Content-Type: application/json
 
 ### 19. Criar cupom de desconto fixo em R$ (POST)
 POST http://localhost:3000/api/cupons
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -171,12 +198,15 @@ Content-Type: application/json
 
 ### 20. Listar todos os cupons (GET)
 GET http://localhost:3000/api/cupons
+Authorization: Bearer {{token}}
 
 ### 21. Consultar cupom por ID (GET)
 GET http://localhost:3000/api/cupons/1
+Authorization: Bearer {{token}}
 
 ### 22. Atualizar cupom (PUT)
 PUT http://localhost:3000/api/cupons/1
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -185,6 +215,7 @@ Content-Type: application/json
 
 ### 23. Validar cupom com sucesso (POST)
 POST http://localhost:3000/api/cupons/validar
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -194,6 +225,7 @@ Content-Type: application/json
 
 ### 24. Validar cupom que não atingiu o pedido mínimo (POST)
 POST http://localhost:3000/api/cupons/validar
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -203,3 +235,4 @@ Content-Type: application/json
 
 ### 25. Excluir cupom (DELETE)
 DELETE http://localhost:3000/api/cupons/2
+Authorization: Bearer {{token}}

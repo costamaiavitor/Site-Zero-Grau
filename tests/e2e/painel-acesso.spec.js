@@ -103,24 +103,93 @@ test.describe('RF21 dono entra direto no painel', () => {
     await expect(page.locator('#a-produtos')).toBeVisible();
   });
 
-  test('pelo painel, o dono ainda abre a vitrine de varejo sem ser mandado de volta', async ({ page }) => {
+  const entrarComoDono = async page => {
+    await confirmarIdade(page);
+    await page.fill('#emailInput', EMAIL_ADMIN);
+    await page.fill('#senhaInput', SENHA);
+    await page.click('#docBtn');
+  };
+
+  const ficaNaVitrine = async (page, url) => {
+    await esperarLoja(page);
+    await expect(page).toHaveURL(url);
+    await expect(page.locator('#a-produtos')).toHaveCount(0);
+  };
+
+  test('os botões "Ver varejo" e "Ver atacado" do painel abrem as lojas em prévia', async ({ page }) => {
+    await abrir(page, '/admin.html');
+    await expect(page.getByRole('link', { name: 'Ver varejo' })).toHaveAttribute('href', 'index.html?previa');
+    await expect(page.getByRole('link', { name: 'Ver atacado' })).toHaveAttribute('href', 'atacado.html?previa');
+  });
+
+  test('pelo botão "Ver varejo" do painel, a aba nova pede o login e fica na vitrine', async ({ page }) => {
+    await page.context().route(/\/js\/config\.js/, r => r.fulfill({
+      contentType: 'text/javascript; charset=utf-8',
+      body: `const ZG_CONFIG = Object.assign(${JSON.stringify({ usarMock: true, adminsSimulados: [EMAIL_ADMIN] })}, { apiBase: location.origin + "/api" });`
+    }));
     await abrir(page);
     await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
     await page.waitForURL(/admin\.html$/);
-    await page.goto('/index.html');
+
+    const [aba] = await Promise.all([page.waitForEvent('popup'), page.getByRole('link', { name: 'Ver varejo' }).click()]);
+    await aba.waitForURL(/index\.html\?previa$/);
+    await entrarComoDono(aba);
+    await ficaNaVitrine(aba, /index\.html\?previa$/);
+  });
+
+  test('na prévia do varejo (aba nova), o login do dono fica na vitrine e não volta ao painel', async ({ page }) => {
+    await abrir(page);
+    await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
+    await page.waitForURL(/admin\.html$/);
+
+    await page.evaluate(() => sessionStorage.clear());
+    await abrir(page, '/index.html?previa');
+    await entrarComoDono(page);
+    await ficaNaVitrine(page, /index\.html\?previa$/);
+
+    await page.reload();
+    await ficaNaVitrine(page, /index\.html\?previa$/);
+  });
+
+  test('na prévia do atacado, o dono com conta de CPF vê o atacado', async ({ page }) => {
+    await abrir(page);
+    await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
+    await page.waitForURL(/admin\.html$/);
+
+    await page.evaluate(() => sessionStorage.clear());
+    await abrir(page, '/atacado.html?previa');
+    await entrarComoDono(page);
+    await ficaNaVitrine(page, /atacado\.html\?previa$/);
+    await expect(page.locator('#docMsg')).toHaveText('');
+  });
+
+  test('criando a conta na prévia do atacado, o dono fica no atacado e pode passar ao varejo', async ({ page }) => {
+    await abrir(page, '/atacado.html?previa');
+    await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
+    await ficaNaVitrine(page, /atacado\.html\?previa$/);
+
+    await abrir(page, '/index.html');
+    await ficaNaVitrine(page, /index\.html$/);
+    await abrir(page, '/atacado.html');
+    await ficaNaVitrine(page, /atacado\.html$/);
+  });
+
+  test('cliente comum na prévia segue as regras de sempre', async ({ page }) => {
+    await abrir(page, '/atacado.html?previa');
+    await criarConta(page, { doc: CPF });
+    await page.waitForURL(/index\.html$/);
     await esperarLoja(page);
-    await expect(page).toHaveURL(/index\.html$/);
   });
 });
 
 test.describe('RF21 dono entra direto no painel pela API', () => {
   test.use({ api: true });
-  const entrarComPerfil = async (page, perfil) => {
+  const entrarComPerfil = async (page, perfil, caminho = '/index.html') => {
     await page.route('**/api/auth/login', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
       token: tokenDeTeste(perfil, 3600, Date.parse(HORA_ABERTA)),
       usuario: { id: 1, nome: 'Dono', email: EMAIL_ADMIN, perfil, documento: '111.444.777-35', tipo_documento: 'cpf' }
     }) }));
-    await abrir(page);
+    await abrir(page, caminho);
     await confirmarIdade(page);
     await page.fill('#emailInput', EMAIL_ADMIN);
     await page.fill('#senhaInput', SENHA);
@@ -137,5 +206,23 @@ test.describe('RF21 dono entra direto no painel pela API', () => {
     await entrarComPerfil(page, 'cliente');
     await esperarLoja(page);
     await expect(page).toHaveURL(/index\.html$/);
+  });
+
+  test('perfil admin na prévia do varejo fica na vitrine', async ({ page }) => {
+    await entrarComPerfil(page, 'admin', '/index.html?previa');
+    await esperarLoja(page);
+    await expect(page).toHaveURL(/index\.html\?previa$/);
+  });
+
+  test('perfil admin com conta de CPF na prévia do atacado fica no atacado', async ({ page }) => {
+    await entrarComPerfil(page, 'admin', '/atacado.html?previa');
+    await esperarLoja(page);
+    await expect(page).toHaveURL(/atacado\.html\?previa$/);
+  });
+
+  test('perfil cliente na prévia do atacado com conta de CPF vai para o varejo, como sempre', async ({ page }) => {
+    await entrarComPerfil(page, 'cliente', '/atacado.html?previa');
+    await page.waitForURL(/index\.html$/);
+    await esperarLoja(page);
   });
 });

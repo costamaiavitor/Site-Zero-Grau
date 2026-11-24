@@ -9,7 +9,9 @@
     "test": "playwright test && node tests/smoke.mjs",
     "test:atualizar": "playwright test --update-snapshots",
     "test:fumaca": "node tests/smoke.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:api": "npm test --prefix backend",
+    "test:real": "playwright test -c playwright.real.config.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",

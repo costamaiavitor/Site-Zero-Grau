@@ -39,6 +39,7 @@ React + Bootstrap, API em Node.js + Express e banco MySQL.
 ## Estrutura do repositório
 
 ```
+backend/             API em Node.js + Express + MySQL (contas, catálogo, pedidos)
 frontend/            o site, publicado no GitHub Pages a cada push na main
   index.html           loja de varejo
   atacado.html         balcão de atacado
@@ -49,32 +50,33 @@ docs/                documentação
   site/                guias de como o site funciona por dentro
 ferramentas/         scripts em Python para padronizar e conferir as fotos
 tests/               teste automático do site no navegador (Playwright)
+render.yaml          como o Render sobe a API com o site
 .github/workflows/   testes a cada push (ci.yml) e publicação no Pages (pages.yml)
 ```
 
-## Painel no modo simulado
+## Modo simulado e modo API
 
-Sem servidor, o painel abre para os e-mails de `adminsSimulados` em `frontend/js/config.js`.
-Para demonstração está `admin@zerograu.com.br`: crie uma conta com esse e-mail na loja (ou entre
-com ela) e o site vai direto para o painel, sem passar pelo varejo ou pelo atacado. Com a API
-ligada, quem decide é o perfil `admin` do usuário no banco.
+O site funciona de dois jeitos:
 
-A conta fica no navegador em que foi criada, e o login vale para a aba em que foi feito: numa aba
-nova, o `admin.html` manda para a porta, e entrar de novo leva de volta ao painel. O botão **?**
+| | Modo simulado (GitHub Pages) | Modo API (servido pelo `backend/`) |
+|---|---|---|
+| Contas | só no navegador em que foram criadas | no banco: entram de qualquer computador |
+| Pedidos | vão pelo WhatsApp | vão pelo WhatsApp **e** ficam gravados, com número |
+| Painel | abre para `admin@zerograu.com.br` (lista em `frontend/js/config.js`) | abre para quem tem perfil `admin` no banco |
+
+Quem decide é `frontend/js/config.js` (`usarMock`). Aberto pelo endereço da API,
+o próprio servidor já entrega o site em modo API. Como subir a API, o banco e
+colocar no ar: [`docs/backend.md`](docs/backend.md).
+
+O administrador entra direto no painel. Os botões **Ver varejo** e **Ver atacado**
+do painel abrem a loja numa aba de prévia, sem voltar para o painel. O botão **?**
 no topo do painel abre um guia passo a passo, como o da loja.
-
-## Ligar o site à API
-
-Por padrão o site roda em modo simulado (sem servidor). Para usar a API do `backend/`,
-edite `frontend/js/config.js`: `apiBase` com o endereço da API e `usarMock: false`. Aí o
-login, o cadastro, o catálogo da loja e do atacado e o CRUD de produtos do painel passam
-a ir ao banco. O que falta no back-end para isso funcionar no ar está em
-[`docs/levantamento-entrega-final.md`](docs/levantamento-entrega-final.md).
 
 ## Rodar e testar
 
 ```bash
-npm run dev          # abre o site em http://localhost:8080
+npm run dev          # abre o site em http://localhost:8080 (modo simulado)
+npm start --prefix backend   # site + API em http://localhost:3000 (precisa do backend/.env)
 ```
 
 ```bash
@@ -82,6 +84,8 @@ npm install
 npm install --prefix frontend-react
 npx playwright install chromium
 npm test             # monta a página React e passa o Chromium pelas lojas, pelo painel e pela Minha conta
+npm run test:api     # testes da API num MySQL de teste (ver docs/backend.md)
+npm run test:real    # o site inteiro com a API e o banco de verdade
 ```
 
 ### Páginas em React + Bootstrap
@@ -122,7 +126,7 @@ Os caminhos abaixo são dentro de `frontend/`.
 | quantas unidades tem cada caixa | `CAIXA_PADRAO` e `CAIXA_EXCECAO` |
 | cor, tipografia, forma | os tokens em `css/temas.css` |
 | conferir o dígito verificador na porta | `CONFERE_DIGITO`, em `js/porta.js` |
-| ligar o login e o cadastro a um servidor | `autenticar()` e `cadastrar()`, em `js/porta.js` |
+| ligar o site à API | `apiBase` e `usarMock`, em `js/config.js` ([back-end](docs/backend.md)) |
 | preço, estoque e regras, sem mexer em código | `admin.html` ([guia do painel](docs/site/painel.md)) |
 | publicar o painel direto num servidor | `publicar()`, em `js/admin.js` |
 | tamanho mínimo da senha | `SENHA_MIN`, em `js/porta.js` |
@@ -139,7 +143,8 @@ versão antiga.
 | [Painel de administração](docs/site/painel.md) | o que o painel edita, as três camadas (base, publicado, rascunho), publicar com a chave do GitHub |
 | [Fotos de produto](docs/site/fotos.md) | padrão das fotos, origem e licença, como refazer o lote |
 | [Publicação e o que falta para ir ao ar](docs/site/publicacao.md) | GitHub Pages e a lista do que ainda é exemplo |
+| [Back-end e banco de dados](docs/backend.md) | a API, quem pode o quê, rodar na máquina, colocar no ar no Render, testes |
 
-⚠ Hoje o login não tem servidor: as contas ficam só no navegador em que foram
-criadas. O painel não tem senha; quem publica é quem tem a chave do GitHub.
-Os detalhes estão nos guias acima.
+⚠ No GitHub Pages o site está no modo simulado: as contas ficam só no navegador
+em que foram criadas. Para contas e pedidos de verdade, suba a API
+([docs/backend.md](docs/backend.md)).

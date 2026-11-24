@@ -22,6 +22,7 @@ self.addEventListener("fetch", evento => {
   const endereco = new URL(pedido.url);
   if (pedido.method !== "GET" || endereco.origin !== location.origin) return;
   if (/\/admin(\.html)?$|\/js\/admin\.js/.test(endereco.pathname)) return;
+  if (/\/api\//.test(endereco.pathname)) return;
 
   if (/\/img\/[^/]+\.webp$/.test(endereco.pathname)) {
     evento.respondWith(caches.match(pedido).then(salvo => salvo || buscarEGuardar(pedido)));

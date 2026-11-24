@@ -27,6 +27,11 @@ const Cupom = sequelize.define(
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0.0,
     },
+    // Desconto máximo em reais (o ZEROGRAU10 do site dá 10% até R$ 30). Nulo = sem teto.
+    teto: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+    },
     data_validade: {
       type: DataTypes.DATE,
       allowNull: true,

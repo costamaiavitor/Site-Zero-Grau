@@ -45,6 +45,18 @@ const LOJA = {
 
 const PAGINA_DA_LOJA = {varejo: "index.html", atacado: "atacado.html"};
 
+/* "?previa" vem dos botões "Ver varejo" e "Ver atacado" do painel. A marca fica
+   na sessão da aba, para a prévia valer também nos links entre as duas lojas. */
+const EM_PREVIA = (() => {
+  const pedida = new URLSearchParams(location.search).has("previa");
+  try {
+    if (pedida) sessionStorage.setItem("zg-previa", "ok");
+    return sessionStorage.getItem("zg-previa") === "ok";
+  } catch {
+    return pedida;
+  }
+})();
+
 const CHAVES_SEM_CONTA = ["zg-carrinho", "zg-atacado", "zg-pedidos", "zg-endereco", "zg-entrega"];
 try {
   for (const chave of CHAVES_SEM_CONTA) localStorage.removeItem(chave);
@@ -379,8 +391,8 @@ async function cadastrar({nome, email, senha, doc, tipo}) {
 /* O dono da loja entra direto no painel, sem passar pela vitrine. Com a API vale
    o perfil "admin" que o servidor devolveu (o painel ainda confere o token); no
    modo simulado, a lista adminsSimulados do config.js. Só no login e no
-   cadastro: os botões "Ver varejo" e "Ver atacado" do painel continuam abrindo
-   as lojas. */
+   cadastro, e nunca na prévia: os botões "Ver varejo" e "Ver atacado" do painel
+   abrem a loja pedida, seja a conta de CPF ou de CNPJ. */
 function contaDeAdministrador(dadosDoPerfil) {
   if (!API.usarMock) return dadosDoPerfil?.perfil === "admin";
   const lista = typeof ZG_CONFIG !== "undefined" && Array.isArray(ZG_CONFIG.adminsSimulados) ? ZG_CONFIG.adminsSimulados : [];
@@ -388,8 +400,17 @@ function contaDeAdministrador(dadosDoPerfil) {
   return !!email && lista.some(admin => String(admin).trim().toLowerCase() === email);
 }
 
+function previaDoAdministrador(dadosDoPerfil) {
+  return EM_PREVIA && contaDeAdministrador(dadosDoPerfil);
+}
+
 function irParaLoja(loja, dadosDoPerfil) {
   PERFIL.gravar({tipo: loja === "varejo" ? "cpf" : "cnpj", ...dadosDoPerfil});
+  if (previaDoAdministrador(dadosDoPerfil)) {
+    LOJA.gravar(PUBLICO);
+    fecharPorta();
+    return;
+  }
   LOJA.gravar(loja);
   if (contaDeAdministrador(dadosDoPerfil)) {
     location.href = "admin.html";
@@ -556,6 +577,12 @@ function decidirEntrada() {
   const perfil = PERFIL.ler();
   if (!perfil) {
     abrirPorta();
+    return;
+  }
+
+  if (previaDoAdministrador(perfil)) {
+    LOJA.gravar(PUBLICO);
+    document.dispatchEvent(new CustomEvent("zg:entrou", {detail: perfil}));
     return;
   }
 

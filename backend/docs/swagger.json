@@ -1,70 +1,116 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.3",
   "info": {
     "title": "API Zero Grau - Distribuidora de Bebidas",
-    "description": "Documentação oficial dos endpoints REST da API do projeto Zero Grau (RNF10).",
-    "version": "1.0.0"
+    "description": "Documentação oficial dos endpoints REST da API do projeto Zero Grau (RNF10).\n\n**Autenticação:** faça `POST /api/auth/login`, copie o `token` da resposta e use o botão **Authorize** (cabeçalho `Authorization: Bearer <token>`). O token vale 24 horas. A cada requisição o servidor relê a conta no banco: conta apagada ou que perdeu o perfil de admin deixa de passar na hora.\n\n- Rotas com cadeado e a marca **[login]** pedem qualquer conta logada (401 sem token ou com token vencido).\n- Rotas com a marca **[admin]** pedem conta com perfil `admin` (401 sem login, 403 para cliente comum).\n\n**Erros:** toda resposta de erro é JSON no formato `{ \"erro\": \"mensagem\" }`, pronta para mostrar ao usuário. Rota inexistente em `/api` devolve 404 com `{ \"erro\": \"Rota não encontrada.\" }`; corpo JSON malformado devolve 400; corpo acima de 200 KB devolve 413; registro duplicado no banco devolve 409; falha inesperada devolve 500 com mensagem genérica (o detalhe fica só no log do servidor).\n\n**Limite de tentativas:** as rotas em `/api/auth` aceitam até 30 requisições a cada 5 minutos por IP (ajustável com `LIMITE_LOGIN`); acima disso respondem 429 com o cabeçalho `Retry-After`.\n\n**Valores decimais** (preços, totais, taxas) vêm do MySQL como texto, por exemplo `\"12.90\"`; logo depois de uma gravação podem vir como número. Nos corpos enviados, aceite número ou texto com vírgula ou ponto.",
+    "version": "2.0.0"
   },
   "servers": [
+    {
+      "url": "/",
+      "description": "Mesmo endereço que está servindo esta documentação"
+    },
     {
       "url": "http://localhost:3000",
       "description": "Servidor Local"
     }
   ],
+  "tags": [
+    {
+      "name": "Saúde",
+      "description": "Situação da API e do banco."
+    },
+    {
+      "name": "Autenticação",
+      "description": "Cadastro, login e conta logada (RF03, RNF03)."
+    },
+    {
+      "name": "Categorias",
+      "description": "Categorias do catálogo."
+    },
+    {
+      "name": "Produtos",
+      "description": "Catálogo de bebidas e fotos (RF16)."
+    },
+    {
+      "name": "Atacado",
+      "description": "Faixas de desconto por caixa e simulação de preço (RF13)."
+    },
+    {
+      "name": "Loja",
+      "description": "Dados da loja e horário de funcionamento."
+    },
+    {
+      "name": "Regras de Venda",
+      "description": "Regras de pedido por canal (RF17)."
+    },
+    {
+      "name": "Cupons",
+      "description": "Cupons de desconto do varejo (RF09)."
+    },
+    {
+      "name": "Pedidos",
+      "description": "Pedidos do varejo e do atacado (RNF04, RNF05)."
+    }
+  ],
   "paths": {
-    "/api/auth/login": {
-      "post": {
-        "summary": "Autenticar usuário e obter token JWT (RF03, RNF03)",
-        "tags": ["Autenticação"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": { "type": "string", "example": "admin@zerograu.com" },
-                  "senha": { "type": "string", "example": "123456" }
-                },
-                "required": ["email", "senha"]
+    "/api/saude": {
+      "get": {
+        "summary": "Verificar se a API e o banco estão no ar",
+        "description": "Faz um `SELECT 1` no banco. Rota pública, usada pelo serviço de hospedagem como health check (não é redirecionada para HTTPS).",
+        "tags": [
+          "Saúde"
+        ],
+        "responses": {
+          "200": {
+            "description": "API e banco funcionando.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "banco": {
+                      "type": "string",
+                      "example": "conectado"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "API no ar, mas o banco não respondeu.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "banco": {
+                      "type": "string",
+                      "example": "fora do ar"
+                    }
+                  }
+                }
               }
             }
           }
-        },
-        "responses": {
-          "200": { "description": "Login realizado com sucesso e token retornado." },
-          "401": { "description": "Credenciais inválidas." }
         }
       }
     },
-    "/api/regras/{canal}": {
-      "get": {
-        "summary": "Consultar regras de pedido por canal (RF17)",
-        "tags": ["Regras de Venda"],
-        "parameters": [
-          {
-            "name": "canal",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "enum": ["varejo", "atacado"] },
-            "description": "Canal de venda"
-          }
-        ],
-        "responses": {
-          "200": { "description": "Dados da regra do canal retornados." },
-          "400": { "description": "Canal inválido." }
-        }
-      },
-      "put": {
-        "summary": "Atualizar regras de pedido por canal (RF17, RF21)",
-        "tags": ["Regras de Venda"],
-        "parameters": [
-          {
-            "name": "canal",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "enum": ["varejo", "atacado"] }
-          }
+    "/api/auth/cadastro": {
+      "post": {
+        "summary": "Cadastrar novo cliente (RF03)",
+        "description": "Cria uma conta com perfil `cliente`. Conta com CPF compra no varejo; conta com CNPJ compra no atacado. O documento é guardado sempre com máscara, então o \"já cadastrado\" vale com ou sem pontos e traços. Os dígitos verificadores só são conferidos com `CONFERIR_DIGITO=true`. Administradores não são criados por aqui (use `npm run admin`).",
+        "tags": [
+          "Autenticação"
         ],
         "requestBody": {
           "required": true,
@@ -72,25 +118,1041 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "tipo_documento",
+                  "nome",
+                  "email",
+                  "senha",
+                  "documento"
+                ],
                 "properties": {
-                  "pedido_minimo": { "type": "number", "example": 40.0 },
-                  "frete_gratis_acima": { "type": "number", "example": 150.0 },
-                  "desconto_canal": { "type": "number", "example": 5.0 },
-                  "prazo_pagamento": { "type": "string", "example": "À vista / PIX" }
+                  "tipo_documento": {
+                    "type": "string",
+                    "enum": [
+                      "cpf",
+                      "cnpj"
+                    ],
+                    "example": "cpf"
+                  },
+                  "nome": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "description": "Nome completo (CPF) ou razão social (CNPJ).",
+                    "example": "Ana Cliente"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 160,
+                    "example": "ana@exemplo.com"
+                  },
+                  "senha": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 6,
+                    "maxLength": 72,
+                    "example": "segredo123"
+                  },
+                  "documento": {
+                    "type": "string",
+                    "description": "CPF com 11 dígitos ou CNPJ com 14, com ou sem máscara.",
+                    "example": "123.456.789-09"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Regras atualizadas com sucesso." }
+          "201": {
+            "description": "Usuário cadastrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Usuário cadastrado com sucesso."
+                    },
+                    "usuario": {
+                      "$ref": "#/components/schemas/Usuario"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos, e-mail já cadastrado ou documento já usado por outra conta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "E-mail já cadastrado."
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/MuitasTentativas"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Autenticar usuário e obter token JWT (RF03, RNF03)",
+        "tags": [
+          "Autenticação"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "senha"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "admin@zerograu.com"
+                  },
+                  "senha": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "123456"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso e token retornado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Login realizado com sucesso!"
+                    },
+                    "token": {
+                      "type": "string",
+                      "description": "JWT válido por 24 horas. Enviar como `Authorization: Bearer <token>`.",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "usuario": {
+                      "$ref": "#/components/schemas/Usuario"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "E-mail ou senha não enviados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "E-mail e senha são obrigatórios."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Credenciais inválidas."
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/MuitasTentativas"
+          }
+        }
+      }
+    },
+    "/api/auth/eu": {
+      "get": {
+        "summary": "Dados da conta logada [login]",
+        "description": "Devolve a conta dona do token, relida do banco. Serve para o site conferir se a sessão ainda vale. Conta no limite de tentativas de `/api/auth`.",
+        "tags": [
+          "Autenticação"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conta logada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "usuario": {
+                      "$ref": "#/components/schemas/Usuario"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "429": {
+            "$ref": "#/components/responses/MuitasTentativas"
+          }
+        }
+      }
+    },
+    "/api/categorias": {
+      "get": {
+        "summary": "Listar categorias",
+        "tags": [
+          "Categorias"
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de categorias, em ordem de cadastro.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Categoria"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar categoria [admin]",
+        "tags": [
+          "Categorias"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "slug",
+                  "nome"
+                ],
+                "properties": {
+                  "slug": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]{0,29}$",
+                    "description": "Identificador: letras minúsculas, números e hífen (até 30).",
+                    "example": "destilados"
+                  },
+                  "nome": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "example": "Destilados"
+                  },
+                  "detalhe": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "nullable": true,
+                    "example": "Vodka, gin, whisky e cachaça"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoria criada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Categoria"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "409": {
+            "description": "Já existe uma categoria com esse identificador.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Já existe uma categoria com esse identificador."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtos": {
+      "get": {
+        "summary": "Listar produtos do catálogo",
+        "description": "Devolve os produtos em ordem de cadastro, **incluindo os desativados** (`ativo: false`); quem monta a vitrine filtra pelo campo `ativo`.",
+        "tags": [
+          "Produtos"
+        ],
+        "parameters": [
+          {
+            "name": "cat",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Slug da categoria. `all` ou vazio traz todas; slug inexistente devolve lista vazia.",
+            "example": "destilados"
+          },
+          {
+            "name": "busca",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "description": "Trecho procurado no nome ou na marca.",
+            "example": "absolut"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de produtos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Produto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Cadastrar produto [admin] (RF16)",
+        "description": "Se o SKU pertence a um produto desativado antes, ele volta a ficar ativo com os dados novos (resposta 201).",
+        "tags": [
+          "Produtos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProdutoNovo"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto cadastrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Produto cadastrado com sucesso!"
+                    },
+                    "produto": {
+                      "$ref": "#/components/schemas/Produto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "409": {
+            "description": "Já existe um produto ativo com este SKU.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Já existe um produto com este SKU no banco de dados."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtos/{sku}": {
+      "parameters": [
+        {
+          "name": "sku",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,59}$"
+          },
+          "description": "SKU do produto (o mesmo usado pelo carrinho do site).",
+          "example": "absolut-1l"
+        }
+      ],
+      "get": {
+        "summary": "Consultar produto pelo SKU",
+        "description": "Também encontra produtos desativados.",
+        "tags": [
+          "Produtos"
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Produto"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar produto [admin] (RF16)",
+        "description": "Atualização parcial: só os campos enviados são conferidos e gravados. O SKU não muda (se vier no corpo, é ignorado). Enviar `ativo: true` reativa um produto desativado.",
+        "tags": [
+          "Produtos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProdutoEdicao"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Produto atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Produto atualizado com sucesso!"
+                    },
+                    "produto": {
+                      "$ref": "#/components/schemas/Produto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "description": "Produto não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Produto não encontrado para atualização."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remover (desativar) produto [admin] (RF16)",
+        "description": "Não apaga a linha: marca `ativo: false`. O produto some da loja, mas os pedidos antigos continuam mostrando o que foi vendido. Para trazer de volta, use `PUT` com `ativo: true` ou cadastre de novo o mesmo SKU.",
+        "tags": [
+          "Produtos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Produto desativado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Produto removido com sucesso!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "description": "Produto não encontrado ou já removido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Produto não encontrado para exclusão."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/produtos/{id}/foto": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "ID numérico do produto.",
+          "example": 1
+        }
+      ],
+      "get": {
+        "summary": "Baixar a foto do produto",
+        "description": "Devolve a imagem guardada no banco, com o `Content-Type` original e cache longo (`immutable`). O `foto_url` do produto já aponta para esta rota com `?v=` para renovar o cache a cada envio.",
+        "tags": [
+          "Produtos"
+        ],
+        "responses": {
+          "200": {
+            "description": "Imagem do produto.",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/gif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/avif": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Este produto não tem foto no servidor.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Este produto não tem foto no servidor."
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Enviar ou trocar a foto do produto [admin] (RF16)",
+        "description": "Upload `multipart/form-data` no campo `foto`, até 3 MB, nos formatos WebP, PNG, JPEG, GIF ou AVIF. A imagem fica guardada no banco (não some a cada nova publicação do servidor) e o `foto_url` do produto passa a ser `/api/produtos/{id}/foto?v=<data>`.",
+        "tags": [
+          "Produtos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "foto"
+                ],
+                "properties": {
+                  "foto": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Arquivo de imagem (até 3 MB)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Foto guardada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Foto do produto enviada e guardada com sucesso!"
+                    },
+                    "foto_url": {
+                      "type": "string",
+                      "example": "/api/produtos/1/foto?v=1764000000000"
+                    },
+                    "produto": {
+                      "$ref": "#/components/schemas/Produto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nenhum arquivo, formato não aceito ou imagem maior que 3 MB.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "A imagem pode ter no máximo 3 MB."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      }
+    },
+    "/api/produtos/{id}/faixas": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "ID numérico do produto.",
+          "example": 1
+        }
+      ],
+      "get": {
+        "summary": "Listar faixas de desconto do atacado de um produto (RF13)",
+        "tags": [
+          "Atacado"
+        ],
+        "responses": {
+          "200": {
+            "description": "Faixas do produto, da menor para a maior quantidade.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "produto_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "nome": {
+                      "type": "string",
+                      "example": "Vodka Original 1 L"
+                    },
+                    "unidades_por_caixa": {
+                      "type": "integer",
+                      "example": 12
+                    },
+                    "preco_unitario": {
+                      "type": "number",
+                      "example": 89.9
+                    },
+                    "preco_caixa_padrao": {
+                      "type": "number",
+                      "description": "Preço da caixa no atacado, sem faixa.",
+                      "example": 970.92
+                    },
+                    "faixas": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FaixaAtacado"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      },
+      "post": {
+        "summary": "Cadastrar ou atualizar faixa de atacado [admin] (RF13)",
+        "description": "Se já existe faixa com a mesma `quantidade_minima` para o produto, ela é atualizada (200); senão é criada (201). Sem `preco_caixa`, o preço é calculado aplicando o desconto sobre o preço padrão da caixa no atacado.",
+        "tags": [
+          "Atacado"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "quantidade_minima"
+                ],
+                "properties": {
+                  "quantidade_minima": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000,
+                    "description": "A partir de quantas caixas a faixa vale.",
+                    "example": 10
+                  },
+                  "desconto_percentual": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 90,
+                    "default": 0,
+                    "example": 5
+                  },
+                  "preco_caixa": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 1000000,
+                    "nullable": true,
+                    "description": "Preço fixo por caixa nesta faixa (opcional).",
+                    "example": 920
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Faixa existente atualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Faixa de atacado cadastrada com sucesso!"
+                    },
+                    "faixa": {
+                      "$ref": "#/components/schemas/FaixaAtacado"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Faixa criada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Faixa de atacado cadastrada com sucesso!"
+                    },
+                    "faixa": {
+                      "$ref": "#/components/schemas/FaixaAtacado"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
         }
       }
     },
     "/api/atacado/calcular": {
+      "get": {
+        "summary": "Simular preço por volume de caixas no atacado (RF13)",
+        "description": "Mesma conta do `POST`, com os dados na query string.",
+        "tags": [
+          "Atacado"
+        ],
+        "parameters": [
+          {
+            "name": "produto_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "caixas",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cálculo realizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculoAtacado"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      },
       "post": {
         "summary": "Calcular desconto por volume de caixas no atacado (RF13)",
-        "tags": ["Atacado"],
+        "description": "Usa a maior faixa do produto que a quantidade alcança (`/api/produtos/{id}/faixas`). Sem faixa, vale o preço padrão da caixa no atacado.",
+        "tags": [
+          "Atacado"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "produto_id",
+                  "caixas"
+                ],
+                "properties": {
+                  "produto_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "example": 1
+                  },
+                  "caixas": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000,
+                    "example": 10
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cálculo de volume e preço unitário efetivo realizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalculoAtacado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros ausentes ou inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Informe a quantidade de caixas."
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      }
+    },
+    "/api/loja": {
+      "get": {
+        "summary": "Consultar dados da loja e horários",
+        "tags": [
+          "Loja"
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da loja principal com os horários.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Loja"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar dados da loja [admin] (RF21)",
+        "description": "Atualização parcial: só os campos enviados mudam. Os horários não são alterados por esta rota.",
+        "tags": [
+          "Loja"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -98,78 +1160,2255 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "produto_id": { "type": "integer", "example": 1 },
-                  "caixas": { "type": "integer", "example": 10 }
-                },
-                "required": ["produto_id", "caixas"]
+                  "nome": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "example": "Zero Grau Distribuidora"
+                  },
+                  "cnpj": {
+                    "type": "string",
+                    "maxLength": 18,
+                    "example": "12.345.678/0001-90"
+                  },
+                  "whatsapp": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "85999990000"
+                  },
+                  "telefone": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "8532220000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 160,
+                    "example": "contato@zerograu.com"
+                  },
+                  "endereco": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "Rua Exemplo, 100 - Fortaleza/CE"
+                  },
+                  "chave_pix": {
+                    "type": "string",
+                    "maxLength": 77,
+                    "example": "12345678000190"
+                  },
+                  "cidade_pix": {
+                    "type": "string",
+                    "maxLength": 15,
+                    "example": "FORTALEZA"
+                  },
+                  "taxa_base": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000,
+                    "example": 5
+                  },
+                  "taxa_km": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000,
+                    "example": 1.5
+                  },
+                  "raio_max_km": {
+                    "type": "number",
+                    "minimum": 0.5,
+                    "maximum": 500,
+                    "example": 15
+                  }
+                }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Cálculo de volume e preço unitário efetivo realizado." },
-          "400": { "description": "Parâmetros ausentes ou inválidos." }
+          "200": {
+            "description": "Loja atualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Loja"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      }
+    },
+    "/api/regras/{canal}": {
+      "parameters": [
+        {
+          "name": "canal",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "varejo",
+              "atacado"
+            ]
+          },
+          "description": "Canal de venda."
+        }
+      ],
+      "get": {
+        "summary": "Consultar regras de pedido por canal (RF17)",
+        "description": "Se o canal ainda não tem regra no banco, cria uma com valores padrão (varejo: mínimo R$ 30, frete grátis acima de R$ 150, à vista; atacado: mínimo R$ 300, frete grátis acima de R$ 800, 30 dias).",
+        "tags": [
+          "Regras de Venda"
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados da regra do canal retornados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegraVenda"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Canal inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Canal inválido. Os valores permitidos são 'varejo' ou 'atacado'."
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar regras de pedido por canal [admin] (RF17, RF21)",
+        "description": "Atualização parcial: só os campos enviados mudam.",
+        "tags": [
+          "Regras de Venda"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pedido_minimo": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000,
+                    "example": 40
+                  },
+                  "frete_gratis_acima": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1000000,
+                    "example": 150
+                  },
+                  "desconto_canal": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 90,
+                    "example": 5
+                  },
+                  "prazo_pagamento": {
+                    "type": "string",
+                    "maxLength": 40,
+                    "example": "À vista / PIX"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Regras atualizadas com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Regras do canal 'varejo' atualizadas com sucesso!"
+                    },
+                    "regra": {
+                      "$ref": "#/components/schemas/RegraVenda"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          }
         }
       }
     },
     "/api/cupons": {
       "get": {
-        "summary": "Listar todos os cupons cadastrados (RF09)",
-        "tags": ["Cupons"],
+        "summary": "Listar todos os cupons cadastrados [admin] (RF09)",
+        "tags": [
+          "Cupons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Lista de cupons retornada." }
+          "200": {
+            "description": "Lista de cupons retornada, do mais novo para o mais antigo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Cupom"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          }
         }
       },
       "post": {
-        "summary": "Criar novo cupom de desconto (RF09)",
-        "tags": ["Cupons"],
+        "summary": "Criar novo cupom de desconto [admin] (RF09)",
+        "tags": [
+          "Cupons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "codigo": { "type": "string", "example": "ZEROGRAU10" },
-                  "tipo_desconto": { "type": "string", "enum": ["percentual", "fixo"], "example": "percentual" },
-                  "valor_desconto": { "type": "number", "example": 10.0 },
-                  "valor_minimo_pedido": { "type": "number", "example": 50.0 },
-                  "limite_uso": { "type": "integer", "example": 100 },
-                  "data_validade": { "type": "string", "format": "date", "example": "2026-12-31" }
-                },
-                "required": ["codigo", "valor_desconto"]
+                "$ref": "#/components/schemas/CupomEntrada"
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Cupom cadastrado com sucesso." }
+          "201": {
+            "description": "Cupom cadastrado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Cupom criado com sucesso!"
+                    },
+                    "cupom": {
+                      "$ref": "#/components/schemas/Cupom"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "409": {
+            "description": "Já existe um cupom com este código.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Já existe um cupom com este código."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cupons/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "ID numérico do cupom.",
+          "example": 1
+        }
+      ],
+      "get": {
+        "summary": "Consultar cupom [admin] (RF09)",
+        "tags": [
+          "Cupons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cupom encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cupom"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar cupom [admin] (RF09)",
+        "description": "Atualização parcial: só os campos enviados mudam.",
+        "tags": [
+          "Cupons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CupomEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cupom atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Cupom atualizado com sucesso!"
+                    },
+                    "cupom": {
+                      "$ref": "#/components/schemas/Cupom"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErroValidacao"
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          },
+          "409": {
+            "description": "Já existe outro cupom com este código.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Já existe um cupom com este código."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Excluir (desativar) cupom [admin] (RF09)",
+        "description": "Não apaga a linha: marca `ativo: false`, porque pedidos antigos continuam apontando para o cupom. Para reativar, use `PUT` com `ativo: true`.",
+        "tags": [
+          "Cupons"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cupom desativado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Cupom excluído com sucesso."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
         }
       }
     },
     "/api/cupons/validar": {
       "post": {
         "summary": "Validar elegibilidade e aplicar cupom no carrinho (RF09)",
-        "tags": ["Cupons"],
+        "description": "Rota pública, sem login. Confere se o cupom existe e está ativo, a validade, o limite de uso e o valor mínimo. O uso de uma vez por cliente só é conferido ao fechar o pedido (`POST /api/pedidos`). O cupom do site (definido em `ajustes.js`, ex.: `ZEROGRAU10`) também é aceito.",
+        "tags": [
+          "Cupons"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": [
+                  "codigo",
+                  "subtotal"
+                ],
                 "properties": {
-                  "codigo": { "type": "string", "example": "ZEROGRAU10" },
-                  "subtotal": { "type": "number", "example": 120.0 }
-                },
-                "required": ["codigo", "subtotal"]
+                  "codigo": {
+                    "type": "string",
+                    "description": "Código do cupom (maiúsculas e minúsculas tanto faz).",
+                    "example": "ZEROGRAU10"
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total dos produtos no carrinho.",
+                    "example": 120
+                  }
+                }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Cupom validado e desconto calculado com sucesso." },
-          "400": { "description": "Cupom expirado, inativo ou pedido abaixo do mínimo." },
-          "404": { "description": "Cupom não encontrado." }
+          "200": {
+            "description": "Cupom validado e desconto calculado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valido": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Cupom aplicado com sucesso!"
+                    },
+                    "codigo": {
+                      "type": "string",
+                      "example": "ZEROGRAU10"
+                    },
+                    "tipo_desconto": {
+                      "type": "string",
+                      "enum": [
+                        "percentual",
+                        "fixo"
+                      ],
+                      "example": "percentual"
+                    },
+                    "valor_desconto": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "desconto_calculado": {
+                      "type": "number",
+                      "example": 12
+                    },
+                    "subtotal_original": {
+                      "type": "number",
+                      "example": 120
+                    },
+                    "total_com_desconto": {
+                      "type": "number",
+                      "example": 108
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados ausentes, cupom inexistente, inativo, expirado, esgotado ou pedido abaixo do mínimo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valido": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "erro": {
+                      "type": "string",
+                      "example": "Cupom inválido ou inexistente."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pedidos": {
+      "get": {
+        "summary": "Listar todos os pedidos [admin]",
+        "description": "Do mais novo para o mais antigo.",
+        "tags": [
+          "Pedidos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/StatusPedido"
+            },
+            "description": "Filtra pelo status."
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 300
+            },
+            "description": "Quantidade máxima de pedidos."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pedidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pedido"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          }
+        }
+      },
+      "post": {
+        "summary": "Fazer pedido [login] (RNF04, RNF05)",
+        "description": "O servidor ignora preços vindos do site: recalcula preço, desconto e frete a partir do banco e das regras publicadas pelo painel (RNF04), confere o estoque e o baixa na mesma transação (RNF05).\n\n**Varejo** (`canal: \"varejo\"`, itens com `unidade: \"un\"`): aceita `cupom` (uma vez por cliente), confere o pedido mínimo, calcula a taxa pela distância (CEP consultado no ViaCEP; se o ViaCEP não responder, usa `entrega.bairro`, `entrega.cidade` e `entrega.uf` enviados) e exige `pagamento`. Na `retirada`, endereço e taxa não se aplicam.\n\n**Atacado** (`canal: \"atacado\"`, itens com `unidade: \"cx\"`): só para contas com CNPJ (ou admin); não aceita cupom; o desconto vem da faixa de caixas e o destinatário é o próprio cliente. `entrega` e `pagamento` são ignorados.\n\nCom a loja fechada, o pedido é gravado com `agendado: true`.",
+        "tags": [
+          "Pedidos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NovoPedido"
+              },
+              "examples": {
+                "varejo": {
+                  "summary": "Pedido do varejo com entrega",
+                  "value": {
+                    "canal": "varejo",
+                    "itens": [
+                      {
+                        "sku": "absolut-1l",
+                        "quantidade": 2,
+                        "unidade": "un"
+                      }
+                    ],
+                    "cupom": "ZEROGRAU10",
+                    "entrega": {
+                      "modalidade": "entrega",
+                      "cep": "60160000",
+                      "logradouro": "Rua Silva Paulet",
+                      "numero": "100",
+                      "complemento": null,
+                      "referencia": null,
+                      "destinatario": "Ana Cliente"
+                    },
+                    "pagamento": {
+                      "momento": "entrega",
+                      "forma": "dinheiro",
+                      "troco_para": 200,
+                      "txid": null
+                    },
+                    "observacao": "portão azul"
+                  }
+                },
+                "retirada": {
+                  "summary": "Varejo com retirada no balcão e Pix pelo site",
+                  "value": {
+                    "canal": "varejo",
+                    "itens": [
+                      {
+                        "sku": "absolut-1l",
+                        "quantidade": 1,
+                        "unidade": "un"
+                      }
+                    ],
+                    "entrega": {
+                      "modalidade": "retirada",
+                      "destinatario": "Ana Cliente"
+                    },
+                    "pagamento": {
+                      "momento": "site",
+                      "forma": "pix",
+                      "txid": "ZG77ABC"
+                    }
+                  }
+                },
+                "atacado": {
+                  "summary": "Pedido do atacado (conta CNPJ)",
+                  "value": {
+                    "canal": "atacado",
+                    "itens": [
+                      {
+                        "sku": "absolut-1l",
+                        "quantidade": 10,
+                        "unidade": "cx"
+                      }
+                    ],
+                    "entrega": {
+                      "modalidade": "entrega"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pedido registrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Pedido registrado na loja."
+                    },
+                    "pedido": {
+                      "$ref": "#/components/schemas/Pedido"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Pedido recusado: canal inválido, item sem SKU ou com unidade errada, produto fora de venda, estoque insuficiente, cupom inválido ou já usado, abaixo do pedido mínimo, CEP inválido ou fora do raio de entrega, forma de pagamento inválida, troco menor que o total, atacado sem CNPJ etc.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "O pedido mínimo é de R$ 30,00 em produtos."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          }
+        }
+      }
+    },
+    "/api/pedidos/meus": {
+      "get": {
+        "summary": "Listar meus pedidos [login]",
+        "description": "Pedidos da conta logada, do mais novo para o mais antigo (até 200).",
+        "tags": [
+          "Pedidos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pedidos do cliente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Pedido"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          }
+        }
+      }
+    },
+    "/api/pedidos/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "Número do pedido.",
+          "example": 77
+        }
+      ],
+      "get": {
+        "summary": "Consultar um pedido [login]",
+        "description": "O cliente só vê os próprios pedidos; o admin vê qualquer um. Pedido de outra pessoa responde 404.",
+        "tags": [
+          "Pedidos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pedido completo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pedido"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      }
+    },
+    "/api/pedidos/{id}/status": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "Número do pedido.",
+          "example": 77
+        }
+      ],
+      "patch": {
+        "summary": "Mudar o status do pedido [admin]",
+        "description": "Ao cancelar, devolve o estoque dos itens e o uso do cupom. Ao marcar como `entregue`, o pagamento passa para `pago`. Pedido cancelado não muda mais de status. Mandar o status atual não altera nada.",
+        "tags": [
+          "Pedidos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/StatusPedido"
+                  }
+                }
+              },
+              "example": {
+                "status": "confirmado"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Status atualizado com sucesso!"
+                    },
+                    "pedido": {
+                      "$ref": "#/components/schemas/Pedido"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Status inválido ou pedido já cancelado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Pedido cancelado não pode mudar de status. Faça um pedido novo."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "403": {
+            "$ref": "#/components/responses/SemPermissao"
+          },
+          "404": {
+            "$ref": "#/components/responses/NaoEncontrado"
+          }
+        }
+      }
+    },
+    "/api/pedidos/{id}/agendar": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": "Número do pedido.",
+          "example": 77
+        }
+      ],
+      "patch": {
+        "summary": "Agendar a entrega do pedido [login]",
+        "description": "Só o dono do pedido agenda. A data precisa estar entre 15 minutos e 30 dias à frente e dentro do horário de funcionamento da loja. Pedido entregue ou cancelado não pode ser agendado.",
+        "tags": [
+          "Pedidos"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "agendado_para"
+                ],
+                "properties": {
+                  "agendado_para": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-11-25T18:30:00-03:00"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pedido agendado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensagem": {
+                      "type": "string",
+                      "example": "Pedido agendado com sucesso!"
+                    },
+                    "pedido": {
+                      "$ref": "#/components/schemas/Pedido"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Data ausente, fora do prazo, fora do horário da loja ou pedido já encerrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Agende com pelo menos 15 minutos de antecedência."
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/NaoAutenticado"
+          },
+          "404": {
+            "description": "Pedido não encontrado para este usuário.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                },
+                "example": {
+                  "erro": "Pedido não encontrado para este usuário."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token recebido em `POST /api/auth/login`, válido por 24 horas."
+      }
+    },
+    "responses": {
+      "ErroValidacao": {
+        "description": "Dados inválidos. A mensagem diz qual campo corrigir.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Erro"
+            },
+            "example": {
+              "erro": "Valor inválido para o preço."
+            }
+          }
+        }
+      },
+      "NaoAutenticado": {
+        "description": "Sem token, token inválido ou vencido, ou conta que não existe mais.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Erro"
+            },
+            "example": {
+              "erro": "Entre na sua conta para continuar."
+            }
+          }
+        }
+      },
+      "SemPermissao": {
+        "description": "A conta logada não é administradora.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Erro"
+            },
+            "example": {
+              "erro": "Só o administrador da loja pode fazer isso."
+            }
+          }
+        }
+      },
+      "NaoEncontrado": {
+        "description": "Registro não encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Erro"
+            },
+            "example": {
+              "erro": "Produto não encontrado."
+            }
+          }
+        }
+      },
+      "MuitasTentativas": {
+        "description": "Limite de tentativas em `/api/auth` atingido para este IP.",
+        "headers": {
+          "Retry-After": {
+            "description": "Segundos até poder tentar de novo.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Erro"
+            },
+            "example": {
+              "erro": "Muitas tentativas seguidas. Espere alguns minutos e tente de novo."
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Erro": {
+        "type": "object",
+        "required": [
+          "erro"
+        ],
+        "properties": {
+          "erro": {
+            "type": "string",
+            "example": "Rota não encontrada."
+          }
+        }
+      },
+      "Decimal": {
+        "description": "Valor decimal. Vem do banco como texto (ex.: \"12.90\"); logo após uma gravação pode vir como número.",
+        "oneOf": [
+          {
+            "type": "string",
+            "example": "12.90"
+          },
+          {
+            "type": "number",
+            "example": 12.9
+          }
+        ]
+      },
+      "StatusPedido": {
+        "type": "string",
+        "enum": [
+          "recebido",
+          "confirmado",
+          "em_preparo",
+          "saiu",
+          "entregue",
+          "cancelado"
+        ],
+        "example": "confirmado"
+      },
+      "Usuario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Ana Cliente"
+          },
+          "email": {
+            "type": "string",
+            "example": "ana@exemplo.com"
+          },
+          "perfil": {
+            "type": "string",
+            "enum": [
+              "cliente",
+              "admin"
+            ],
+            "example": "cliente"
+          },
+          "documento": {
+            "type": "string",
+            "example": "123.456.789-09"
+          },
+          "tipo_documento": {
+            "type": "string",
+            "enum": [
+              "cpf",
+              "cnpj"
+            ],
+            "example": "cpf"
+          },
+          "loja": {
+            "type": "string",
+            "enum": [
+              "varejo",
+              "atacado"
+            ],
+            "description": "Loja em que a conta compra: CNPJ = atacado, CPF = varejo.",
+            "example": "varejo"
+          }
+        }
+      },
+      "Categoria": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "slug": {
+            "type": "string",
+            "example": "destilados"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Destilados"
+          },
+          "detalhe": {
+            "type": "string",
+            "nullable": true,
+            "example": "Vodka, gin, whisky e cachaça"
+          }
+        }
+      },
+      "Produto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "categoria_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "sku": {
+            "type": "string",
+            "example": "absolut-1l"
+          },
+          "marca": {
+            "type": "string",
+            "example": "Absolut"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Vodka Original 1 L"
+          },
+          "volume": {
+            "type": "string",
+            "nullable": true,
+            "example": "1 L"
+          },
+          "teor_alcoolico": {
+            "type": "string",
+            "nullable": true,
+            "example": "40%"
+          },
+          "embalagem": {
+            "type": "string",
+            "enum": [
+              "can",
+              "bottle",
+              "tall",
+              "pet",
+              "saco"
+            ],
+            "example": "bottle"
+          },
+          "preco": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "preco_promo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ],
+            "nullable": true
+          },
+          "unidades_caixa": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Vazio = usa o padrão da embalagem.",
+            "example": 12
+          },
+          "estoque": {
+            "type": "integer",
+            "example": 48
+          },
+          "gelada": {
+            "type": "boolean",
+            "example": false
+          },
+          "alcoolica": {
+            "type": "boolean",
+            "example": true
+          },
+          "retornavel": {
+            "type": "boolean",
+            "example": false
+          },
+          "valor_casco": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ],
+            "nullable": true
+          },
+          "foto_url": {
+            "type": "string",
+            "nullable": true,
+            "description": "Foto guardada no banco (`/api/produtos/{id}/foto?v=...`), nome de imagem do site ou endereço https.",
+            "example": "/api/produtos/1/foto?v=1764000000000"
+          },
+          "ativo": {
+            "type": "boolean",
+            "description": "`false` = removido da loja.",
+            "example": true
+          }
+        }
+      },
+      "ProdutoEdicao": {
+        "type": "object",
+        "description": "Campos aceitos ao editar. Todos opcionais.",
+        "properties": {
+          "categoria_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "ID da categoria. Alternativa: `cat`.",
+            "example": 1
+          },
+          "cat": {
+            "type": "string",
+            "description": "Slug da categoria (usado se `categoria_id` não vier).",
+            "example": "destilados"
+          },
+          "marca": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "Absolut"
+          },
+          "nome": {
+            "type": "string",
+            "maxLength": 120,
+            "example": "Vodka Original 1 L"
+          },
+          "volume": {
+            "type": "string",
+            "maxLength": 20,
+            "nullable": true,
+            "example": "1 L"
+          },
+          "teor_alcoolico": {
+            "type": "string",
+            "maxLength": 10,
+            "nullable": true,
+            "example": "40%"
+          },
+          "embalagem": {
+            "type": "string",
+            "enum": [
+              "can",
+              "bottle",
+              "tall",
+              "pet",
+              "saco"
+            ],
+            "example": "bottle"
+          },
+          "preco": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 100000,
+            "example": 89.9
+          },
+          "preco_promo": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 100000,
+            "nullable": true,
+            "description": "Tem de ser menor que o preço normal. `null` tira a promoção.",
+            "example": 79.9
+          },
+          "unidades_caixa": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "nullable": true,
+            "example": 12
+          },
+          "estoque": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000,
+            "example": 48
+          },
+          "gelada": {
+            "type": "boolean",
+            "example": false
+          },
+          "alcoolica": {
+            "type": "boolean",
+            "example": true
+          },
+          "retornavel": {
+            "type": "boolean",
+            "example": false
+          },
+          "valor_casco": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 10000,
+            "nullable": true,
+            "example": 2.5
+          },
+          "foto_url": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nome de imagem do site (letras, números e hífen), `/api/produtos/{id}/foto` ou endereço https. Para enviar arquivo use `POST /api/produtos/{id}/foto`.",
+            "example": "absolut-1l"
+          },
+          "ativo": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "ProdutoNovo": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProdutoEdicao"
+          },
+          {
+            "type": "object",
+            "required": [
+              "sku",
+              "marca",
+              "nome",
+              "embalagem",
+              "preco",
+              "estoque"
+            ],
+            "description": "Também é obrigatório informar a categoria (`categoria_id` ou `cat`). `gelada`, `alcoolica` e `retornavel` não enviados ficam `false`; `ativo` não enviado fica `true`.",
+            "properties": {
+              "sku": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,59}$",
+                "description": "Letras, números e hífen (até 60).",
+                "example": "absolut-1l"
+              }
+            }
+          }
+        ]
+      },
+      "FaixaAtacado": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "produto_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "quantidade_minima": {
+            "type": "integer",
+            "example": 10
+          },
+          "desconto_percentual": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "preco_caixa": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "CalculoAtacado": {
+        "type": "object",
+        "properties": {
+          "produto": {
+            "type": "string",
+            "example": "Vodka Original 1 L"
+          },
+          "caixas": {
+            "type": "integer",
+            "example": 10
+          },
+          "unidades_por_caixa": {
+            "type": "integer",
+            "example": 12
+          },
+          "total_unidades": {
+            "type": "integer",
+            "example": 120
+          },
+          "desconto_aplicado_percentual": {
+            "type": "number",
+            "example": 5
+          },
+          "preco_por_caixa": {
+            "type": "number",
+            "example": 922.37
+          },
+          "preco_unitario_efetivo": {
+            "type": "number",
+            "example": 76.86
+          },
+          "subtotal": {
+            "type": "number",
+            "example": 9223.74
+          }
+        }
+      },
+      "Horario": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "loja_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "dia_semana": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "0 = domingo, 6 = sábado.",
+            "example": 5
+          },
+          "abre": {
+            "type": "string",
+            "example": "10:00:00"
+          },
+          "fecha": {
+            "type": "string",
+            "example": "22:00:00"
+          }
+        }
+      },
+      "Loja": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "nome": {
+            "type": "string",
+            "example": "Zero Grau Distribuidora"
+          },
+          "cnpj": {
+            "type": "string",
+            "nullable": true,
+            "example": "12.345.678/0001-90"
+          },
+          "whatsapp": {
+            "type": "string",
+            "nullable": true,
+            "example": "85999990000"
+          },
+          "telefone": {
+            "type": "string",
+            "nullable": true,
+            "example": "8532220000"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "example": "contato@zerograu.com"
+          },
+          "endereco": {
+            "type": "string",
+            "nullable": true,
+            "example": "Rua Exemplo, 100 - Fortaleza/CE"
+          },
+          "chave_pix": {
+            "type": "string",
+            "nullable": true,
+            "example": "12345678000190"
+          },
+          "cidade_pix": {
+            "type": "string",
+            "nullable": true,
+            "example": "FORTALEZA"
+          },
+          "taxa_base": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "taxa_km": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "raio_max_km": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "Horarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Horario"
+            },
+            "description": "Horários de funcionamento (nome gerado pelo Sequelize). Só vem no `GET`."
+          }
+        }
+      },
+      "RegraVenda": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "loja_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "canal": {
+            "type": "string",
+            "enum": [
+              "varejo",
+              "atacado"
+            ],
+            "example": "varejo"
+          },
+          "pedido_minimo": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "frete_gratis_acima": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ],
+            "nullable": true
+          },
+          "desconto_canal": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "prazo_pagamento": {
+            "type": "string",
+            "nullable": true,
+            "example": "À vista"
+          }
+        }
+      },
+      "Cupom": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "codigo": {
+            "type": "string",
+            "example": "ZEROGRAU10"
+          },
+          "tipo_desconto": {
+            "type": "string",
+            "enum": [
+              "percentual",
+              "fixo"
+            ],
+            "example": "percentual"
+          },
+          "valor_desconto": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "valor_minimo_pedido": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "teto": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ],
+            "nullable": true,
+            "description": "Desconto máximo em reais. Vazio = sem teto."
+          },
+          "data_validade": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-12-31T23:59:59.000Z"
+          },
+          "limite_uso": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Vazio = sem limite.",
+            "example": 100
+          },
+          "usos_atuais": {
+            "type": "integer",
+            "example": 3
+          },
+          "ativo": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CupomEntrada": {
+        "type": "object",
+        "description": "No cadastro, `codigo` e `valor_desconto` são obrigatórios; na edição, todos os campos são opcionais.",
+        "properties": {
+          "codigo": {
+            "type": "string",
+            "pattern": "^[A-Z0-9_-]{3,50}$",
+            "description": "Letras, números, _ ou - (3 a 50). É gravado em maiúsculas.",
+            "example": "ZEROGRAU10"
+          },
+          "tipo_desconto": {
+            "type": "string",
+            "enum": [
+              "percentual",
+              "fixo"
+            ],
+            "default": "percentual",
+            "example": "percentual"
+          },
+          "valor_desconto": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 100000,
+            "description": "Percentual (até 90) ou valor em reais.",
+            "example": 10
+          },
+          "valor_minimo_pedido": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000000,
+            "example": 50
+          },
+          "teto": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 1000000,
+            "nullable": true,
+            "description": "Desconto máximo em reais.",
+            "example": 30
+          },
+          "limite_uso": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000000,
+            "nullable": true,
+            "example": 100
+          },
+          "data_validade": {
+            "type": "string",
+            "nullable": true,
+            "description": "Data (`AAAA-MM-DD`, vale até 23:59:59 de Brasília) ou data e hora ISO. Vazio = sem validade.",
+            "example": "2026-12-31"
+          },
+          "ativo": {
+            "type": "boolean",
+            "default": true,
+            "example": true
+          }
+        }
+      },
+      "Endereco": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 10
+          },
+          "usuario_id": {
+            "type": "integer",
+            "example": 5
+          },
+          "cep": {
+            "type": "string",
+            "example": "60160000"
+          },
+          "logradouro": {
+            "type": "string",
+            "example": "Rua Silva Paulet"
+          },
+          "numero": {
+            "type": "string",
+            "example": "100"
+          },
+          "complemento": {
+            "type": "string",
+            "nullable": true
+          },
+          "bairro": {
+            "type": "string",
+            "nullable": true,
+            "example": "Aldeota"
+          },
+          "cidade": {
+            "type": "string",
+            "nullable": true,
+            "example": "Fortaleza"
+          },
+          "uf": {
+            "type": "string",
+            "nullable": true,
+            "example": "CE"
+          },
+          "referencia": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "Pagamento": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 30
+          },
+          "pedido_id": {
+            "type": "integer",
+            "example": 77
+          },
+          "forma": {
+            "type": "string",
+            "enum": [
+              "pix",
+              "cartao",
+              "dinheiro"
+            ],
+            "example": "dinheiro"
+          },
+          "momento": {
+            "type": "string",
+            "enum": [
+              "site",
+              "entrega"
+            ],
+            "example": "entrega"
+          },
+          "troco_para": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Decimal"
+              }
+            ],
+            "nullable": true
+          },
+          "txid": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pendente",
+              "pago"
+            ],
+            "example": "pendente"
+          },
+          "confirmado_em": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "ItemPedido": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 120
+          },
+          "pedido_id": {
+            "type": "integer",
+            "example": 77
+          },
+          "produto_id": {
+            "type": "integer",
+            "example": 1
+          },
+          "quantidade": {
+            "type": "integer",
+            "example": 2
+          },
+          "unidade": {
+            "type": "string",
+            "enum": [
+              "un",
+              "cx"
+            ],
+            "example": "un"
+          },
+          "preco_unitario": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "subtotal": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "produto": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "sku": {
+                "type": "string",
+                "example": "absolut-1l"
+              },
+              "marca": {
+                "type": "string",
+                "example": "Absolut"
+              },
+              "nome": {
+                "type": "string",
+                "example": "Vodka Original 1 L"
+              },
+              "embalagem": {
+                "type": "string",
+                "example": "bottle"
+              },
+              "volume": {
+                "type": "string",
+                "nullable": true,
+                "example": "1 L"
+              }
+            }
+          }
+        }
+      },
+      "Pedido": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 77
+          },
+          "usuario_id": {
+            "type": "integer",
+            "example": 5
+          },
+          "endereco_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": 10
+          },
+          "cupom_id": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "canal": {
+            "type": "string",
+            "enum": [
+              "varejo",
+              "atacado"
+            ],
+            "example": "varejo"
+          },
+          "modalidade": {
+            "type": "string",
+            "enum": [
+              "entrega",
+              "retirada"
+            ],
+            "example": "entrega"
+          },
+          "subtotal": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "desconto": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "taxa_entrega": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Decimal"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusPedido"
+          },
+          "agendado": {
+            "type": "boolean",
+            "description": "`true` quando o pedido foi feito com a loja fechada ou foi agendado.",
+            "example": false
+          },
+          "agendado_para": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "destinatario": {
+            "type": "string",
+            "nullable": true,
+            "example": "Ana Cliente"
+          },
+          "observacao": {
+            "type": "string",
+            "nullable": true,
+            "example": "portão azul"
+          },
+          "criado_em": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-15T23:00:00Z"
+          },
+          "usuario": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 5
+              },
+              "nome": {
+                "type": "string",
+                "example": "Ana Cliente"
+              },
+              "email": {
+                "type": "string",
+                "example": "ana@exemplo.com"
+              },
+              "documento": {
+                "type": "string",
+                "example": "123.456.789-09"
+              },
+              "tipo_documento": {
+                "type": "string",
+                "enum": [
+                  "cpf",
+                  "cnpj"
+                ],
+                "example": "cpf"
+              }
+            }
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemPedido"
+            }
+          },
+          "endereco": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Endereco"
+              }
+            ],
+            "nullable": true,
+            "description": "Só no varejo com entrega."
+          },
+          "pagamento": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Pagamento"
+              }
+            ],
+            "nullable": true,
+            "description": "Só no varejo."
+          },
+          "cupom": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código do cupom usado.",
+            "example": "ZEROGRAU10"
+          }
+        }
+      },
+      "NovoPedido": {
+        "type": "object",
+        "required": [
+          "canal",
+          "itens"
+        ],
+        "properties": {
+          "canal": {
+            "type": "string",
+            "enum": [
+              "varejo",
+              "atacado"
+            ],
+            "example": "varejo"
+          },
+          "itens": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 60,
+            "description": "Até 60 produtos diferentes. SKUs repetidos são somados. Preço enviado pelo site é ignorado.",
+            "items": {
+              "type": "object",
+              "required": [
+                "sku",
+                "quantidade"
+              ],
+              "properties": {
+                "sku": {
+                  "type": "string",
+                  "example": "absolut-1l"
+                },
+                "quantidade": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10000,
+                  "example": 2
+                },
+                "unidade": {
+                  "type": "string",
+                  "enum": [
+                    "un",
+                    "cx"
+                  ],
+                  "description": "`un` no varejo, `cx` no atacado. Se não vier, assume a do canal.",
+                  "example": "un"
+                }
+              }
+            }
+          },
+          "cupom": {
+            "type": "string",
+            "nullable": true,
+            "description": "Só no varejo. Cada cliente usa o mesmo cupom uma vez (pedidos não cancelados).",
+            "example": "ZEROGRAU10"
+          },
+          "entrega": {
+            "type": "object",
+            "description": "Varejo. No atacado só `modalidade` é enviada pelo site e o servidor não a usa.",
+            "properties": {
+              "modalidade": {
+                "type": "string",
+                "enum": [
+                  "entrega",
+                  "retirada"
+                ],
+                "default": "entrega",
+                "example": "entrega"
+              },
+              "cep": {
+                "type": "string",
+                "description": "8 dígitos, com ou sem traço. Obrigatório na entrega.",
+                "example": "60160000"
+              },
+              "logradouro": {
+                "type": "string",
+                "maxLength": 160,
+                "description": "Obrigatório na entrega.",
+                "example": "Rua Silva Paulet"
+              },
+              "numero": {
+                "type": "string",
+                "maxLength": 10,
+                "description": "Obrigatório na entrega.",
+                "example": "100"
+              },
+              "complemento": {
+                "type": "string",
+                "maxLength": 80,
+                "nullable": true
+              },
+              "referencia": {
+                "type": "string",
+                "maxLength": 120,
+                "nullable": true
+              },
+              "destinatario": {
+                "type": "string",
+                "maxLength": 120,
+                "nullable": true,
+                "example": "Ana Cliente"
+              },
+              "bairro": {
+                "type": "string",
+                "nullable": true,
+                "description": "Reserva: usado só se a consulta do CEP (ViaCEP) estiver fora do ar.",
+                "example": "Aldeota"
+              },
+              "cidade": {
+                "type": "string",
+                "nullable": true,
+                "description": "Reserva: usado só se a consulta do CEP estiver fora do ar. Sem ele, o pedido é recusado nesse caso.",
+                "example": "Fortaleza"
+              },
+              "uf": {
+                "type": "string",
+                "nullable": true,
+                "description": "Reserva: usado só se a consulta do CEP estiver fora do ar.",
+                "example": "CE"
+              }
+            }
+          },
+          "pagamento": {
+            "type": "object",
+            "description": "Obrigatório no varejo; ignorado no atacado.",
+            "required": [
+              "forma"
+            ],
+            "properties": {
+              "forma": {
+                "type": "string",
+                "enum": [
+                  "pix",
+                  "cartao",
+                  "dinheiro"
+                ],
+                "example": "dinheiro"
+              },
+              "momento": {
+                "type": "string",
+                "enum": [
+                  "site",
+                  "entrega"
+                ],
+                "default": "entrega",
+                "description": "Pelo site, só Pix.",
+                "example": "entrega"
+              },
+              "troco_para": {
+                "type": "number",
+                "nullable": true,
+                "description": "Só para dinheiro. Tem de ser maior ou igual ao total.",
+                "example": 200
+              },
+              "txid": {
+                "type": "string",
+                "nullable": true,
+                "description": "Identificador do Pix (até 25 letras e números).",
+                "example": null
+              }
+            }
+          },
+          "observacao": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "example": "portão azul"
+          },
+          "agendado": {
+            "type": "boolean",
+            "description": "Enviado pelo site, mas ignorado: o servidor marca o pedido como agendado quando a loja está fechada. Para escolher data e hora, use `PATCH /api/pedidos/{id}/agendar`.",
+            "example": false
+          }
         }
       }
     }

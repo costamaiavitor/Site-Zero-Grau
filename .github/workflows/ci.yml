@@ -29,3 +29,49 @@ jobs:
 
       - name: Rodar o teste de fumaça
         run: npm test
+
+  api:
+    name: API e banco (MySQL)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: raiz-do-teste
+          MYSQL_DATABASE: zerograu_teste
+          MYSQL_USER: zg
+          MYSQL_PASSWORD: senha-do-teste
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -praiz-do-teste"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: zerograu_teste
+      DB_USER: zg
+      DB_PASSWORD: senha-do-teste
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar o back-end
+        run: npm ci --prefix backend --no-audit --no-fund
+
+      - name: Testes da API no MySQL
+        run: npm test --prefix backend
+
+      - name: Instalar o front e montar a página React
+        run: |
+          npm install --no-audit --no-fund
+          npm ci --prefix frontend-react --no-audit --no-fund
+          npm run build --prefix frontend-react
+
+      - name: Instalar o Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Site inteiro com a API e o banco (ponta a ponta)
+        run: npx playwright test -c playwright.real.config.js

@@ -841,7 +841,10 @@ function montarPedidoParaApi(pedido) {
       numero: retirada ? null : pedido.numero,
       complemento: pedido.compl || null,
       referencia: pedido.ref || null,
-      destinatario: pedido.nome
+      destinatario: pedido.nome,
+      bairro: entrega?.bairro || null,
+      cidade: entrega?.cidade || null,
+      uf: entrega?.uf || null
     },
     pagamento: {
       momento: pedido.fechar === "pix-site" ? "site" : "entrega",
@@ -1124,7 +1127,7 @@ async function consultarCep(numerosDoCep) {
     return {
       classe: "bad",
       texto: `${onde} fica fora do raio de ${RAIO_MAX} km. Você pode retirar no balcão, sem taxa.`,
-      entrega: {km: km ?? 0, taxa: 0, minutos: 0, retirada: true, onde, cep, rua}
+      entrega: {km: km ?? 0, taxa: 0, minutos: 0, retirada: true, onde, cep, rua, bairro: lugar.bairro || "", cidade: lugar.localidade || "", uf: lugar.uf || ""}
     };
   }
 
@@ -1133,7 +1136,7 @@ async function consultarCep(numerosDoCep) {
   return {
     classe: "ok",
     texto: `Entregamos em ${onde}. ${km.toFixed(1).replace(".", ",")} km · taxa R$ ${brl(taxa)} · cerca de ${minutos} minutos.`,
-    entrega: {km, taxa, minutos, retirada: false, onde, cep, rua}
+    entrega: {km, taxa, minutos, retirada: false, onde, cep, rua, bairro: lugar.bairro || "", cidade: lugar.localidade || "", uf: lugar.uf || ""}
   };
 }
 

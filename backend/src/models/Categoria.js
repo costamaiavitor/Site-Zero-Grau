@@ -21,11 +21,9 @@ const Categoria = sequelize.define("Categoria", {
     type: DataTypes.STRING(120)
   }
 }, {
+  // Nome que a tabela sempre teve no banco (o Sequelize não pluraliza "Categoria").
+  tableName: "Categoria",
   timestamps: false
-}, {
-    tableName: "categorias", // Garante o nome exato da tabela no MySQL
-    timestamps: true,
-  }
-);
+});
 
 module.exports = Categoria;

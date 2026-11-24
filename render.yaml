@@ -1,0 +1,35 @@
+# Render Blueprint: sobe a API e o site juntos num endereço só
+# (https://<nome>.onrender.com). Servido por lá, o site já entra em modo API.
+# Em render.com: New → Blueprint → escolha este repositório e preencha as
+# variáveis marcadas "sync: false" (os dados do banco MySQL e a senha do admin).
+services:
+  - type: web
+    name: zero-grau
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci --prefix backend && npm ci --prefix frontend-react && npm run build --prefix frontend-react
+    startCommand: npm start --prefix backend
+    healthCheckPath: /api/saude
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@zerograu.com.br
+      - key: ADMIN_SENHA
+        sync: false
