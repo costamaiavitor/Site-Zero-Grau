@@ -55,8 +55,13 @@ tests/               teste automático do site no navegador (Playwright)
 ## Painel no modo simulado
 
 Sem servidor, o painel abre para os e-mails de `adminsSimulados` em `frontend/js/config.js`.
-Para demonstração está `admin@zerograu.com.br`: crie uma conta com esse e-mail na loja e abra
-`admin.html`. Com a API ligada, quem decide é o perfil `admin` do usuário no banco.
+Para demonstração está `admin@zerograu.com.br`: crie uma conta com esse e-mail na loja (ou entre
+com ela) e o site vai direto para o painel, sem passar pelo varejo ou pelo atacado. Com a API
+ligada, quem decide é o perfil `admin` do usuário no banco.
+
+A conta fica no navegador em que foi criada, e o login vale para a aba em que foi feito: numa aba
+nova, o `admin.html` manda para a porta, e entrar de novo leva de volta ao painel. O botão **?**
+no topo do painel abre um guia passo a passo, como o da loja.
 
 ## Ligar o site à API
 

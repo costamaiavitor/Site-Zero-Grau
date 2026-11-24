@@ -376,9 +376,25 @@ async function cadastrar({nome, email, senha, doc, tipo}) {
   return {ok: CONTAS.gravar({email: email.toLowerCase(), nome, doc, tipo, senhaHash})};
 }
 
+/* O dono da loja entra direto no painel, sem passar pela vitrine. Com a API vale
+   o perfil "admin" que o servidor devolveu (o painel ainda confere o token); no
+   modo simulado, a lista adminsSimulados do config.js. Só no login e no
+   cadastro: os botões "Ver varejo" e "Ver atacado" do painel continuam abrindo
+   as lojas. */
+function contaDeAdministrador(dadosDoPerfil) {
+  if (!API.usarMock) return dadosDoPerfil?.perfil === "admin";
+  const lista = typeof ZG_CONFIG !== "undefined" && Array.isArray(ZG_CONFIG.adminsSimulados) ? ZG_CONFIG.adminsSimulados : [];
+  const email = String(dadosDoPerfil?.email || "").trim().toLowerCase();
+  return !!email && lista.some(admin => String(admin).trim().toLowerCase() === email);
+}
+
 function irParaLoja(loja, dadosDoPerfil) {
   PERFIL.gravar({tipo: loja === "varejo" ? "cpf" : "cnpj", ...dadosDoPerfil});
   LOJA.gravar(loja);
+  if (contaDeAdministrador(dadosDoPerfil)) {
+    location.href = "admin.html";
+    return;
+  }
   if (loja === PUBLICO) {
     fecharPorta();
   } else {

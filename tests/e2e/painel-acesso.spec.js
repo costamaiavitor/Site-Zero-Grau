@@ -1,4 +1,4 @@
-import { test, expect, abrir, criarConta, esperarLoja, CPF } from './apoio.js';
+import { test, expect, abrir, criarConta, esperarLoja, confirmarIdade, tokenDeTeste, CPF, CNPJ, SENHA, EMAIL_ADMIN, HORA_ABERTA } from './apoio.js';
 
 test.describe('RF21 painel sem login', () => {
   test('sem conta vai para a loja e o painel nunca aparece', async ({ page }) => {
@@ -67,5 +67,75 @@ test.describe('RF21 com a API', () => {
       await page.goto('/admin.html');
       await page.waitForURL(/index\.html$/);
     });
+  });
+});
+
+test.describe('RF21 dono entra direto no painel', () => {
+  test.use({ admin: 'simulado' });
+
+  test('ao criar a conta com o e-mail de administrador, vai para o painel e não para a vitrine', async ({ page }) => {
+    await abrir(page);
+    await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
+    await page.waitForURL(/admin\.html$/);
+    await expect(page.locator('#a-produtos')).toBeVisible();
+  });
+
+  test('com CNPJ também vai para o painel, e não para o atacado', async ({ page }) => {
+    await abrir(page, '/atacado.html');
+    await criarConta(page, { doc: CNPJ, nome: 'Zero Grau Ltda', email: EMAIL_ADMIN });
+    await page.waitForURL(/admin\.html$/);
+    await expect(page.locator('#a-produtos')).toBeVisible();
+  });
+
+  test('sem a sessão da aba (aba nova), o painel manda para a porta e o login leva de volta ao painel', async ({ page }) => {
+    await abrir(page);
+    await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
+    await page.waitForURL(/admin\.html$/);
+
+    // Uma aba nova começa sem o sessionStorage; a conta continua no localStorage.
+    await page.evaluate(() => sessionStorage.clear());
+    await page.goto('/index.html');
+    await confirmarIdade(page);
+    await page.fill('#emailInput', EMAIL_ADMIN);
+    await page.fill('#senhaInput', SENHA);
+    await page.click('#docBtn');
+    await page.waitForURL(/admin\.html$/);
+    await expect(page.locator('#a-produtos')).toBeVisible();
+  });
+
+  test('pelo painel, o dono ainda abre a vitrine de varejo sem ser mandado de volta', async ({ page }) => {
+    await abrir(page);
+    await criarConta(page, { doc: CPF, email: EMAIL_ADMIN });
+    await page.waitForURL(/admin\.html$/);
+    await page.goto('/index.html');
+    await esperarLoja(page);
+    await expect(page).toHaveURL(/index\.html$/);
+  });
+});
+
+test.describe('RF21 dono entra direto no painel pela API', () => {
+  test.use({ api: true });
+  const entrarComPerfil = async (page, perfil) => {
+    await page.route('**/api/auth/login', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      token: tokenDeTeste(perfil, 3600, Date.parse(HORA_ABERTA)),
+      usuario: { id: 1, nome: 'Dono', email: EMAIL_ADMIN, perfil, documento: '111.444.777-35', tipo_documento: 'cpf' }
+    }) }));
+    await abrir(page);
+    await confirmarIdade(page);
+    await page.fill('#emailInput', EMAIL_ADMIN);
+    await page.fill('#senhaInput', SENHA);
+    await page.click('#docBtn');
+  };
+
+  test('perfil admin vai para o painel', async ({ page }) => {
+    await entrarComPerfil(page, 'admin');
+    await page.waitForURL(/admin\.html$/);
+    await expect(page.locator('#a-produtos')).toBeVisible();
+  });
+
+  test('perfil cliente fica na loja, mesmo com o e-mail da lista do modo simulado', async ({ page }) => {
+    await entrarComPerfil(page, 'cliente');
+    await esperarLoja(page);
+    await expect(page).toHaveURL(/index\.html$/);
   });
 });

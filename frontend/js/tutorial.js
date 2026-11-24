@@ -1,6 +1,8 @@
 (() => {
-  const CHAVE_VISTO = "zg-tour-visto";
-  const PUBLICO = document.body.dataset.publico === "atacado" ? "atacado" : "varejo";
+  const PUBLICO = ["atacado", "admin"].includes(document.body.dataset.publico) ? document.body.dataset.publico : "varejo";
+  /* O painel tem guia próprio: quem já viu o da loja ainda recebe o convite do painel. */
+  const CHAVE_VISTO = PUBLICO === "admin" ? "zg-tour-visto-admin" : "zg-tour-visto";
+  const ONDE_SE_USA = PUBLICO === "admin" ? "o painel" : "o site";
   const NO_CELULAR = matchMedia("(max-width: 900px)");
   const SEM_MOVIMENTO = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -151,11 +153,110 @@
         alvo: () => primeiroVisivel(".tour-btn"),
         ultimo: "Montar o pedido"
       }
+    ],
+    admin: [
+      {
+        area: "Boas-vindas",
+        titulo: "Um minuto para conhecer o painel",
+        texto: "<p>Daqui você muda o que as duas lojas mostram: produtos, preços, regras de venda e os dados da loja. Toque em <b>Próximo</b> para avançar; a parte explicada fica destacada na tela.</p>",
+        aba: "produtos"
+      },
+      {
+        area: "Rascunho",
+        titulo: "Tudo vira rascunho antes de ir ao ar",
+        texto: "<p>Cada mudança fica salva sozinha, como rascunho, neste navegador. Este aviso conta quantas alterações ainda não foram publicadas.</p><p>Os clientes só veem depois de <b>Publicar</b>.</p>",
+        alvo: () => primeiroVisivel("#estado")
+      },
+      {
+        area: "Abas",
+        titulo: "Cinco abas, um assunto cada",
+        texto: "<p><b>Produtos</b> é o catálogo das duas lojas. <b>Varejo</b> e <b>Atacado</b> guardam as regras de venda de cada uma, <b>Loja</b> os contatos, o Pix e o horário, e <b>Publicação</b> põe tudo no ar.</p>",
+        onde: () => {
+          const abas = document.querySelector(".adm-abas");
+          return abas && abas.scrollWidth > abas.clientWidth + 2 ? "Nesta tela, deslize as abas para o lado para ver todas." : "";
+        },
+        alvo: () => primeiroVisivel(".adm-abas")
+      },
+      {
+        area: "Produtos",
+        titulo: "Edite direto na tabela",
+        texto: "<p>Preço, promoção, estoque, categoria e embalagem mudam no próprio campo. O que você alterou fica destacado, e a coluna <b>Atacado</b> mostra quanto o revendedor vai pagar.</p>",
+        onde: () => ATE(900) ? "A tabela rola para os lados: arraste para ver as outras colunas." : "",
+        aba: "produtos",
+        alvo: () => primeiroVisivel("#linhasProdutos tr", "#tabProdutos")
+      },
+      {
+        area: "Produtos",
+        titulo: "Busque ou cadastre um produto",
+        texto: "<p>O campo <b>Buscar marca ou produto</b> filtra a tabela, e <b>Adicionar produto</b> abre uma linha nova no topo.</p>",
+        aba: "produtos",
+        alvo: () => primeiroVisivel("#a-produtos .adm-barra")
+      },
+      {
+        area: "Produtos",
+        titulo: "A foto já sai no padrão da loja",
+        texto: "<p>Em <b>Subir foto</b>, mande um PNG com fundo transparente. O painel recorta, ajusta o tamanho e confere se o produto está reto; a foto que não serve volta com o motivo.</p>",
+        aba: "produtos",
+        alvo: () => {
+          /* Em tela estreita a coluna Foto fica fora da vista, à direita da tabela: rola até ela,
+             encostada na direita para não ficar atrás da coluna Produto, que é fixa. */
+          document.querySelector("#linhasProdutos .adm-foto-btn")?.scrollIntoView({block: "center", inline: "end", behavior: "instant"});
+          return primeiroVisivel("#linhasProdutos .adm-foto-btn");
+        }
+      },
+      {
+        area: "Varejo",
+        titulo: "As regras da loja de varejo",
+        texto: "<p>Pedido mínimo, frete grátis, taxa base, taxa por quilômetro e raio de entrega. O <b>cupom</b> de primeiro pedido também é definido aqui: código, desconto, valor mínimo, teto e validade.</p>",
+        aba: "varejo",
+        alvo: () => primeiroVisivel("#a-varejo .adm-grupos")
+      },
+      {
+        area: "Atacado",
+        titulo: "As regras do balcão de atacado",
+        texto: "<p>O desconto de revenda sobre o preço do varejo, o pedido mínimo, o frete, o prazo de pagamento, as <b>faixas de desconto por volume</b> e quantas unidades vêm em cada caixa.</p>",
+        aba: "atacado",
+        alvo: () => primeiroVisivel("#a-atacado .adm-grupos")
+      },
+      {
+        area: "Loja",
+        titulo: "Contato, Pix e horário",
+        texto: "<p>O WhatsApp que recebe os pedidos, a <b>chave Pix</b> do pagamento pelo site e o horário de cada dia. Com a loja fechada, o pedido chega marcado como agendado.</p>",
+        aba: "loja",
+        alvo: () => primeiroVisivel("#a-loja .adm-grupos")
+      },
+      {
+        area: "Prévia",
+        titulo: "Veja a loja antes do cliente",
+        texto: "<p><b>Ver varejo</b> e <b>Ver atacado</b> abrem as lojas em outra aba já com o rascunho, e um aviso amarelo lembra que é só uma prévia.</p>",
+        alvo: () => primeiroVisivel(".adm-acoes a[href=\"index.html\"]", ".adm-acoes")
+      },
+      {
+        area: "Pedidos",
+        titulo: "Os pedidos que chegaram",
+        texto: "<p><b>Pedidos</b> lista o que os clientes enviaram, com filtro e busca, e deixa mudar o status: recebido, confirmado, em preparo, saiu para entrega, entregue ou cancelado.</p>",
+        alvo: () => primeiroVisivel(".adm-acoes a[href$=\"pedidos.html\"]")
+      },
+      {
+        area: "Publicação",
+        titulo: "Publicar põe tudo no ar",
+        texto: "<p><b>Publicar</b> leva o rascunho para as lojas; <b>Descartar rascunho</b> volta ao que está no ar. Com a API ligada, os produtos vão para o banco de dados.</p><p>Na aba <b>Publicação</b> ficam a chave do GitHub e o histórico das publicações.</p>",
+        aba: "publicacao",
+        alvo: () => primeiroVisivel("#publicar")
+      },
+      {
+        area: "Pronto",
+        titulo: "Pronto, tudo a zero grau",
+        texto: "<p>Para rever, toque no <b>?</b> no topo. Os traços do guia levam direto a qualquer passo.</p>",
+        aba: "produtos",
+        alvo: () => primeiroVisivel(".tour-btn"),
+        ultimo: "Começar a editar"
+      }
     ]
   };
 
   const passos = PASSOS[PUBLICO];
-  const acoes = document.querySelector(".app-acoes, .bal-acoes");
+  const acoes = document.querySelector(".app-acoes, .bal-acoes, .adm-acoes");
   if (!acoes || !passos) return;
 
   const lerVisto = () => {
@@ -176,10 +277,10 @@
   botao.type = "button";
   botao.className = "tour-btn";
   botao.textContent = "?";
-  botao.setAttribute("aria-label", "Como usar o site");
+  botao.setAttribute("aria-label", `Como usar ${ONDE_SE_USA}`);
   botao.setAttribute("aria-haspopup", "dialog");
   botao.setAttribute("aria-expanded", "false");
-  botao.title = "Como usar o site";
+  botao.title = `Como usar ${ONDE_SE_USA}`;
   const antesDe = acoes.querySelector(".conta-btn");
   acoes.insertBefore(botao, antesDe || acoes.firstChild);
 
@@ -242,11 +343,15 @@
   let vistaOriginal = null;
   let quadro = 0;
 
-  const vistaAtiva = () => document.querySelector(".app-aba[aria-selected=\"true\"]")?.dataset.vista || null;
+  /* Na loja as "vistas" são as abas Início, Catálogo...; no painel, as abas Produtos, Varejo... */
+  const vistaAtiva = () => PUBLICO === "admin"
+    ? document.querySelector(".adm-aba[aria-selected=\"true\"]")?.id.replace(/^t-/, "") || null
+    : document.querySelector(".app-aba[aria-selected=\"true\"]")?.dataset.vista || null;
 
   const irParaVista = vista => {
     if (!vista || vistaAtiva() === vista) return;
-    document.querySelector(`.app-aba[data-vista="${vista}"]`)?.click();
+    const aba = PUBLICO === "admin" ? document.getElementById(`t-${vista}`) : document.querySelector(`.app-aba[data-vista="${vista}"]`);
+    aba?.click();
   };
 
   const posicionar = () => {
@@ -307,7 +412,7 @@
   const mostrarPasso = (indice, focarTitulo) => {
     atual = Math.min(Math.max(indice, 0), total - 1);
     const passo = passos[atual];
-    irParaVista(passo.vista);
+    irParaVista(passo.vista || passo.aba);
 
     const q = frio(atual);
     grau.textContent = `${total - 1 - atual}°`;
@@ -338,7 +443,7 @@
   };
 
   const algumaCaixaAberta = () =>
-    !!document.querySelector(".gate.aberto, .cart.aberto, .pedido.aberto, .consentimento");
+    !!document.querySelector(".gate.aberto, .cart.aberto, .pedido.aberto, .consentimento, dialog[open]");
 
   const aoRolar = () => {
     if (!camada.hidden) posicionar();
@@ -373,6 +478,7 @@
     if (atual >= total - 1) {
       fechar(false);
       if (PUBLICO === "varejo") irParaVista("catalogo");
+      if (PUBLICO === "admin") irParaVista("produtos");
       return;
     }
     mostrarPasso(atual + 1, true);
@@ -477,7 +583,7 @@
     convite.setAttribute("role", "region");
     convite.setAttribute("aria-label", "Guia do site");
     convite.innerHTML = `
-      <p><b>Primeira vez por aqui?</b>Um guia rápido mostra onde fica cada coisa no site.</p>
+      <p><b>Primeira vez por aqui?</b>Um guia rápido mostra onde fica cada coisa n${ONDE_SE_USA.slice(1)}.</p>
       <div>
         <button type="button" class="btn btn-primary btn-sm" data-tour="sim">Ver o guia</button>
         <button type="button" class="btn btn-ghost btn-sm" data-tour="nao">Agora não</button>
@@ -497,6 +603,8 @@
     setTimeout(mostrarConvite, 900);
   };
 
+  /* No painel, a guarda já conferiu o login antes de a página aparecer. */
+  if (PUBLICO === "admin") agendarConvite();
   document.addEventListener("zg:entrou", agendarConvite);
   try {
     const liberada = sessionStorage.getItem("zg-idade") === "ok" && sessionStorage.getItem("zg-perfil");
